@@ -1,40 +1,19 @@
-# OLTP 手元ツール系
+# Shakujo tools
 
-## codegen
-
-IR/ASTのコードを生成するやつ
-
-### requirements
+## Requirements
 
 * JDK 10
 
-### usage
+## usage
 
 ```bash
 cd tools/codegen
 ./gradlew generate
 ```
 
-* 生成したファイルが下記に上書きされる
+* generated files will place under..
   * `<repository-root>/model/include`
   * `<repository-root>/model/src`
-* 生成したファイルはライセンスヘッダー直下に以下のコメントがあるので注意
+* generated files will have the following comment line below the license header
   * `// DON'T EDIT THIS GENERATED FILE`
-  * これらのファイルは上書きされる
-
-### code reading
-
-* entry
-  * `com.ashigeru.lang.codegen.spec.sql.Main`
-* modules
-  * `modules/common`
-    * 共通ライブラリ
-  * `modules/model`
-    * メタモデル
-  * `modules/dsl`
-    * メタモデルを記述するDSL
-  * `modules/cpp`
-    * C++のコード生成系
-  * `modules/sql`
-    * IRモデル定義
-    * プログラムエントリ
+  * note that, these overwrites the existing files
