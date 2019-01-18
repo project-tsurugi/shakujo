@@ -103,7 +103,7 @@ pipeline {
                 [parserName: 'Doxygen', pattern: 'build/doxygen.log'],
             ]
             cobertura autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'build/gcovr-xml/shakujo-gcovr.xml', failNoReports: false, failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, zoomCoverageChart: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'build/shakujo-coverage-report.zip, build/shakujo-doxygen.zip, build/clang-tidy-fix.yaml, build/dependency-graph/shakujo.png', onlyIfSuccessful: true
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'build/shakujo-coverage-report.zip, build/shakujo-doxygen.zip, build/clang-tidy.log, build/clang-tidy-fix.yaml, build/dependency-graph/shakujo.png', onlyIfSuccessful: true
             notifySlack('tsurugi-dev')
         }
     }
