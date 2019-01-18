@@ -1,0 +1,5 @@
+# Temporary files
+*.html
+
+/design/*.pdf
+/tasks/*.pdf

@@ -1,0 +1,11 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+dependencies {
+  implementation project(':common')
+  implementation project(':dsl')
+  implementation project(':model')
+  implementation project(':cpp')
+}
+
+mainClassName = 'com.ashigeru.lang.codegen.spec.sql.Main'

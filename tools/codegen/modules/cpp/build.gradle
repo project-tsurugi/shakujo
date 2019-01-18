@@ -1,0 +1,6 @@
+apply plugin: 'java'
+
+dependencies {
+  implementation project(':common')
+  implementation project(':model')
+}

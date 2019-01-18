@@ -1,0 +1,12 @@
+rootProject.name = 'ir-generator'
+
+include 'common'
+include 'model'
+include 'dsl'
+include 'cpp'
+include 'sql'
+
+rootProject.children.each { project ->
+    project.projectDir = new File(settingsDir, "modules/${project.name}")
+    assert project.projectDir.isDirectory()
+}
