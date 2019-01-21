@@ -61,6 +61,18 @@ std::unique_ptr<model::program::Program> Parser::parse_program(std::string path,
     return engine.visit(tree);
 }
 
+std::unique_ptr<model::program::Program> Parser::parse_program(std::string path, std::string const& input) {
+    antlr4::ANTLRInputStream is { input };
+    ShakujoLexer lexer { &is };
+    antlr4::CommonTokenStream tokens { &lexer };
+    ShakujoParser parser { &tokens };
+
+    auto tree = parser.programEntry();
+    impl_->debug(tree, parser);
+    impl::Engine engine { std::move(path) };
+    return engine.visit(tree);
+}
+
 std::unique_ptr<model::statement::Statement> Parser::parse_statement(std::string path, std::istream& input) {
     // FIXME: remove code dup
     antlr4::ANTLRInputStream is { input };

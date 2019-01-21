@@ -31,8 +31,9 @@ namespace v = shakujo::common::core::value;
 
 class ParserInsertTest : public ParserTestBase, public ::testing::Test {
 public:
-    std::unique_ptr<InsertValuesStatement> parse_insert_values(const std::string& text) {
-        return parse_program_main<InsertValuesStatement>(text, "must be a select statement");
+    std::unique_ptr<InsertValuesStatement> parse_insert_values(std::string_view text) {
+        std::string s { text };
+        return parse_program_main<InsertValuesStatement>(s, "must be a select statement");
     }
 };
 

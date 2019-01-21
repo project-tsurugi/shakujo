@@ -39,8 +39,7 @@ public:
 
     template<typename T>
     std::unique_ptr<T> parse_program_main(std::string const& text, std::string_view message = "invalid main statement") {
-        std::istringstream input { text };
-        auto program = parser.parse_program("<testing>", input);
+        auto program = parser.parse_program("<testing>", text);
         auto result = cast_ptr(program->release_main(), message).to<T>();
         return result;
     }
