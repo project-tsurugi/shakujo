@@ -3,6 +3,7 @@ pipeline {
         docker {
             image 'nautilus/oltp-sandbox'
             label 'docker'
+            args '--cap-add SYS_PTRACE'
         }
     }
     environment {
@@ -41,6 +42,7 @@ pipeline {
         stage ('Test') {
             environment {
                 GTEST_OUTPUT="xml"
+                ASAN_OPTIONS="detect_stack_use_after_return=true"
             }
             steps {
                 sh '''
