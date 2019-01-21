@@ -27,6 +27,7 @@ option(INSTALL_EXAMPLES "Install example programs" OFF)
 option(FORCE_INSTALL_RPATH "force add lib dir of custom prefixes to INSTALL_RPATH" OFF)
 
 option(ENABLE_SANITIZER "enable sanitizer on debug build" ON)
+option(ENABLE_UB_SANITIZER "enable undefined behavior sanitizer on debug build" OFF)
 option(ENABLE_COVERAGE "enable coverage on debug build" OFF)
 
 find_package(Threads REQUIRED)

@@ -36,6 +36,10 @@ available options:
 * `-DBUILD_EXAMPLES=OFF` - don't build nor test example programs
 * `-DINSTALL_EXAMPLES=ON` - also install example programs
 * `-DFORCE_INSTALL_RPATH=ON` - force set RPATH for non-default library paths
+* for debugging only
+  * `-DENABLE_SANITIZER=OFF` - disable sanitizers (requires `-DCMAKE_BUILD_TYPE=Debug`)
+  * `-DENABLE_UB_SANITIZER=ON` - enable undefined behavior sanitizer (requires `-DENABLE_SANITIZER=ON`)
+  * `-DENABLE_COVERAGE=OFF` - disable sanitizers (requires `-DCMAKE_BUILD_TYPE=Debug`)
 
 ### install
 
