@@ -18,10 +18,6 @@ project(shakujo
     DESCRIPTION "Shakujo - A portable relational database languages compiler"
     LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 option(BUILD_TESTS "Build test programs" ON)
@@ -29,6 +25,9 @@ option(BUILD_EXAMPLES "Build and test example programs" ON)
 option(BUILD_DOCUMENTS "Build documents" ON)
 option(INSTALL_EXAMPLES "Install example programs" OFF)
 option(FORCE_INSTALL_RPATH "force add lib dir of custom prefixes to INSTALL_RPATH" OFF)
+
+option(ENABLE_SANITIZER "enable sanitizer on debug build" ON)
+option(ENABLE_COVERAGE "enable coverage on debug build" OFF)
 
 find_package(Threads REQUIRED)
 find_package(Java REQUIRED COMPONENTS Runtime)
