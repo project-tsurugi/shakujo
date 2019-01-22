@@ -21,10 +21,12 @@ if(ENABLE_UB_SANITIZER)
     # NOTE: UB check requires instrumented libstdc++
     set(sanitizers "$(sanitizers},undefined")
 endif()
-if (CMAKE_CXX_COMPILER_ID MATCHES "^(Clang|AppleClang)$")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    # do nothing for gcc
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "^(Clang|AppleClang)$")
     set(sanitizers "${sanitizers},nullability")
 else()
-    message(CRITICAL "unsupported compiler ${CMAKE_CXX_COMPILER_ID}")
+    message(FATAL_ERROR "unsupported compiler ${CMAKE_CXX_COMPILER_ID}")
 endif()
 
 string(TOUPPER "${CMAKE_BUILD_TYPE}" upper_CMAKE_BUILD_TYPE)
