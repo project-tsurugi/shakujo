@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <shakujo/analyzer/binding/VariableBinding.h>
+
 #include "shakujo/analyzer/binding/VariableBinding.h"
 
 #include "shakujo/analyzer/binding/Id.h"
@@ -22,7 +24,7 @@
 
 namespace shakujo::analyzer::binding {
 
-namespace util = common::util;
+static const std::any EMPTY_ANY;  // NOLINT
 
 class VariableBinding::Impl {
 public:
@@ -30,6 +32,7 @@ public:
     common::core::Name name_;
     std::unique_ptr<common::core::Type> type_;
     std::unique_ptr<common::core::Value> value_;
+    std::map<std::string, std::any> attributes_;
     Impl(
             Id<VariableBinding>&& id,
             common::core::Name&& name,
@@ -75,9 +78,14 @@ VariableBinding &VariableBinding::value(std::unique_ptr<common::core::Value> val
     return *this;
 }
 
-bool VariableBinding::is_valid() const {
-    return has_id()
-        && util::is_valid(type())
-        && (!util::is_defined(value()) || util::is_valid(value()));
+std::map<std::string, std::any>& VariableBinding::attributes() {
+    return impl_->attributes_;
+}
+
+std::any const& VariableBinding::find_attribute(std::string const& key) const {
+    if (auto it = attributes().find(key); it != attributes().end()) {
+        return it->second;
+    }
+    return EMPTY_ANY;
 }
 }  // namespace shakujo::analyzer::binding

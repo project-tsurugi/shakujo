@@ -22,8 +22,6 @@ namespace shakujo::analyzer::binding {
 
 static const std::any EMPTY_ANY;  // NOLINT
 
-namespace util = common::util;
-
 class ExpressionBinding::Impl {
 public:
     std::unique_ptr<common::core::Type> type_;
@@ -83,10 +81,5 @@ std::any const& ExpressionBinding::find_attribute(std::string const& key) const 
         return it->second;
     }
     return EMPTY_ANY;
-}
-
-bool ExpressionBinding::is_valid() const {
-    return util::is_valid(type())
-        && (!util::is_defined(value()) || util::is_valid(value()));
 }
 }  // namespace shakujo::analyzer::binding

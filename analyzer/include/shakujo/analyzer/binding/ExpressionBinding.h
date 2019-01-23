@@ -20,6 +20,8 @@
 #include <map>
 #include <memory>
 #include <stdexcept>
+#include <string>
+#include <string_view>
 #include <utility>
 
 #include "shakujo/common/util/utility.h"
@@ -186,7 +188,7 @@ public:
      * @brief returns the view of extra attributes.
      * @return the view of extra attributes
      */
-    std::map<std::string, std::any> const& attributes() const {
+    inline std::map<std::string, std::any> const& attributes() const {
         return const_cast<ExpressionBinding*>(this)->attributes();
     }
 
@@ -235,7 +237,7 @@ public:
      * @throw std::bad_any_cast if the attribute value type is inconsistent
      */
     template<class T>
-    T const& get_attribute(std::string const& key) const {
+    inline T const& get_attribute(std::string const& key) const {
         return const_cast<ExpressionBinding*>(this)->get_attribute<T>(key);
     }
 
@@ -244,7 +246,11 @@ public:
      * @return true if it is valid
      * @return false if it has some errors
      */
-    bool is_valid() const;
+    bool is_valid() const {
+        namespace util = common::util;
+        return util::is_valid(type())
+            && (!util::is_defined(value()) || util::is_valid(value()));
+    }
 };
 }  // namespace shakujo::analyzer::binding
 
