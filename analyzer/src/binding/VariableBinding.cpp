@@ -19,23 +19,22 @@
 #include "shakujo/common/core/Name.h"
 #include "shakujo/common/core/Type.h"
 #include "shakujo/common/core/Value.h"
-#include "shakujo/common/util/ClonablePtr.h"
 
 namespace shakujo::analyzer::binding {
 
-using common::util::is_defined;
+namespace util = common::util;
 
 class VariableBinding::Impl {
 public:
     Id<VariableBinding> id_;
     common::core::Name name_;
-    common::util::ClonablePtr<common::core::Type> type_;
-    common::util::ClonablePtr<common::core::Value> value_;
+    std::unique_ptr<common::core::Type> type_;
+    std::unique_ptr<common::core::Value> value_;
     Impl(
-            Id<VariableBinding> &&id,
-            common::core::Name name,
-            std::unique_ptr<common::core::Type> type,
-            std::unique_ptr<common::core::Value> value)
+            Id<VariableBinding>&& id,
+            common::core::Name&& name,
+            std::unique_ptr<common::core::Type>&& type,
+            std::unique_ptr<common::core::Value>&& value)
         : id_(std::move(id)), name_(std::move(name)), type_(std::move(type)), value_(std::move(value))
     {}
 };
@@ -78,7 +77,7 @@ VariableBinding &VariableBinding::value(std::unique_ptr<common::core::Value> val
 
 bool VariableBinding::is_valid() const {
     return has_id()
-        && (is_defined(type()) && type()->kind() != common::core::Type::Kind::ERROR)
-        && (!is_defined(value()) || value()->kind() != common::core::Value::Kind::ERROR);
+        && util::is_valid(type())
+        && (!util::is_defined(value()) || util::is_valid(value()));
 }
 }  // namespace shakujo::analyzer::binding

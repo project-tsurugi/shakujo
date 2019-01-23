@@ -15,22 +15,21 @@
  */
 #include "shakujo/analyzer/binding/ExpressionBinding.h"
 
-#include "shakujo/common/util/ClonablePtr.h"
 #include "shakujo/common/core/Type.h"
 #include "shakujo/common/core/Value.h"
 
 namespace shakujo::analyzer::binding {
 
-using common::util::is_defined;
+namespace util = common::util;
 
 class ExpressionBinding::Impl {
 public:
-    common::util::ClonablePtr<common::core::Type> type_;
-    common::util::ClonablePtr<common::core::Value> value_;
+    std::unique_ptr<common::core::Type> type_;
+    std::unique_ptr<common::core::Value> value_;
     bool constant_;
     Impl(
-            std::unique_ptr<common::core::Type> type,
-            std::unique_ptr<common::core::Value> value,
+            std::unique_ptr<common::core::Type>&& type,
+            std::unique_ptr<common::core::Value>&& value,
             bool constant)
         : type_(std::move(type)), value_(std::move(value)), constant_(constant)
     {}
@@ -73,7 +72,7 @@ ExpressionBinding &ExpressionBinding::constant(bool constant) {
 }
 
 bool ExpressionBinding::is_valid() const {
-    return (is_defined(type()) && type()->kind() != common::core::Type::Kind::ERROR)
-        && (!is_defined(value()) || value()->kind() != common::core::Value::Kind::ERROR);
+    return util::is_valid(type())
+        && (!util::is_defined(value()) || util::is_valid(value()));
 }
 }  // namespace shakujo::analyzer::binding

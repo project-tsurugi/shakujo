@@ -52,6 +52,18 @@ is_defined(T const& ptr) {
 }
 
 /**
+ * @brief returns whether or not the given object is valid.
+ * @tparam T the object type
+ * @param object the object
+ * @return true if the object is valid
+ * @return false otherwise
+ */
+template<class T>
+inline auto is_valid(T const& object) -> decltype(object.is_valid()) {
+    return object.is_valid();
+}
+
+/**
  * @brief returns whether or not the given pointer like object is valid.
  * @tparam T the pointer type
  * @param ptr the pointer like object
@@ -59,7 +71,7 @@ is_defined(T const& ptr) {
  * @return false otherwise
  */
 template<class T>
-inline auto is_valid(T&& ptr) -> decltype(is_defined(ptr) && ptr->is_valid()) {
+inline auto is_valid(T const& ptr) -> decltype(is_defined(ptr) && ptr->is_valid()) {
     return is_defined(ptr) && ptr->is_valid();
 }
 

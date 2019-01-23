@@ -17,8 +17,6 @@
 
 #include "shakujo/analyzer/binding/Id.h"
 #include "shakujo/analyzer/binding/VariableBinding.h"
-#include "shakujo/common/util/ClonablePtr.h"
-#include "shakujo/common/util/PtrList.h"
 #include "shakujo/common/core/Name.h"
 #include "shakujo/common/core/Type.h"
 #include "shakujo/common/core/Value.h"
@@ -29,10 +27,10 @@ class FunctionBinding::Impl {
 public:
     Id<FunctionBinding> id_;
     common::core::Name name_;
-    common::util::ClonablePtr<common::core::Type> type_;
+    std::unique_ptr<common::core::Type> type_;
     std::vector<std::shared_ptr<VariableBinding>> parameters_;
 
-    Impl(Id<FunctionBinding> &&id,
+    Impl(Id<FunctionBinding>&& id,
              common::core::Name&& name,
              std::unique_ptr<common::core::Type>&& type,
              std::vector<std::shared_ptr<VariableBinding>>&& parameters)
