@@ -31,6 +31,8 @@ using namespace shakujo::model::statement::dml;
 namespace t = shakujo::common::core::type;
 namespace v = shakujo::common::core::value;
 
+using common::util::equals;
+
 class ParserQueryTest : public ParserTestBase, public ::testing::Test {
 public:
     std::unique_ptr<EmitStatement> parse_select(std::string const& text) {
@@ -46,15 +48,22 @@ public:
 TEST_F(ParserQueryTest, select_simple) {
     auto select = parse_select("SELECT * FROM TBL");
     auto scan = cast_node(select->source()).to<ScanExpression>();
-    EXPECT_TRUE(eq(f.Name("TBL"), scan->table()));
+    EXPECT_TRUE(equals(f.Name("TBL"), scan->table()));
     EXPECT_FALSE(scan->alias());
 }
 
 TEST_F(ParserQueryTest, select_alias) {
+    auto select = parse_select("SELECT * FROM TBL A");
+    auto scan = cast_node(select->source()).to<ScanExpression>();
+    EXPECT_TRUE(equals(f.Name("TBL"), scan->table()));
+    EXPECT_TRUE(equals(f.Name("A"), scan->alias()));
+}
+
+TEST_F(ParserQueryTest, select_as_alias) {
     auto select = parse_select("SELECT * FROM TBL AS A");
     auto scan = cast_node(select->source()).to<ScanExpression>();
-    EXPECT_TRUE(eq(f.Name("TBL"), scan->table()));
-    EXPECT_TRUE(eq(f.Name("A"), scan->alias()));
+    EXPECT_TRUE(equals(f.Name("TBL"), scan->table()));
+    EXPECT_TRUE(equals(f.Name("A"), scan->alias()));
 }
 
 TEST_F(ParserQueryTest, select_condition) {
@@ -73,7 +82,7 @@ TEST_F(ParserQueryTest, select_projection) {
     auto c1 = projection->columns()[0];
     EXPECT_FALSE(c1->alias());
     auto c1v = cast_node(c1->value()).to<VariableReference>();
-    EXPECT_TRUE(eq(f.Name("C1"), c1v->name()));
+    EXPECT_TRUE(equals(f.Name("C1"), c1v->name()));
 }
 
 TEST_F(ParserQueryTest, select_projection_alias) {
@@ -82,9 +91,9 @@ TEST_F(ParserQueryTest, select_projection_alias) {
     ASSERT_EQ(1U, projection->columns().size());
 
     auto c1 = projection->columns()[0];
-    EXPECT_TRUE(eq(f.Name("x"), c1->alias()));
+    EXPECT_TRUE(equals(f.Name("x"), c1->alias()));
     auto c1v = cast_node(c1->value()).to<VariableReference>();
-    EXPECT_TRUE(eq(f.Name("C1"), c1v->name()));
+    EXPECT_TRUE(equals(f.Name("C1"), c1v->name()));
 }
 
 TEST_F(ParserQueryTest, select_projection_many) {

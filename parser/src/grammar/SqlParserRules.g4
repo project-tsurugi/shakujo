@@ -77,7 +77,7 @@ tablePrimary
     ;
 
 tableName
-    : name (K_AS simpleName)? // FIXME: correlation name wit derived columns
+    : name (K_AS? simpleName)? // FIXME: correlation name with derived columns
     ;
 
 joinedTable

@@ -115,11 +115,6 @@ public:
         serializer.serialize(json, node);
         return ss.str();
     }
-
-    template<class S, class T>
-    auto eq(S&& s, T&& t) -> decltype(*s == *t) {
-        return *s == *t;
-    }
 };
 }  // namespace shakujo::parser
 

@@ -24,6 +24,8 @@ using namespace shakujo::model::statement;
 namespace t = shakujo::common::core::type;
 namespace v = shakujo::common::core::value;
 
+using common::util::equals;
+
 class ParserExpressionTest : public ParserTestBase, public ::testing::Test {
 public:
     int as_int(Expression const* expr) {
@@ -83,17 +85,17 @@ TEST_F(ParserExpressionTest, literal_string_escape) {
 
 TEST_F(ParserExpressionTest, simple_name) {
     auto v = parse_expression<VariableReference>("a");
-    EXPECT_TRUE(eq(f.Name("a"), v->name()));
+    EXPECT_TRUE(equals(f.Name("a"), v->name()));
 }
 
 TEST_F(ParserExpressionTest, qualified_name) {
     auto v = parse_expression<VariableReference>("a.b.c");
-    EXPECT_TRUE(eq(f.Name("a", "b", "c"), v->name()));
+    EXPECT_TRUE(equals(f.Name("a", "b", "c"), v->name()));
 }
 
 TEST_F(ParserExpressionTest, function_call) {
     auto v = parse_expression<FunctionCall>("f(100)");
-    EXPECT_TRUE(eq(f.Name("f"), v->name()));
+    EXPECT_TRUE(equals(f.Name("f"), v->name()));
 
     auto& args = v->arguments();
     ASSERT_EQ(1U, args.size());
@@ -102,7 +104,7 @@ TEST_F(ParserExpressionTest, function_call) {
 
 TEST_F(ParserExpressionTest, function_call_empty_args) {
     auto v = parse_expression<FunctionCall>("f()");
-    EXPECT_TRUE(eq(f.Name("f"), v->name()));
+    EXPECT_TRUE(equals(f.Name("f"), v->name()));
 
     auto& args = v->arguments();
     ASSERT_EQ(0U, args.size());
@@ -110,7 +112,7 @@ TEST_F(ParserExpressionTest, function_call_empty_args) {
 
 TEST_F(ParserExpressionTest, function_call_many_args) {
     auto v = parse_expression<FunctionCall>("f(1, 2, 3)");
-    EXPECT_TRUE(eq(f.Name("f"), v->name()));
+    EXPECT_TRUE(equals(f.Name("f"), v->name()));
 
     auto& args = v->arguments();
     ASSERT_EQ(3U, args.size());

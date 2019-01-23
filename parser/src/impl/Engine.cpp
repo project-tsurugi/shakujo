@@ -255,7 +255,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::TablePrima
 }
 
 // tableName
-//     : name (K_AS simpleName)? // FIXME: correlation name wit derived columns
+//     : name (K_AS? simpleName)?
 //     ;
 std::unique_ptr<model::expression::relation::ScanExpression> Engine::visit(Grammar::TableNameContext *c) {
     if (auto q = c->name(); is_defined(q)) {

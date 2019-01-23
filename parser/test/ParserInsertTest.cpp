@@ -29,6 +29,8 @@ using namespace shakujo::model::statement::dml;
 namespace t = shakujo::common::core::type;
 namespace v = shakujo::common::core::value;
 
+using common::util::equals;
+
 class ParserInsertTest : public ParserTestBase, public ::testing::Test {
 public:
     std::unique_ptr<InsertValuesStatement> parse_insert_values(std::string_view text) {
@@ -40,7 +42,7 @@ public:
 TEST_F(ParserInsertTest, insert_values_simple) {
     auto stmt = parse_insert_values("INSERT INTO TBL VALUES (1)");
 
-    EXPECT_TRUE(eq(f.Name("TBL"), stmt->table()));
+    EXPECT_TRUE(equals(f.Name("TBL"), stmt->table()));
 
     auto& cols = stmt->columns();
     ASSERT_EQ(1U, cols.size());
@@ -80,7 +82,7 @@ TEST_F(ParserInsertTest, insert_values_columns) {
     ASSERT_EQ(1U, cols.size());
     {
         auto c = cols[0];
-        EXPECT_TRUE(eq(f.SimpleName("C1"), c->name()));
+        EXPECT_TRUE(equals(f.SimpleName("C1"), c->name()));
         EXPECT_EQ(v::Int(1), *cast_node(c->value()).to<Literal>()->value());
     }
 }
@@ -92,17 +94,17 @@ TEST_F(ParserInsertTest, insert_values_multiple_columns) {
     ASSERT_EQ(3U, cols.size());
     {
         auto c = cols[0];
-        EXPECT_TRUE(eq(f.SimpleName("C1"), c->name()));
+        EXPECT_TRUE(equals(f.SimpleName("C1"), c->name()));
         EXPECT_EQ(v::Int(1), *cast_node(c->value()).to<Literal>()->value());
     }
     {
         auto c = cols[1];
-        EXPECT_TRUE(eq(f.SimpleName("C2"), c->name()));
+        EXPECT_TRUE(equals(f.SimpleName("C2"), c->name()));
         EXPECT_EQ(v::Int(2), *cast_node(c->value()).to<Literal>()->value());
     }
     {
         auto c = cols[2];
-        EXPECT_TRUE(eq(f.SimpleName("C3"), c->name()));
+        EXPECT_TRUE(equals(f.SimpleName("C3"), c->name()));
         EXPECT_EQ(v::Int(3), *cast_node(c->value()).to<Literal>()->value());
     }
 }
