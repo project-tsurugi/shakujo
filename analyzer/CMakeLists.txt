@@ -9,5 +9,6 @@ target_include_directories(analyzer-interface
 install_custom(analyzer-interface ${export_name})
 
 add_subdirectory(src)
-add_subdirectory(test)
-add_subdirectory(examples)
+if(BUILD_TESTS)
+    add_subdirectory(test)
+endif()
