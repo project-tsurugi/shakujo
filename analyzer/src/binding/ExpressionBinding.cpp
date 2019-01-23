@@ -20,12 +20,15 @@
 
 namespace shakujo::analyzer::binding {
 
+static const std::any EMPTY_ANY;  // NOLINT
+
 namespace util = common::util;
 
 class ExpressionBinding::Impl {
 public:
     std::unique_ptr<common::core::Type> type_;
     std::unique_ptr<common::core::Value> value_;
+    std::map<std::string, std::any> attributes_;
     bool constant_;
     Impl(
             std::unique_ptr<common::core::Type>&& type,
@@ -69,6 +72,17 @@ bool ExpressionBinding::constant() const {
 ExpressionBinding &ExpressionBinding::constant(bool constant) {
     impl_->constant_ = constant;
     return *this;
+}
+
+std::map<std::string, std::any> &ExpressionBinding::attributes() {
+    return impl_->attributes_;
+}
+
+std::any const& ExpressionBinding::find_attribute(std::string const& key) const {
+    if (auto it = attributes().find(key); it != attributes().end()) {
+        return it->second;
+    }
+    return EMPTY_ANY;
 }
 
 bool ExpressionBinding::is_valid() const {

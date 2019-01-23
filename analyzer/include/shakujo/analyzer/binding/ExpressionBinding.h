@@ -16,7 +16,10 @@
 #ifndef SHAKUJO_ANALYZER_BINDING_EXPRESSION_BINDING_H_
 #define SHAKUJO_ANALYZER_BINDING_EXPRESSION_BINDING_H_
 
+#include <any>
+#include <map>
 #include <memory>
+#include <stdexcept>
 #include <utility>
 
 #include "shakujo/common/util/utility.h"
@@ -172,6 +175,69 @@ public:
      * @return this
      */
     ExpressionBinding& constant(bool constant);
+
+    /**
+     * @brief returns the view of extra attributes.
+     * @return the view of extra attributes
+     */
+    std::map<std::string, std::any>& attributes();
+
+    /**
+     * @brief returns the view of extra attributes.
+     * @return the view of extra attributes
+     */
+    std::map<std::string, std::any> const& attributes() const {
+        return const_cast<ExpressionBinding*>(this)->attributes();
+    }
+
+    /**
+     * @brief puts an attribute.
+     * If the attribute already exists on this binding, this operation will overwrite it.
+     * @param key the attribute key
+     * @param value the attribute valule
+     * @return this
+     */
+    ExpressionBinding& put_attribute(std::string_view key, std::any value) {
+        attributes().insert_or_assign(std::string { key }, std::move(value));
+        return *this;
+    }
+
+    /**
+     * @brief returns an attribute value for the given key.
+     * @param key the attribute key
+     * @return the corresponded attribute value if it is defined
+     * @return empty object if there is no such an attribute (or explicitly added an empty value)
+     */
+    std::any const& find_attribute(std::string const& key) const;
+
+    /**
+     * @brief returns a raw attribute value for the given key.
+     * @tparam T the attribute value type
+     * @param key the attribute key
+     * @return the raw value of corresponded attribute
+     * @throw std::domain_error if there is no such an attribute
+     * @throw std::bad_any_cast if the attribute value type is inconsistent
+     */
+    template<class T>
+    T& get_attribute(std::string const& key) {
+        if (auto it = attributes().find(key); it != attributes().end()) {
+            return std::any_cast<T&>(it->second);
+        }
+        throw std::domain_error(key);
+    }
+
+    /**
+     * @brief returns a raw attribute value for the given key.
+     * @tparam T the attribute value type
+     * @param key the attribute key
+     * @return the raw value of corresponded attribute
+     * @throw std::domain_error if there is no such an attribute
+     * @throw std::bad_any_cast if the attribute value type is inconsistent
+     */
+    template<class T>
+    T const& get_attribute(std::string const& key) const {
+        return const_cast<ExpressionBinding*>(this)->get_attribute<T>(key);
+    }
 
     /**
      * @brief returns whether or not this binding is valid.
