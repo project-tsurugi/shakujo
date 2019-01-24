@@ -42,6 +42,7 @@ K_ASC: A S C;
 K_DESC: D E S C;
 
 K_CHAR: C H A R;
+K_VARCHAR: V A R C H A R;
 K_STRING: S T R I N G;
 K_BIGINT: B I G I N T;
 K_INT: I N T;

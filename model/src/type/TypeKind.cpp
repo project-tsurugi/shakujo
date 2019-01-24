@@ -55,6 +55,9 @@ std::ostream& operator<<(std::ostream& out, TypeKind value) {
     case TypeKind::TUPLE_TYPE:
         out << "TUPLE_TYPE";
         break;
+    case TypeKind::VAR_CHAR_TYPE:
+        out << "VAR_CHAR_TYPE";
+        break;
     case TypeKind::VECTOR_TYPE:
         out << "VECTOR_TYPE";
         break;

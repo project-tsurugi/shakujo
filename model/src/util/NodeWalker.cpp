@@ -102,6 +102,7 @@
 #include "shakujo/model/type/TupleType.h"
 #include "shakujo/model/type/Type.h"
 #include "shakujo/model/type/TypeKind.h"
+#include "shakujo/model/type/VarCharType.h"
 #include "shakujo/model/type/VectorType.h"
 
 namespace shakujo::model::util {
@@ -827,6 +828,9 @@ void NodeWalker::walk(type::Type* node) {
     case type::TypeKind::TUPLE_TYPE:
         walk(dynamic_cast<type::TupleType*>(node));
         return;
+    case type::TypeKind::VAR_CHAR_TYPE:
+        walk(dynamic_cast<type::VarCharType*>(node));
+        return;
     case type::TypeKind::VECTOR_TYPE:
         walk(dynamic_cast<type::VectorType*>(node));
         return;
@@ -894,6 +898,11 @@ void NodeWalker::walk(type::TupleType* node) {
         if (child->name()) walk(child->name());
         if (child->type()) walk(child->type());
     }
+    exit(node);
+}
+
+void NodeWalker::walk(type::VarCharType* node) {
+    if (!enter(node)) return;
     exit(node);
 }
 

@@ -28,6 +28,7 @@ namespace shakujo::common::core::type {
  */
 class Char final : public Textual {
 private:
+    bool variant_;
     std::size_t size_;
 
 public:
@@ -38,11 +39,21 @@ public:
 
     /**
      * @brief Constructs a new object.
+     * @param variant true to variant character
+     * @param size the size in bytes
+     * @param nullity the nullity
+     */
+    constexpr Char(bool variant, std::size_t size, Type::Nullity nullity = Type::Nullity::NULLABLE) noexcept
+        : Textual(nullity), variant_(variant), size_(size)
+    {}
+
+    /**
+     * @brief Constructs a new object.
      * @param size the size in bytes
      * @param nullity the nullity
      */
     constexpr explicit Char(std::size_t size, Type::Nullity nullity = Type::Nullity::NULLABLE) noexcept
-        : Textual(nullity), size_(size)
+        : Char(false, size, nullity)
     {}
 
     /**
@@ -89,10 +100,19 @@ public:
     }
 
     /**
+     * @brief returns whether or not the character length is variant.
+     * @return true if it is variant length (a.k.a. VARCHAR)
+     * @return false otherwise (a.k.a. CHAR)
+     */
+    constexpr bool variant() const {
+        return variant_;
+    }
+
+    /**
      * @brief returns the byte length of this type.
      * @return the byte length
      */
-    std::size_t size() const {
+    constexpr std::size_t size() const {
         return size_;
     }
 };

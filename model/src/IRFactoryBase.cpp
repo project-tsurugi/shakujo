@@ -1095,6 +1095,17 @@ std::unique_ptr<type::TupleType::Element> IRFactoryBase::TupleTypeElement(
     return ret;
 }
 
+std::unique_ptr<type::VarCharType> IRFactoryBase::VarCharType() {
+    return std::make_unique<type::VarCharType>();
+}
+
+std::unique_ptr<type::VarCharType> IRFactoryBase::VarCharType(
+        std::size_t size) {
+    auto ret = VarCharType();
+    ret->size(size);
+    return ret;
+}
+
 std::unique_ptr<type::VectorType> IRFactoryBase::VectorType() {
     return std::make_unique<type::VectorType>();
 }

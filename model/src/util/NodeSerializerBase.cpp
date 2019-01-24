@@ -110,6 +110,7 @@
 #include "shakujo/model/type/TupleType.h"
 #include "shakujo/model/type/Type.h"
 #include "shakujo/model/type/TypeKind.h"
+#include "shakujo/model/type/VarCharType.h"
 #include "shakujo/model/type/VectorType.h"
 
 namespace shakujo::model::util {
@@ -2889,6 +2890,9 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, type::
     case type::TypeKind::TUPLE_TYPE:
         serialize(printer, dynamic_cast<type::TupleType const*>(value));
         return;
+    case type::TypeKind::VAR_CHAR_TYPE:
+        serialize(printer, dynamic_cast<type::VarCharType const*>(value));
+        return;
     case type::TypeKind::VECTOR_TYPE:
         serialize(printer, dynamic_cast<type::VectorType const*>(value));
         return;
@@ -2896,6 +2900,20 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, type::
     std::ostringstream ss;
     ss << "unknown node kind: " << value->kind();
     throw std::invalid_argument(ss.str());
+}
+
+void NodeSerializerBase::serialize(common::util::DataSerializer& printer, type::VarCharType const* value) {
+    if (value == nullptr) {
+        printer.value(nullptr);
+        return;
+    }
+    printer.enter_object("VarCharType");
+    {
+        printer.enter_property("size");
+        printer.value(value->size());
+        printer.exit_property("size");
+    }
+    printer.exit_object("VarCharType");
 }
 
 void NodeSerializerBase::serialize(common::util::DataSerializer& printer, type::VectorType const* value) {

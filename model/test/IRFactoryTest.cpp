@@ -339,6 +339,13 @@ TEST_F(IRFactoryTest, type_array) {
     EXPECT_EQ(*f.ArrayType(f.StringType(), 10U), *e);
 }
 
+TEST_F(IRFactoryTest, type_varchar) {
+    IRFactory f;
+    auto e = f.Type(t::Char(true, 256U));
+    EXPECT_TRUE(e);
+    EXPECT_EQ(*f.VarCharType(256U), *e);
+}
+
 TEST_F(IRFactoryTest, type_vector) {
     IRFactory f;
     auto e = f.Type(t::Vector(t::String()));

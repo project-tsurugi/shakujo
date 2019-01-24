@@ -65,6 +65,9 @@ std::unique_ptr<type::Type> IRFactory::Type(common::core::Type const* type) {
             return visitDefault(node, f);
         }
         std::unique_ptr<type::Type> visit(Char const* node, IRFactory& f) override {
+            if (node->variant()) {
+                return f.VarCharType(node->size());
+            }
             return f.CharType(node->size());
         }
         std::unique_ptr<type::Type> visit(String const*, IRFactory& f) override {

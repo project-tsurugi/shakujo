@@ -109,10 +109,10 @@ static inline std::unique_ptr<Type> numeric_binary_promotion(Numeric const* a, N
 
 static inline std::unique_ptr<Type> textual_binary_promotion(Textual const* a, Textual const* b) {
     if (a->kind() == Type::Kind::CHAR && b->kind() == Type::Kind::CHAR) {
-        auto a_size = dynamic_cast<Char const*>(a)->size();
-        auto b_size = dynamic_cast<Char const*>(b)->size();
-        if (a_size == b_size) {
-            return std::make_unique<Char>(a_size, a->nullity() | b->nullity());
+        auto* ac = dynamic_cast<Char const*>(a);
+        auto* bc = dynamic_cast<Char const*>(b);
+        if (ac->variant() == bc->variant() && ac->size() == bc->size()) {
+            return std::make_unique<Char>(ac->variant(), ac->size(), a->nullity() | b->nullity());
         }
     }
     return std::make_unique<String>(a->nullity() | b->nullity());
@@ -258,6 +258,9 @@ std::unique_ptr<common::core::Type> convert(model::type::Type const* type) {
                 columns.emplace_back(element->name()->token(), dispatch(element->type()));
             }
             return std::make_unique<Relation>(std::move(columns));
+        }
+        std::unique_ptr<Type> visit(model::type::VarCharType const* node) override {
+            return std::make_unique<Char>(true, node->size(), Type::Nullity::NULLABLE);
         }
         std::unique_ptr<Type> visit(model::type::VectorType const* node) override {
             return std::make_unique<Vector>(dispatch(node->element_type()), Type::Nullity::NULLABLE);

@@ -95,6 +95,7 @@
 #include "shakujo/model/type/StringType.h"
 #include "shakujo/model/type/TupleType.h"
 #include "shakujo/model/type/Type.h"
+#include "shakujo/model/type/VarCharType.h"
 #include "shakujo/model/type/VectorType.h"
 
 namespace shakujo::model::util {
@@ -1808,6 +1809,30 @@ protected:
     }
 
     /**
+     * @brief callback on enter into VarCharType.
+     * @param node the processing target
+     * @return true if continue to enter into child elements of the given node
+     * @return false don't walk into child elements, also the corresponded exit() will not be called
+     * @see type::VarCharType
+     * @see walk()
+     * @see exit()
+     */
+    virtual bool enter([[maybe_unused]] type::VarCharType const* node) {
+        return enterDefault(node);
+    }
+
+    /**
+     * @brief callback on exit from VarCharType.
+     * @param node the processing target
+     * @see type::VarCharType
+     * @see walk()
+     * @see enter()
+     */
+    virtual void exit([[maybe_unused]] type::VarCharType const* node) {
+        exitDefault(node);
+    }
+
+    /**
      * @brief callback on enter into VectorType.
      * @param node the processing target
      * @return true if continue to enter into child elements of the given node
@@ -2517,6 +2542,13 @@ public:
      * @see type::TupleType
      */
     void walk(type::TupleType const* node);
+
+    /**
+     * @brief Begins to walk VarCharType.
+     * @param node the processing target
+     * @see type::VarCharType
+     */
+    void walk(type::VarCharType const* node);
 
     /**
      * @brief Begins to walk VectorType.

@@ -129,6 +129,25 @@ TEST_F(AnalyzerExpressionTest, literal_char_inconsistent) {
     success(false);
 }
 
+TEST_F(AnalyzerExpressionTest, literal_varchar) {
+    auto expr = analyze(f.Literal(t::Char(true, 5U), "HELLO"));
+    success();
+
+    auto binding = extract(expr.get());
+    EXPECT_EQ(t::Char(true, 5U), *binding->type());
+    EXPECT_EQ(v::String("HELLO"), *binding->value());
+}
+
+TEST_F(AnalyzerExpressionTest, literal_varchar_too_long) {
+    auto expr = analyze(f.Literal(t::Char(true, 5U), "HELLO!"));
+    success(false);
+}
+
+TEST_F(AnalyzerExpressionTest, literal_varchar_inconsistent) {
+    auto expr = analyze(f.Literal(t::Char(true, 5U), v::Bool(true)));
+    success(false);
+}
+
 TEST_F(AnalyzerExpressionTest, literal_string) {
     auto expr = analyze(f.Literal(t::String(), "Hello, world!"));
     success();

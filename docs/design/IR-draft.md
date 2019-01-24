@@ -110,6 +110,12 @@ TBD: WIP
   `char.*` represents *character sequence with any length*.
 ~ `char.N <= Text`
 
+`varchar.N`
+~ variant length character sequence.
+  `N` is maximum **byte length** of the sequence (characters may have different byte length).
+  `varchar.*` represents *character sequence with any length*.
+~ `varchar.N <= Text`
+
 `string`
 ~ flexible length character sequence.
 ~ `string <= Text`
@@ -237,11 +243,12 @@ The *binary numeric promotion* converts two numeric values into a common type.
 
 The *binary character sequence promotion* converts two textual values into a common type.
 
-|          | `char.M` | `char.N` | `string` |
-|---------:|:--------:|:--------:|:--------:|
-| `char.M` | `char.M` | `string` | `string` |
-| `char.N` | `string` | `char.N` | `string` |
-| `string` | `string` | `string` | `string` |
+Where `S` and `T` are both textual type:
+
+* If `S = T`,
+  * the promoted type is `S`
+* otherwise,
+  * the promoted type is `string`
 
 ### The boolean conversion
 

@@ -82,6 +82,11 @@ enum class TypeKind {
      */
     TUPLE_TYPE,
     /**
+     * @brief tag for VarCharType.
+     * @see VarCharType
+     */
+    VAR_CHAR_TYPE,
+    /**
      * @brief tag for VectorType.
      * @see VectorType
      */

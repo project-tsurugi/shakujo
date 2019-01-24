@@ -328,6 +328,7 @@ dataType
     | K_FLOAT ( dataSize )?
     | K_DOUBLE ( K_PRECISION )?
     | K_CHAR dataSize
+    | K_VARCHAR dataSize
     | K_STRING
     ;
 

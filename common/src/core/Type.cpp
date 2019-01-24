@@ -52,7 +52,8 @@ bool Type::operator==(Type const& other) const {
                 return false;
             }
             auto that = dynamic_cast<Char const*>(other);
-            return node->size() == that->size();
+            return node->variant() == that->variant()
+                && node->size() == that->size();
         }
 
         bool visit(String const* node, Type const* other) override {
@@ -153,7 +154,12 @@ class Printer : public ConstVisitor<void, std::ostream&> {
         if (node->nullity() == Type::Nullity::NULLABLE) out << "?";
     }
     void visit(Char const* node, std::ostream& out) final {
-        out << "Char(" << node->size() << ")";
+        if (node->variant()) {
+            out << "VarChar";
+        } else {
+            out << "Char";
+        }
+        out << "(" << node->size() << ")";
         if (node->nullity() == Type::Nullity::NULLABLE) out << "?";
     }
     void visit(String const* node, std::ostream& out) final {

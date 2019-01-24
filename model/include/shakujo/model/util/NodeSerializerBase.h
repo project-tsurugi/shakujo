@@ -104,6 +104,7 @@
 #include "shakujo/model/type/StringType.h"
 #include "shakujo/model/type/TupleType.h"
 #include "shakujo/model/type/Type.h"
+#include "shakujo/model/type/VarCharType.h"
 #include "shakujo/model/type/VectorType.h"
 
 namespace shakujo::model::util {
@@ -956,6 +957,13 @@ public:
      * @param value the target value
      */
     virtual void serialize(common::util::DataSerializer& printer, type::Type const* value);  // NOLINT
+
+    /**
+     * @brief serializes the value into given printer.
+     * @param printer the destination printer
+     * @param value the target value
+     */
+    virtual void serialize(common::util::DataSerializer& printer, type::VarCharType const* value);  // NOLINT
 
     /**
      * @brief serializes the value into given printer.

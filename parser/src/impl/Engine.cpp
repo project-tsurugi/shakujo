@@ -1162,6 +1162,12 @@ std::unique_ptr<model::type::Type> Engine::visit(Grammar::DataTypeContext *c) {
             return f.CharType(sz) << region(c);
         }
     }
+    if (is_defined(c->K_VARCHAR())) {
+        if (auto p = c->dataSize(); is_defined(p)) {
+            auto sz = visit(p);
+            return f.VarCharType(sz) << region(c);
+        }
+    }
     if (is_defined(c->K_STRING())) {
         return f.StringType() << region(c);
     }

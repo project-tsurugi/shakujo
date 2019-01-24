@@ -99,6 +99,14 @@ bool Type::operator==(Type const& other) const {
             return true;
         }
 
+        bool visit(VarCharType const* node, Type const* other) override {
+            if (node->kind() != other->kind()) {
+                return false;
+            }
+            auto that = dynamic_cast<VarCharType const*>(other);
+            return node->size() == that->size();
+        }
+
         bool visit(VectorType const* node, Type const* other) override {
             if (node->kind() != other->kind()) {
                 return false;
@@ -169,6 +177,10 @@ std::ostream& operator<<(std::ostream& out, Type const& value) {
                 position++;
             }
             out << ")";
+        }
+
+        void visit(VarCharType const* node, std::ostream& out) override {
+            out << "VarCharType(" << node->size() << ")";
         }
 
         void visit(VectorType const* node, std::ostream& out) override {

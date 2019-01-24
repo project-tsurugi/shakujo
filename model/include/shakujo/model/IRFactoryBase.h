@@ -103,6 +103,7 @@
 #include "shakujo/model/type/StringType.h"
 #include "shakujo/model/type/TupleType.h"
 #include "shakujo/model/type/Type.h"
+#include "shakujo/model/type/VarCharType.h"
 #include "shakujo/model/type/VectorType.h"
 
 namespace shakujo::model {
@@ -1552,6 +1553,22 @@ public:
     std::unique_ptr<type::TupleType::Element> TupleTypeElement(
             std::unique_ptr<name::SimpleName> name,
             std::unique_ptr<type::Type> type);
+
+    /**
+     * @brief returns a new empty type::VarCharType.
+     * @return a created empty node
+     * @see type::VarCharType
+     */
+    virtual std::unique_ptr<type::VarCharType> VarCharType();
+
+    /**
+     * @brief returns a new type::VarCharType.
+     * @param size bytes length
+     * @return a created node
+     * @see type::VarCharType
+     */
+    std::unique_ptr<type::VarCharType> VarCharType(
+            std::size_t size);
 
     /**
      * @brief returns a new empty type::VectorType.

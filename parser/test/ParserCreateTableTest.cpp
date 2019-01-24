@@ -344,6 +344,17 @@ TEST_F(ParserCreateTableTest, type_char) {
     EXPECT_TRUE(equals(f.CharType(10), col->type()));
 }
 
+TEST_F(ParserCreateTableTest, type_varchar) {
+    auto stmt = parse("CREATE TABLE t (C1 VARCHAR(10))");
+
+    EXPECT_TRUE(equals(f.Name("t"), stmt->table()));
+
+    auto& cols = stmt->columns();
+    ASSERT_EQ(1U, cols.size());
+    auto col = cols[0];
+    EXPECT_TRUE(equals(f.VarCharType(10), col->type()));
+}
+
 TEST_F(ParserCreateTableTest, type_string) {
     auto stmt = parse("CREATE TABLE t (C1 STRING)");
 

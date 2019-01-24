@@ -33,6 +33,7 @@
 #include "shakujo/model/type/StringType.h"
 #include "shakujo/model/type/TupleType.h"
 #include "shakujo/model/type/TypeKind.h"
+#include "shakujo/model/type/VarCharType.h"
 #include "shakujo/model/type/VectorType.h"
 
 namespace shakujo::model::type {
@@ -181,6 +182,17 @@ public:
     }
 
     /**
+     * @brief Processes VarCharType.
+     * @param node the processing target
+     * @param args the processing arguments
+     * @return the result
+     * @see VarCharType
+     */
+    virtual Return visit(VarCharType* node, Args... args) {  // NOLINT
+        return visitDefault(node, args...);
+    }
+
+    /**
      * @brief Processes VectorType.
      * @param node the processing target
      * @param args the processing arguments
@@ -221,6 +233,8 @@ public:
             return visit(dynamic_cast<StringType*>(node), args...);
         case TypeKind::TUPLE_TYPE:
             return visit(dynamic_cast<TupleType*>(node), args...);
+        case TypeKind::VAR_CHAR_TYPE:
+            return visit(dynamic_cast<VarCharType*>(node), args...);
         case TypeKind::VECTOR_TYPE:
             return visit(dynamic_cast<VectorType*>(node), args...);
         }
