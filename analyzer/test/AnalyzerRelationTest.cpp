@@ -65,7 +65,7 @@ TEST_F(AnalyzerRelationTest, scan) {
     auto expr = analyze(f.ScanExpression(f.Name("testing")));
     success();
 
-    auto* relation = extract_relation(expr.get());
+    auto* relation = extract_relation_type(expr.get());
     auto& cols = relation->columns();
     ASSERT_EQ(1U, cols.size());
 
@@ -81,7 +81,7 @@ TEST_F(AnalyzerRelationTest, scan_alias) {
     auto expr = analyze(f.ScanExpression(f.Name("testing"), f.Name("TT")));
     success();
 
-    auto* relation = extract_relation(expr.get());
+    auto* relation = extract_relation_type(expr.get());
     auto& cols = relation->columns();
     ASSERT_EQ(1U, cols.size());
 
@@ -104,7 +104,7 @@ TEST_F(AnalyzerRelationTest, select) {
             literal(true, NON_NULL)));
     success();
 
-    auto* relation = extract_relation(expr.get());
+    auto* relation = extract_relation_type(expr.get());
     auto& cols = relation->columns();
     ASSERT_EQ(1U, cols.size());
 
@@ -120,7 +120,7 @@ TEST_F(AnalyzerRelationTest, select_invalid_relation) {
             literal(true, NON_NULL)));
     success(false);
     EXPECT_FALSE(is_propagated_error(expr.get()));
-    EXPECT_FALSE(is_valid(extract_var(expr.get(), true)));
+    EXPECT_FALSE(is_valid(extract_relation(expr.get(), true)));
 }
 
 TEST_F(AnalyzerRelationTest, select_propagate_error) {
@@ -129,7 +129,7 @@ TEST_F(AnalyzerRelationTest, select_propagate_error) {
             literal(true, NON_NULL)));
     success(false);
     EXPECT_TRUE(is_propagated_error(expr.get()));
-    EXPECT_FALSE(is_valid(extract_var(expr.get(), true)));
+    EXPECT_FALSE(is_valid(extract_relation(expr.get(), true)));
 }
 
 TEST_F(AnalyzerRelationTest, select_invalid_condition) {
@@ -153,62 +153,19 @@ TEST_F(AnalyzerRelationTest, select_ref_simple) {
                     var("C1"),
                     literal(1, 32U, NON_NULL))));
     success();
-    auto var_decl = extract_var(expr.get());
-    t::Tuple row_type {
-        {"C1", t::Int(32U, NON_NULL)},
-    };
-    EXPECT_EQ(row_type, *var_decl->type());
+    auto relation_decl = extract_relation(expr.get());
+    ASSERT_EQ(relation_decl->columns().size(), 1U);
 
-    auto* relation = extract_relation(expr.get());
+    auto&& c0_ref = relation_decl->columns()[0];
+
+    auto* relation = extract_relation_type(expr.get());
     auto& cols = relation->columns();
     ASSERT_EQ(1U, cols.size());
 
     auto* cond = as<expression::BinaryOperator>(expr->condition());
-    auto* left = as<expression::TupleElementLoadExpression>(cond->left());
-    EXPECT_EQ(0U, left->index()->position());
-
-    auto* tuple_ref = as<expression::VariableReference>(left->data());
-    EXPECT_FALSE(is_defined(tuple_ref->name()));
-
-    auto var_ref = extract_var(tuple_ref);
-    EXPECT_EQ(var_decl->id(), var_ref->id());
-
-    EXPECT_EQ(*row_type.elements()[0].type(), type(left));
-}
-
-TEST_F(AnalyzerRelationTest, select_ref_qualified_explicit) {
-    add(schema::TableInfo { "testing", {
-            { "C1", t::Int(32U, NON_NULL), },
-    }});
-    auto expr = analyze(f.SelectionExpression(
-            f.ScanExpression(f.Name("testing")),
-            f.BinaryOperator(
-                    expression::BinaryOperator::Kind::EQUAL,
-                    f.TupleElementLoadExpression(
-                            var("testing"),
-                            f.Index(f.Name("C1"))),
-                    literal(1, 32U, NON_NULL))));
-    success();
-    auto var_decl = extract_var(expr.get());
-    t::Tuple row_type {
-            {"C1", t::Int(32U, NON_NULL)},
-    };
-    EXPECT_EQ(row_type, *var_decl->type());
-
-    auto* relation = extract_relation(expr.get());
-    auto& cols = relation->columns();
-    ASSERT_EQ(1U, cols.size());
-
-    auto* cond = as<expression::BinaryOperator>(expr->condition());
-    auto* left = as<expression::TupleElementLoadExpression>(cond->left());
-    EXPECT_EQ(0U, left->index()->position());
-
-    auto* tuple_ref = as<expression::VariableReference>(left->data());
-    EXPECT_TRUE(equals(f.Name("testing"), tuple_ref->name()));
-
-    auto var_ref = extract_var(tuple_ref);
-    EXPECT_EQ(var_decl->id(), var_ref->id());
-    EXPECT_EQ(*row_type.elements()[0].type(), type(left));
+    auto* left = as<expression::VariableReference>(cond->left());
+    auto var_ref = extract_var(left);
+    EXPECT_EQ(c0_ref->id(), var_ref->id());
 }
 
 TEST_F(AnalyzerRelationTest, select_ref_qualified) {
@@ -222,27 +179,21 @@ TEST_F(AnalyzerRelationTest, select_ref_qualified) {
                     f.VariableReference(f.Name("testing", "C1")),
                     literal(1, 32U, NON_NULL))));
     success();
-    auto var_decl = extract_var(expr.get());
-    t::Tuple row_type {
-            {"C1", t::Int(32U, NON_NULL)},
-    };
-    EXPECT_EQ(row_type, *var_decl->type());
+    auto relation_decl = extract_relation(expr.get());
+    ASSERT_EQ(relation_decl->columns().size(), 1U);
 
-    auto* relation = extract_relation(expr.get());
+    auto&& c0_ref = relation_decl->columns()[0];
+
+    auto* relation = extract_relation_type(expr.get());
     auto& cols = relation->columns();
     ASSERT_EQ(1U, cols.size());
 
     auto* cond = as<expression::BinaryOperator>(expr->condition());
-    auto* left = as<expression::TupleElementLoadExpression>(cond->left());
-    EXPECT_EQ(0U, left->index()->position());
+    auto* left = as<expression::VariableReference>(cond->left());
+    EXPECT_TRUE(equals(f.Name("testing", "C1"), left->name()));
 
-    auto* tuple_ref = as<expression::VariableReference>(left->data());
-    EXPECT_TRUE(equals(f.Name("testing"), tuple_ref->name()));
-
-    auto var_ref = extract_var(tuple_ref);
-    EXPECT_EQ(var_decl->id(), var_ref->id());
-
-    EXPECT_EQ(*row_type.elements()[0].type(), type(left));
+    auto var_ref = extract_var(left);
+    EXPECT_EQ(c0_ref->id(), var_ref->id());
 }
 
 TEST_F(AnalyzerRelationTest, select_ref_qualified_column_missing) {
@@ -274,7 +225,7 @@ TEST_F(AnalyzerRelationTest, projection) {
     ));
     success();
 
-    auto* relation = extract_relation(expr.get());
+    auto* relation = extract_relation_type(expr.get());
     auto& cols = relation->columns();
     ASSERT_EQ(2U, cols.size());
 
@@ -297,7 +248,7 @@ TEST_F(AnalyzerRelationTest, projection_invalid_relation) {
     ));
     success(false);
     EXPECT_FALSE(is_propagated_error(expr.get()));
-    EXPECT_FALSE(is_valid(extract_var(expr.get(), true)));
+    EXPECT_FALSE(is_valid(extract_relation(expr.get(), true)));
 }
 
 TEST_F(AnalyzerRelationTest, projection_propagate_error) {
@@ -310,7 +261,7 @@ TEST_F(AnalyzerRelationTest, projection_propagate_error) {
     ));
     success(false);
     EXPECT_TRUE(is_propagated_error(expr.get()));
-    EXPECT_FALSE(is_valid(extract_var(expr.get(), true)));
+    EXPECT_FALSE(is_valid(extract_relation(expr.get(), true)));
 }
 
 TEST_F(AnalyzerRelationTest, projection_named_relation) {
@@ -330,7 +281,7 @@ TEST_F(AnalyzerRelationTest, projection_named_relation) {
     ));
     success();
 
-    auto* relation = extract_relation(expr.get());
+    auto* relation = extract_relation_type(expr.get());
     auto& cols = relation->columns();
     ASSERT_EQ(2U, cols.size());
 
@@ -359,7 +310,7 @@ TEST_F(AnalyzerRelationTest, projection_named_columns) {
     ));
     success();
 
-    auto* relation = extract_relation(expr.get());
+    auto* relation = extract_relation_type(expr.get());
     auto& cols = relation->columns();
     ASSERT_EQ(2U, cols.size());
 
@@ -387,7 +338,7 @@ TEST_F(AnalyzerRelationTest, projection_free) {
     ));
     success();
 
-    auto* relation = extract_relation(expr.get());
+    auto* relation = extract_relation_type(expr.get());
     auto& cols = relation->columns();
     ASSERT_EQ(2U, cols.size());
 
@@ -413,7 +364,7 @@ TEST_F(AnalyzerRelationTest, join) {
     ));
     success();
 
-    auto* relation = extract_relation(expr.get());
+    auto* relation = extract_relation_type(expr.get());
     auto& cols = relation->columns();
     ASSERT_EQ(2U, cols.size());
 
@@ -444,12 +395,16 @@ TEST_F(AnalyzerRelationTest, join_inner) {
     ));
     success();
 
-    auto* cond = as<expression::BinaryOperator>(expr->condition());
-    auto* left = as<expression::TupleElementLoadExpression>(cond->left());
-    EXPECT_EQ(0U, left->index()->position());
+    auto relation = extract_relation(expr.get());
+    auto& cols = relation->columns();
+    ASSERT_EQ(2U, cols.size());
 
-    auto* right = as<expression::TupleElementLoadExpression>(cond->right());
-    EXPECT_EQ(1U, right->index()->position());
+    auto* cond = as<expression::BinaryOperator>(expr->condition());
+    auto* left = as<expression::VariableReference>(cond->left());
+    EXPECT_EQ(cols[0], extract_var(left));
+
+    auto* right = as<expression::VariableReference>(cond->right());
+    EXPECT_EQ(cols[1], extract_var(right));
 }
 
 TEST_F(AnalyzerRelationTest, join_left_outer) {
@@ -467,7 +422,7 @@ TEST_F(AnalyzerRelationTest, join_left_outer) {
     ));
     success();
 
-    auto* relation = extract_relation(expr.get());
+    auto* relation = extract_relation_type(expr.get());
     auto& cols = relation->columns();
     ASSERT_EQ(2U, cols.size());
 
@@ -493,7 +448,7 @@ TEST_F(AnalyzerRelationTest, join_right_outer) {
     ));
     success();
 
-    auto* relation = extract_relation(expr.get());
+    auto* relation = extract_relation_type(expr.get());
     auto& cols = relation->columns();
     ASSERT_EQ(2U, cols.size());
 
@@ -519,7 +474,7 @@ TEST_F(AnalyzerRelationTest, join_full_outer) {
     ));
     success();
 
-    auto* relation = extract_relation(expr.get());
+    auto* relation = extract_relation_type(expr.get());
     auto& cols = relation->columns();
     ASSERT_EQ(2U, cols.size());
 
@@ -547,7 +502,7 @@ TEST_F(AnalyzerRelationTest, join_natural) {
     ));
     success();
 
-    auto* relation = extract_relation(expr.get());
+    auto* relation = extract_relation_type(expr.get());
     auto& cols = relation->columns();
     ASSERT_EQ(3U, cols.size());
 
@@ -704,12 +659,16 @@ TEST_F(AnalyzerRelationTest, join_qualified_column) {
     ));
     success();
 
-    auto* cond = as<expression::BinaryOperator>(expr->condition());
-    auto* left = as<expression::TupleElementLoadExpression>(cond->left());
-    EXPECT_EQ(0U, left->index()->position());
+    auto relation = extract_relation(expr.get());
+    auto& cols = relation->columns();
+    ASSERT_EQ(2U, cols.size());
 
-    auto* right = as<expression::TupleElementLoadExpression>(cond->right());
-    EXPECT_EQ(1U, right->index()->position());
+    auto* cond = as<expression::BinaryOperator>(expr->condition());
+    auto* left = as<expression::VariableReference>(cond->left());
+    EXPECT_EQ(cols[0], extract_var(left));
+
+    auto* right = as<expression::VariableReference>(cond->right());
+    EXPECT_EQ(cols[1], extract_var(right));
 }
 
 }  // namespace shakujo::analyzer

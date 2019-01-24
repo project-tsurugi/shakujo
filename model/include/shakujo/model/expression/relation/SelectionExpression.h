@@ -23,7 +23,7 @@
 #include "shakujo/model/expression/Expression.h"
 #include "shakujo/model/expression/ExpressionKind.h"
 #include "shakujo/model/key/ExpressionKey.h"
-#include "shakujo/model/key/VariableKey.h"
+#include "shakujo/model/key/RelationKey.h"
 
 namespace shakujo::model::expression::relation {
 /**
@@ -31,7 +31,7 @@ namespace shakujo::model::expression::relation {
  */
 class SelectionExpression
         : public Expression
-        , public key::VariableKey::Provider {
+        , public key::RelationKey::Provider {
 private:
     class Impl;
     std::unique_ptr<Impl> impl_;
@@ -151,25 +151,25 @@ public:
     SelectionExpression& expression_key(std::unique_ptr<key::ExpressionKey> expression_key) override;
 
     /**
-     * @brief Returns referring variable key.
-     * @return referring variable key.
+     * @brief Returns relation key.
+     * @return relation key.
      */
-    key::VariableKey* variable_key() override;
+    key::RelationKey* relation_key() override;
 
     /**
-     * @brief Returns referring variable key.
-     * @return referring variable key.
+     * @brief Returns relation key.
+     * @return relation key.
      */
-    inline key::VariableKey const* variable_key() const override {
-        return const_cast<SelectionExpression*>(this)->variable_key();
+    inline key::RelationKey const* relation_key() const override {
+        return const_cast<SelectionExpression*>(this)->relation_key();
     }
 
     /**
-     * @brief Sets referring variable key.
-     * @param variable_key referring variable key
+     * @brief Sets relation key.
+     * @param relation_key relation key
      * @return this
      */
-    SelectionExpression& variable_key(std::unique_ptr<key::VariableKey> variable_key) override;
+    SelectionExpression& relation_key(std::unique_ptr<key::RelationKey> relation_key) override;
 
     /**
      * @brief Returns a copy of this object.

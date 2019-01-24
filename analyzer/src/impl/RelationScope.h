@@ -17,8 +17,6 @@
 #define SHAKUJO_ANALYZER_IMPL_RELATION_SCOPE_H_
 
 #include <map>
-#include <set>
-#include <sstream>
 #include <memory>
 #include <utility>
 
@@ -26,6 +24,7 @@
 #include "shakujo/analyzer/scope/Result.h"
 #include "shakujo/analyzer/scope/Table.h"
 #include "shakujo/analyzer/binding/VariableBinding.h"
+#include "shakujo/analyzer/binding/RelationBinding.h"
 #include "shakujo/analyzer/binding/BindingContext.h"
 #include "shakujo/common/core/Name.h"
 #include "shakujo/common/core/type/Relation.h"
@@ -34,10 +33,9 @@ namespace shakujo::analyzer::impl {
 
 class RelationScope final : public scope::Scope<binding::VariableBinding> {
 private:
-    const scope::Scope<binding::VariableBinding>* parent_;
-    std::shared_ptr<binding::VariableBinding> binding_;
-    std::set<std::string> column_set_;
-    scope::Table<std::map<std::string, std::vector<std::size_t>>> qualifier_map_;
+    scope::Scope<binding::VariableBinding> const* parent_;
+    std::vector<std::shared_ptr<binding::VariableBinding>> columns_;
+    scope::Table<binding::VariableBinding> table_;
 
 public:
     RelationScope(
@@ -51,12 +49,11 @@ public:
     RelationScope& operator=(const RelationScope& other) = delete;
     RelationScope& operator=(RelationScope&& other) noexcept = default;
 
-    std::shared_ptr<binding::VariableBinding> binding();
+    std::unique_ptr<binding::RelationBinding> binding() {
+        return std::make_unique<binding::RelationBinding>(columns_);
+    }
 
     scope::Result<binding::VariableBinding> find(model::name::Name const* name) const override;
-
-private:
-    scope::Result<binding::VariableBinding> find_relation(model::name::Name const* name) const;
 };
 }  // namespace shakujo::analyzer::impl
 

@@ -15,9 +15,6 @@
  */
 #include "shakujo/analyzer/binding/ExpressionBinding.h"
 
-#include "shakujo/common/core/Type.h"
-#include "shakujo/common/core/Value.h"
-
 namespace shakujo::analyzer::binding {
 
 static const std::any EMPTY_ANY;  // NOLINT
@@ -26,8 +23,8 @@ class ExpressionBinding::Impl {
 public:
     std::unique_ptr<common::core::Type> type_;
     std::unique_ptr<common::core::Value> value_;
-    std::map<std::string, std::any> attributes_;
     bool constant_;
+    std::map<std::string, std::any> attributes_;
     Impl(
             std::unique_ptr<common::core::Type>&& type,
             std::unique_ptr<common::core::Value>&& value,

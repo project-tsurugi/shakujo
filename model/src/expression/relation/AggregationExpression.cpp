@@ -23,7 +23,7 @@
 #include "shakujo/model/expression/Expression.h"
 #include "shakujo/model/key/ExpressionKey.h"
 #include "shakujo/model/key/FunctionKey.h"
-#include "shakujo/model/key/VariableKey.h"
+#include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/name/Index.h"
 #include "shakujo/model/name/Name.h"
 #include "shakujo/model/statement/Statement.h"
@@ -41,7 +41,7 @@ public:
     util::NodeList<statement::Statement> initialize_;
     util::FragmentList<AggregationExpression::Column> columns_;
     std::unique_ptr<key::ExpressionKey> expression_key_;
-    std::unique_ptr<key::VariableKey> variable_key_;
+    std::unique_ptr<key::RelationKey> relation_key_;
 
     Impl() = default;
     ~Impl() noexcept = default;
@@ -149,12 +149,12 @@ AggregationExpression& AggregationExpression::expression_key(std::unique_ptr<key
     return *this;
 }
 
-key::VariableKey* AggregationExpression::variable_key() {
-    return impl_->variable_key_.get();
+key::RelationKey* AggregationExpression::relation_key() {
+    return impl_->relation_key_.get();
 }
 
-AggregationExpression& AggregationExpression::variable_key(std::unique_ptr<key::VariableKey> variable_key) {
-    impl_->variable_key_ = std::move(variable_key);
+AggregationExpression& AggregationExpression::relation_key(std::unique_ptr<key::RelationKey> relation_key) {
+    impl_->relation_key_ = std::move(relation_key);
     return *this;
 }
 

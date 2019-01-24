@@ -60,6 +60,7 @@
 #include "shakujo/model/expression/relation/SelectionExpression.h"
 #include "shakujo/model/key/ExpressionKey.h"
 #include "shakujo/model/key/FunctionKey.h"
+#include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/key/VariableKey.h"
 #include "shakujo/model/name/Index.h"
 #include "shakujo/model/name/Name.h"
@@ -1090,9 +1091,9 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         printer.exit_property("expression_key");
     }
     {
-        printer.enter_property("variable_key");
-        serialize(printer, value->variable_key());
-        printer.exit_property("variable_key");
+        printer.enter_property("relation_key");
+        serialize(printer, value->relation_key());
+        printer.exit_property("relation_key");
     }
     printer.exit_object("AggregationExpression");
 }
@@ -1207,9 +1208,9 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         printer.exit_property("expression_key");
     }
     {
-        printer.enter_property("variable_key");
-        serialize(printer, value->variable_key());
-        printer.exit_property("variable_key");
+        printer.enter_property("relation_key");
+        serialize(printer, value->relation_key());
+        printer.exit_property("relation_key");
     }
     printer.exit_object("JoinExpression");
 }
@@ -1379,9 +1380,9 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         printer.exit_property("expression_key");
     }
     {
-        printer.enter_property("variable_key");
-        serialize(printer, value->variable_key());
-        printer.exit_property("variable_key");
+        printer.enter_property("relation_key");
+        serialize(printer, value->relation_key());
+        printer.exit_property("relation_key");
     }
     printer.exit_object("ProjectionExpression");
 }
@@ -1459,9 +1460,9 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         printer.exit_property("expression_key");
     }
     {
-        printer.enter_property("variable_key");
-        serialize(printer, value->variable_key());
-        printer.exit_property("variable_key");
+        printer.enter_property("relation_key");
+        serialize(printer, value->relation_key());
+        printer.exit_property("relation_key");
     }
     printer.exit_object("SelectionExpression");
 }
@@ -1484,6 +1485,16 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, [[mayb
     }
     printer.enter_object("FunctionKey");
     printer.exit_object("FunctionKey");
+}
+
+void NodeSerializerBase::serialize(common::util::DataSerializer& printer, [[maybe_unused]] key::RelationKey const* value) {
+    // external object
+    if (value == nullptr) {
+        printer.value(nullptr);
+        return;
+    }
+    printer.enter_object("RelationKey");
+    printer.exit_object("RelationKey");
 }
 
 void NodeSerializerBase::serialize(common::util::DataSerializer& printer, [[maybe_unused]] key::VariableKey const* value) {

@@ -19,18 +19,10 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "shakujo/analyzer/binding/Id.h"
-#include "shakujo/analyzer/binding/ExpressionBinding.h"
-#include "shakujo/analyzer/binding/VariableBinding.h"
-#include "shakujo/analyzer/binding/FunctionBinding.h"
-#include "shakujo/model/key/ExpressionKey.h"
-#include "shakujo/model/key/VariableKey.h"
-#include "shakujo/model/key/FunctionKey.h"
-
 namespace shakujo::analyzer::binding {
 
 namespace {
-    template<typename B, typename K>
+    template<typename B, typename K = typename B::key_type>
     class EntityImpl : public K::Entity {
     public:
         using binding_type = B;
@@ -45,9 +37,10 @@ namespace {
         {}
     };
 
-    using ExpressionEntity = EntityImpl<ExpressionBinding, model::key::ExpressionKey>;
-    using VariableEntity = EntityImpl<VariableBinding, model::key::VariableKey>;
-    using FunctionEntity = EntityImpl<FunctionBinding, model::key::FunctionKey>;
+    using ExpressionEntity = EntityImpl<ExpressionBinding>;
+    using VariableEntity = EntityImpl<VariableBinding>;
+    using FunctionEntity = EntityImpl<FunctionBinding>;
+    using RelationEntity = EntityImpl<RelationBinding>;
 }  // namespace
 
 class BindingContext::Impl {
@@ -119,6 +112,10 @@ std::unique_ptr<model::key::FunctionKey> BindingContext::create_key(std::shared_
     return impl_->key<FunctionEntity>(std::move(binding));
 }
 
+std::unique_ptr<model::key::RelationKey> BindingContext::create_key(std::shared_ptr<RelationBinding> binding) {
+    return impl_->key<RelationEntity>(std::move(binding));
+}
+
 std::shared_ptr<ExpressionBinding> BindingContext::find(model::key::ExpressionKey const* key) const {
     return impl_->extract<ExpressionEntity>(key);
 }
@@ -131,6 +128,10 @@ std::shared_ptr<FunctionBinding> BindingContext::find(model::key::FunctionKey co
     return impl_->extract<FunctionEntity>(key);
 }
 
+std::shared_ptr<RelationBinding> BindingContext::find(model::key::RelationKey const* key) const {
+    return impl_->extract<RelationEntity>(key);
+}
+
 std::shared_ptr<ExpressionBinding> BindingContext::get(model::key::ExpressionKey const* key) const {
     return impl_->extract<ExpressionEntity>(key, "expression key");
 }
@@ -141,5 +142,9 @@ std::shared_ptr<VariableBinding> BindingContext::get(model::key::VariableKey con
 
 std::shared_ptr<FunctionBinding> BindingContext::get(model::key::FunctionKey const* key) const {
     return impl_->extract<FunctionEntity>(key, "function key");
+}
+
+std::shared_ptr<RelationBinding> BindingContext::get(model::key::RelationKey const* key) const {
+    return impl_->extract<RelationEntity>(key, "relation key");
 }
 }  // namespace shakujo::analyzer::binding

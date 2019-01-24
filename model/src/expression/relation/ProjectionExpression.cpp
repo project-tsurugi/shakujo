@@ -22,7 +22,7 @@
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/expression/Expression.h"
 #include "shakujo/model/key/ExpressionKey.h"
-#include "shakujo/model/key/VariableKey.h"
+#include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/name/SimpleName.h"
 #include "shakujo/model/statement/Statement.h"
 #include "shakujo/model/util/FragmentList.h"
@@ -37,7 +37,7 @@ public:
     util::FragmentList<ProjectionExpression::Column> columns_;
     std::unique_ptr<name::SimpleName> alias_;
     std::unique_ptr<key::ExpressionKey> expression_key_;
-    std::unique_ptr<key::VariableKey> variable_key_;
+    std::unique_ptr<key::RelationKey> relation_key_;
 
     Impl() = default;
     ~Impl() noexcept = default;
@@ -141,12 +141,12 @@ ProjectionExpression& ProjectionExpression::expression_key(std::unique_ptr<key::
     return *this;
 }
 
-key::VariableKey* ProjectionExpression::variable_key() {
-    return impl_->variable_key_.get();
+key::RelationKey* ProjectionExpression::relation_key() {
+    return impl_->relation_key_.get();
 }
 
-ProjectionExpression& ProjectionExpression::variable_key(std::unique_ptr<key::VariableKey> variable_key) {
-    impl_->variable_key_ = std::move(variable_key);
+ProjectionExpression& ProjectionExpression::relation_key(std::unique_ptr<key::RelationKey> relation_key) {
+    impl_->relation_key_ = std::move(relation_key);
     return *this;
 }
 

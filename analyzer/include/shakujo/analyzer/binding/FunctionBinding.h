@@ -26,6 +26,7 @@
 #include "shakujo/common/core/Name.h"
 #include "shakujo/common/core/Type.h"
 #include "shakujo/common/util/utility.h"
+#include "shakujo/model/key/FunctionKey.h"
 
 namespace shakujo::analyzer::binding {
 
@@ -38,6 +39,11 @@ private:
     std::unique_ptr<Impl> impl_;
 
 public:
+    /**
+     * @brief the key type.
+     */
+    using key_type = model::key::FunctionKey;
+
     /**
      * @brief Constructs a new object.
      */

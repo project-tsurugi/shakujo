@@ -16,8 +16,8 @@
 #ifndef SHAKUJO_ANALYZER_SCOPE_TABLE_H_
 #define SHAKUJO_ANALYZER_SCOPE_TABLE_H_
 
-#include <memory>
 #include <map>
+#include <memory>
 #include <string>
 #include <stdexcept>
 #include <sstream>
@@ -50,7 +50,7 @@ private:
     }
 
     Result<T> find_qualified(model::name::QualifiedName const* name) const {
-        std::vector<std::string> segments = name->segments();
+        auto segments = name->segments();
         model::name::QualifiedName const* current = name;
         while (true) {
             auto it = qualified_elements_.find(segments);
@@ -130,7 +130,24 @@ public:
      * @return true if this contains entry for the name
      * @return false otherwise
      */
-    bool contains(std::string const& name) {
+    bool contains(model::name::Name const* name) const {
+        switch (name->kind()) {
+        case model::name::NameKind::SIMPLE_NAME:
+            return contains(dynamic_cast<model::name::SimpleName const*>(name)->token());
+        case model::name::NameKind::QUALIFIED_NAME:
+            return contains(name->segments());
+        default:
+            return {};
+        }
+    }
+
+    /**
+     * @brief returns whether or not this table contains an entry for the given name.
+     * @param name the element name
+     * @return true if this contains entry for the name
+     * @return false otherwise
+     */
+    bool contains(std::string const& name) const {
         return simple_elements_.find(name) != simple_elements_.end();
     }
 
@@ -140,7 +157,7 @@ public:
      * @return true if this contains entry for the name
      * @return false otherwise
      */
-    bool contains(std::vector<std::string> const& name) {
+    bool contains(std::vector<std::string> const& name) const {
         if (name.size() == 1) {
             return contains(name[0]);
         }
@@ -152,7 +169,7 @@ public:
      * @param name the element name
      * @return the corresponded element, or empty pointer if it does not exist
      */
-    std::shared_ptr<T> get(std::string const& name) {
+    std::shared_ptr<T> get(std::string const& name) const {
         auto it = simple_elements_.find(name);
         if (it == simple_elements_.end()) {
             return {};
@@ -165,7 +182,7 @@ public:
      * @param name the element name
      * @return the corresponded element, or empty pointer if it does not exist
      */
-    std::shared_ptr<T> get(std::vector<std::string> const& name) {
+    std::shared_ptr<T> get(std::vector<std::string> const& name) const {
         if (name.size() == 1) {
             return get(name[0]);
         }

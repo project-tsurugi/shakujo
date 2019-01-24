@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <shakujo/analyzer/binding/BindingSerializer.h>
+
 #include "shakujo/analyzer/binding/BindingSerializer.h"
 
 namespace shakujo::analyzer::binding {
@@ -44,6 +46,19 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, model::
 }
 
 void BindingSerializer::serialize(common::util::DataSerializer& printer, model::key::VariableKey const* value) {
+    if (value == nullptr) {
+        printer.value(nullptr);
+        return;
+    }
+    auto binding = context_.find(value);
+    if (!binding) {
+        printer.value(nullptr);
+    } else {
+        serialize(printer, binding.get());
+    }
+}
+
+void BindingSerializer::serialize(common::util::DataSerializer& printer, model::key::RelationKey const* value) {
     if (value == nullptr) {
         printer.value(nullptr);
         return;
@@ -149,6 +164,30 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, Functio
         printer.exit_property("parameters");
     }
     printer.exit_object("FunctionBinding");
+}
+
+void BindingSerializer::serialize(common::util::DataSerializer& printer, RelationBinding const* value) {
+    if (value == nullptr) {
+        printer.value(nullptr);
+        return;
+    }
+    printer.enter_object("RelationBinding");
+    {
+        printer.enter_property("columns");
+        auto& list = value->columns();
+        auto size = list.size();
+        printer.enter_array(size);
+        for (auto& element : list) {
+            if (!element) {
+                printer.value(nullptr);
+            } else {
+                serialize(printer, element.get());
+            }
+        }
+        printer.exit_array(size);
+        printer.exit_property("parameters");
+    }
+    printer.exit_object("RelationBinding");
 }
 
 }  // namespace shakujo::analyzer::binding

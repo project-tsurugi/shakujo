@@ -28,11 +28,6 @@
 
 #include "shakujo/common/util/utility.h"
 
-#include "shakujo/analyzer/binding/Id.h"
-#include "shakujo/analyzer/binding/ExpressionBinding.h"
-#include "shakujo/analyzer/binding/VariableBinding.h"
-#include "shakujo/analyzer/binding/FunctionBinding.h"
-
 #include "shakujo/common/core/type/Relation.h"
 #include "shakujo/common/core/value/Null.h"
 
@@ -50,24 +45,19 @@ std::shared_ptr<binding::ExpressionBinding> Engine::extract_binding(model::key::
     return ptr;
 }
 
-void Engine::bless(
-        model::key::ExpressionKey::Provider* node,
-        std::unique_ptr<common::core::Type> type,
-        std::unique_ptr<common::core::Value> value,
-        bool constant) {
-    auto binding = std::make_shared<binding::ExpressionBinding>(
-        make_clone(type),
-        make_clone(value),
-        constant);
+void Engine::bless(model::key::ExpressionKey::Provider* node, std::shared_ptr<binding::ExpressionBinding> binding) {
     auto key = bindings().create_key(std::move(binding));
     node->expression_key(std::move(key));
 }
 
-void Engine::bless(
-        model::key::VariableKey::Provider* node,
-        std::shared_ptr<binding::VariableBinding> binding) {
+void Engine::bless(model::key::VariableKey::Provider* node, std::shared_ptr<binding::VariableBinding> binding) {
     auto key = bindings().create_key(std::move(binding));
     node->variable_key(std::move(key));
+}
+
+void Engine::bless(model::key::RelationKey::Provider* node, std::shared_ptr<binding::RelationBinding> binding) {
+    auto key = bindings().create_key(std::move(binding));
+    node->relation_key(std::move(key));
 }
 
 void Engine::visit(model::program::GlobalVariableDeclaration* node, ScopeContext& scope) {
@@ -352,7 +342,7 @@ void Engine::visit(model::expression::VariableReference* node, ScopeContext& sco
         // target variable is not found
         report(node, Diagnostic::Code::VARIABLE_NOT_FOUND, to_string(node->name()));
         bless_erroneous_expression(node);
-        bless_undefined_var(node);
+        bless_undefined<binding::VariableBinding>(node);
         return;
     }
 
@@ -362,14 +352,14 @@ void Engine::visit(model::expression::VariableReference* node, ScopeContext& sco
         // target variable is ambiguous
         report(node, Diagnostic::Code::VARIABLE_NOT_IDENTICAL, to_string(node->name()));
         bless_erroneous_expression(node);
-        bless_undefined_var(node);
+        bless_undefined<binding::VariableBinding>(node);
         return;
     }
 
     if (!is_valid(var)) {
         // target variable is identically defined, but it is not valid
-        propagate_error(node);
-        bless_undefined_var(node);
+        bless_undefined<binding::ExpressionBinding>(node);
+        bless_undefined<binding::VariableBinding>(node);
         return;
     }
 
@@ -417,7 +407,7 @@ void Engine::visit(model::expression::AssignExpression* node, ScopeContext& scop
     if (!r) {
         // target variable is not found
         report(node, Diagnostic::Code::VARIABLE_NOT_FOUND, to_string(node->name()));
-        bless_undefined_var(node);
+        bless_undefined<binding::VariableBinding>(node);
         bless_erroneous_expression(node);
         return;
     }
@@ -427,22 +417,22 @@ void Engine::visit(model::expression::AssignExpression* node, ScopeContext& scop
     if (!var->has_id()) {
         // target variable is ambiguous
         report(node, Diagnostic::Code::VARIABLE_NOT_IDENTICAL, to_string(node->name()));
-        bless_undefined_var(node);
+        bless_undefined<binding::VariableBinding>(node);
         bless_erroneous_expression(node);
         return;
     }
     if (!is_valid(var)) {
         // target variable is identically defined, but it is not valid
-        bless_undefined_var(node);
-        propagate_error(node);
+        bless_undefined<binding::VariableBinding>(node);
+        bless_undefined<binding::ExpressionBinding>(node);
         return;
     }
 
     auto expr = extract_binding(node->value());
     if (!is_valid(expr)) {
         // rhs is not valid, then we don't resolve the variable
-        bless_undefined_var(node);
-        propagate_error(node);
+        bless_undefined<binding::VariableBinding>(node);
+        bless_undefined<binding::ExpressionBinding>(node);
         return;
     }
 
@@ -452,7 +442,7 @@ void Engine::visit(model::expression::AssignExpression* node, ScopeContext& scop
                     "variable type: ", var->type(), ", ",
                     "expression type: ", expr->type());
             report(node, Diagnostic::Code::INCOMPATIBLE_VARIABLE_TYPE, std::move(message));
-            bless_undefined_var(node);
+            bless_undefined<binding::VariableBinding>(node);
             bless_erroneous_expression(node);
             return;
         }
@@ -464,7 +454,7 @@ void Engine::visit(model::expression::AssignExpression* node, ScopeContext& scop
     {
         // FIXME: impl
         report(node, Diagnostic::Code::NOT_IMPLEMENTED, "assign statement promotion to tuple element store");
-        bless_undefined_var(node);
+        bless_undefined<binding::VariableBinding>(node);
         bless_erroneous_expression(node);
     }
 }
@@ -477,7 +467,7 @@ void Engine::visit(model::expression::TupleElementLoadExpression* node, ScopeCon
 void Engine::process_tuple_element(model::expression::TupleElementLoadExpression* node) {
     auto expr = extract_binding(node->data());
     if (!is_valid(expr)) {
-        propagate_error(node);
+        bless_undefined<binding::ExpressionBinding>(node);
         return;
     }
     if (!require_tuple(node->data())) {
@@ -548,7 +538,7 @@ void Engine::visit(model::expression::UnaryOperator* node, ScopeContext& scope) 
     dispatch(node->operand(), scope);
     auto expr = extract_binding(node->operand());
     if (!is_valid(expr)) {
-        propagate_error(node);
+        bless_undefined<binding::ExpressionBinding>(node);
         return;
     }
     switch (node->operator_kind()) {
@@ -648,7 +638,7 @@ void Engine::visit(model::expression::BinaryOperator* node, ScopeContext& scope)
     auto l_expr = extract_binding(node->left());
     auto r_expr = extract_binding(node->right());
     if (!is_valid(l_expr) || !is_valid(r_expr)) {
-        propagate_error(node);
+        bless_undefined<binding::ExpressionBinding>(node);
         return;
     }
 
@@ -829,13 +819,13 @@ void Engine::visit(model::expression::relation::SelectionExpression* node, Scope
     dispatch(node->operand(), prev);
     auto source_expr = extract_binding(node->operand());
     if (!is_valid(source_expr)) {
-        propagate_error(node);
-        bless_undefined_var(node);
+        bless_undefined<binding::ExpressionBinding>(node);
+        bless_undefined<binding::RelationBinding>(node);
         return;
     }
     if (!require_relation(node->operand())) {
         bless_erroneous_expression(node);
-        bless_undefined_var(node);
+        bless_undefined<binding::RelationBinding>(node);
         return;
     }
 
@@ -847,11 +837,11 @@ void Engine::visit(model::expression::relation::SelectionExpression* node, Scope
     dispatch(node->condition(), scope);
     auto cond_expr = extract_binding(node->condition());
     if (!is_valid(cond_expr)) {
-        propagate_error(node);
+        bless_undefined<binding::ExpressionBinding>(node);
         return;
     }
     if (!require_boolean(node->condition())) {
-        bless_undefined_var(node);
+        bless_undefined<binding::ExpressionBinding>(node);
         return;
     }
 
@@ -862,13 +852,13 @@ void Engine::visit(model::expression::relation::ProjectionExpression* node, Scop
     dispatch(node->operand(), prev);
     auto source_expr = extract_binding(node->operand());
     if (!is_valid(source_expr)) {
-        propagate_error(node);
-        bless_undefined_var(node);
+        bless_undefined<binding::ExpressionBinding>(node);
+        bless_undefined<binding::RelationBinding>(node);
         return;
     }
     if (!require_relation(node->operand())) {
         bless_erroneous_expression(node);
-        bless_undefined_var(node);
+        bless_undefined<binding::RelationBinding>(node);
         return;
     }
 
@@ -987,16 +977,14 @@ void Engine::visit(model::expression::relation::JoinExpression* node, ScopeConte
     auto left_expr = extract_binding(node->left());
     auto right_expr = extract_binding(node->right());
     if (!is_valid(left_expr) || !is_valid(right_expr)) {
-        propagate_error(node);
-        bless_undefined_var(node);
+        bless_undefined<binding::ExpressionBinding>(node);
+        bless_undefined<binding::RelationBinding>(node);
         return;
     }
-    {
-        if (!require(require_relation(node->left()), require_relation(node->right()))) {
-            bless_erroneous_expression(node);
-            bless_undefined_var(node);
-            return;
-        }
+    if (!require(require_relation(node->left()), require_relation(node->right()))) {
+        bless_erroneous_expression(node);
+        bless_undefined<binding::RelationBinding>(node);
+        return;
     }
     auto* left_type = dynamic_cast<common::core::type::Relation const*>(left_expr->type());
     auto* right_type = dynamic_cast<common::core::type::Relation const*>(right_expr->type());
@@ -1029,7 +1017,7 @@ void Engine::visit(model::expression::relation::JoinExpression* node, ScopeConte
         }
         if (saw_error) {
             bless_erroneous_expression(node);
-            bless_undefined_var(node);
+            bless_undefined<binding::RelationBinding>(node);
             return;
         }
     }
@@ -1078,7 +1066,7 @@ void Engine::visit(model::expression::relation::JoinExpression* node, ScopeConte
         dispatch(node->condition(), scope);
         auto condition_expr = extract_binding(node->condition());
         if (!is_valid(condition_expr) || !require_boolean(node->condition())) {
-            propagate_error(node);
+            bless_undefined<binding::ExpressionBinding>(node);
             return;
         }
     }

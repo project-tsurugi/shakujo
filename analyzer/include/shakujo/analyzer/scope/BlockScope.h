@@ -93,8 +93,7 @@ public:
     using Scope<T>::find;
 
     Result<T> find(model::name::Name const* name) const override {
-        Result<T> result = table_.find(name);
-        if (result) {
+        if (auto result = table_.find(name)) {
             return result;
         }
         if (parent_) {
@@ -112,8 +111,7 @@ public:
      * @throw std::domain_error if not supported
      */
     void insert(model::name::Name const* name, std::shared_ptr<T> element) override {
-        Result<T> conflict = table_.find(name);
-        if (!conflict) {
+        if (!table_.contains(name)) {
             table_.put(name->segments(), std::move(element), false);
         } else {
             reporter_->report(Diagnostic {

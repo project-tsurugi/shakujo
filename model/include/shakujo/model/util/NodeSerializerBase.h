@@ -58,6 +58,7 @@
 #include "shakujo/model/expression/relation/SelectionExpression.h"
 #include "shakujo/model/key/ExpressionKey.h"
 #include "shakujo/model/key/FunctionKey.h"
+#include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/key/VariableKey.h"
 #include "shakujo/model/name/Index.h"
 #include "shakujo/model/name/Name.h"
@@ -530,6 +531,13 @@ public:
      * @param value the target value
      */
     virtual void serialize(common::util::DataSerializer& printer, key::FunctionKey const* value);  // NOLINT
+
+    /**
+     * @brief serializes the value into given printer.
+     * @param printer the destination printer
+     * @param value the target value
+     */
+    virtual void serialize(common::util::DataSerializer& printer, key::RelationKey const* value);  // NOLINT
 
     /**
      * @brief serializes the value into given printer.

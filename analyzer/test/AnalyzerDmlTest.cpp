@@ -45,7 +45,7 @@ TEST_F(AnalyzerDmlTest, emit) {
     auto stmt = analyze(f.EmitStatement(f.ScanExpression(f.Name("testing"))));
     success();
 
-    auto* relation = extract_relation(stmt->source());
+    auto* relation = extract_relation_type(stmt->source());
     auto& cols = relation->columns();
     ASSERT_EQ(1U, cols.size());
 

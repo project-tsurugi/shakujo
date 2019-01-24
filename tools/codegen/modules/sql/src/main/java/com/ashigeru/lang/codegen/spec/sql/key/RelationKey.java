@@ -13,23 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ashigeru.lang.codegen.spec.sql.expression.relation;
+package com.ashigeru.lang.codegen.spec.sql.key;
 
 import com.ashigeru.lang.codegen.ir.reflect.Description;
-import com.ashigeru.lang.codegen.ir.reflect.Extends;
+import com.ashigeru.lang.codegen.ir.reflect.Extern;
+import com.ashigeru.lang.codegen.ir.reflect.Foreign;
+import com.ashigeru.lang.codegen.ir.reflect.Interface;
 import com.ashigeru.lang.codegen.ir.reflect.MetaClass;
-import com.ashigeru.lang.codegen.spec.sql.expression.Expression;
-import com.ashigeru.lang.codegen.spec.sql.key.RelationKey;
+import com.ashigeru.lang.codegen.ir.reflect.MoveOnly;
+import com.ashigeru.lang.codegen.ir.reflect.Transient;
+import com.ashigeru.lang.codegen.ir.reflect.Value;
 
-@Description("filtering records in relations")
-@Extends(Expression.class)
-@Extends(RelationKey.Provider.class)
+@Description("relation key")
+@Interface
+@Value
+@Extern
+@MoveOnly
 @SuppressWarnings("javadoc")
-public class SelectionExpression extends MetaClass {
+public class RelationKey extends MetaClass {
 
-    @Description("source relation")
-    Property<Expression> operand = property();
+    @Description("mix-in of row key provider")
+    @Foreign
+    @Interface
+    public static class Provider extends MetaClass {
 
-    @Description("record filter predicate expression")
-    Property<Expression> condition = property();
+        @Description("relation key")
+        @Transient
+        Property<RelationKey> relationKey = property();
+    }
 }

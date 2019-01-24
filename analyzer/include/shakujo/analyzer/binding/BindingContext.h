@@ -23,9 +23,11 @@
 #include "ExpressionBinding.h"
 #include "VariableBinding.h"
 #include "FunctionBinding.h"
+#include "RelationBinding.h"
 #include "shakujo/model/key/ExpressionKey.h"
 #include "shakujo/model/key/VariableKey.h"
 #include "shakujo/model/key/FunctionKey.h"
+#include "shakujo/model/key/RelationKey.h"
 
 namespace shakujo::analyzer::binding {
 
@@ -90,6 +92,13 @@ public:
 
     /**
      * @brief returns a binding for the key.
+     * @param binding the target binding
+     * @return the corresponded key
+     */
+    std::unique_ptr<model::key::RelationKey> create_key(std::shared_ptr<RelationBinding> binding);
+
+    /**
+     * @brief returns a binding for the key.
      * @param key the target key
      * @return a shared pointer with the corresponded binding
      * @return an empty shared pointer if there is no such a binding for the key
@@ -118,6 +127,15 @@ public:
     /**
      * @brief returns a binding for the key.
      * @param key the target key
+     * @return a shared pointer with the corresponded binding
+     * @return an empty shared pointer if there is no such a binding for the key
+     * @see get()
+     */
+    std::shared_ptr<RelationBinding> find(model::key::RelationKey const* key) const;
+
+    /**
+     * @brief returns a binding for the key.
+     * @param key the target key
      * @return the corresponded binding
      * @throws if there is no such a binding for the key
      * @see exists()
@@ -141,6 +159,15 @@ public:
      * @see exists()
      */
     std::shared_ptr<FunctionBinding> get(model::key::FunctionKey const* key) const;
+
+    /**
+     * @brief returns a binding for the key.
+     * @param key the target key
+     * @return the corresponded binding
+     * @throws if there is no such a binding for the key
+     * @see exists()
+     */
+    std::shared_ptr<RelationBinding> get(model::key::RelationKey const* key) const;
 
     /**
      * @brief returns a binding for the key.

@@ -94,7 +94,15 @@ public:
         return ptr;
     }
 
-    common::core::type::Relation const* extract_relation(shakujo::model::key::ExpressionKey::Provider* provider) {
+    std::shared_ptr<binding::RelationBinding> extract_relation(model::key::RelationKey::Provider* provider, bool force = false) {
+        auto ptr = env.binding_context().get(provider->relation_key());
+        if (!ptr || (!force && !ptr->is_valid())) {
+            throw std::runtime_error("yet not resolved");
+        }
+        return ptr;
+    }
+
+    common::core::type::Relation const* extract_relation_type(shakujo::model::key::ExpressionKey::Provider* provider) {
         auto binding = extract(provider);
         if (binding->type()->kind() != common::core::Type::Kind::RELATION) {
             std::ostringstream ss;

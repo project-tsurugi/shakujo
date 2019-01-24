@@ -28,8 +28,8 @@
 #include "shakujo/common/core/Name.h"
 #include "shakujo/common/core/Type.h"
 #include "shakujo/common/core/Value.h"
-
 #include "shakujo/common/util/utility.h"
+#include "shakujo/model/key/VariableKey.h"
 
 namespace shakujo::analyzer::binding {
 
@@ -42,6 +42,11 @@ private:
     std::unique_ptr<Impl> impl_;
 
 public:
+    /**
+     * @brief the key type.
+     */
+    using key_type = model::key::VariableKey;
+
     /**
      * @brief Constructs a new undefined object.
      */
@@ -206,7 +211,7 @@ public:
      * @brief puts an attribute.
      * If the attribute already exists on this binding, this operation will overwrite it.
      * @param key the attribute key
-     * @param value the attribute valule
+     * @param value the attribute value
      * @return this
      */
     VariableBinding& put_attribute(std::string_view key, std::any value) {

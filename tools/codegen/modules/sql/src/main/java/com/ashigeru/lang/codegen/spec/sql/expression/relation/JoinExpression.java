@@ -21,11 +21,11 @@ import com.ashigeru.lang.codegen.ir.reflect.Extends;
 import com.ashigeru.lang.codegen.ir.reflect.MetaClass;
 import com.ashigeru.lang.codegen.ir.reflect.Opt;
 import com.ashigeru.lang.codegen.spec.sql.expression.Expression;
-import com.ashigeru.lang.codegen.spec.sql.key.VariableKey;
+import com.ashigeru.lang.codegen.spec.sql.key.RelationKey;
 
 @Description("joining relations")
 @Extends(Expression.class)
-@Extends(VariableKey.Provider.class)
+@Extends(RelationKey.Provider.class)
 @SuppressWarnings("javadoc")
 public class JoinExpression extends MetaClass {
 

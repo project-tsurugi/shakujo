@@ -133,11 +133,35 @@ protected:
 private:
     std::shared_ptr<binding::ExpressionBinding> extract_binding(
             model::key::ExpressionKey::Provider const* node);
+
+    void insert_cast(model::expression::Expression*, common::core::Type const*);
+
+    std::unique_ptr<common::core::Type> apply_binary_promotion(model::expression::Expression*, model::expression::Expression*);
+    bool require_boolean(model::expression::Expression*);
+    bool require_integral(model::expression::Expression*);
+    bool require_numeric(model::expression::Expression*);
+    bool require_textual(model::expression::Expression*);
+    bool require_atom(model::expression::Expression*);
+    bool require_tuple(model::expression::Expression*);
+    bool require_relation(model::expression::Expression*);
+    bool require_type(model::expression::Expression*, common::core::Type::Kind, std::string_view);
+
+    void bless(model::key::ExpressionKey::Provider* node, std::shared_ptr<binding::ExpressionBinding> binding);
+    void bless(model::key::VariableKey::Provider* node, std::shared_ptr<binding::VariableBinding> binding);
+    void bless(model::key::RelationKey::Provider* node, std::shared_ptr<binding::RelationBinding> binding);
+
+    template<class Binding>
+    void bless_undefined(typename Binding::key_type::Provider* node) {
+        bless(node, std::make_shared<Binding>());
+    }
+
     void bless(
             model::key::ExpressionKey::Provider* node,
             std::unique_ptr<common::core::Type> type = {},
             std::unique_ptr<common::core::Value> value = {},
-            bool constant = false);
+            bool constant = false) {
+        bless(node, std::make_shared<binding::ExpressionBinding>(std::move(type), std::move(value), constant));
+    }
     inline void bless(
             model::key::ExpressionKey::Provider* node,
             common::core::Type const* type,
@@ -159,26 +183,7 @@ private:
         bless(node, common::util::make_clone(std::move(type)), common::util::make_clone(std::move(value)), constant);
     }
     void bless_erroneous_expression(model::key::ExpressionKey::Provider* node) {
-        bless(node, common::core::type::Error());
-    }
-    void propagate_error(model::key::ExpressionKey::Provider* node) {
-        bless(node);
-    }
-    void insert_cast(model::expression::Expression*, common::core::Type const*);
-
-    std::unique_ptr<common::core::Type> apply_binary_promotion(model::expression::Expression*, model::expression::Expression*);
-    bool require_boolean(model::expression::Expression*);
-    bool require_integral(model::expression::Expression*);
-    bool require_numeric(model::expression::Expression*);
-    bool require_textual(model::expression::Expression*);
-    bool require_atom(model::expression::Expression*);
-    bool require_tuple(model::expression::Expression*);
-    bool require_relation(model::expression::Expression*);
-    bool require_type(model::expression::Expression*, common::core::Type::Kind, std::string_view);
-
-    void bless(model::key::VariableKey::Provider* node, std::shared_ptr<binding::VariableBinding> binding);
-    void bless_undefined_var(model::key::VariableKey::Provider* node) {
-        bless(node, std::make_shared<binding::VariableBinding>());
+        bless(node, std::make_unique<common::core::type::Error>());
     }
 
     std::tuple<std::unique_ptr<model::name::Name>, std::vector<std::unique_ptr<model::name::SimpleName>>>

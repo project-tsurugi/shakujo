@@ -23,7 +23,7 @@
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/expression/Expression.h"
 #include "shakujo/model/key/ExpressionKey.h"
-#include "shakujo/model/key/VariableKey.h"
+#include "shakujo/model/key/RelationKey.h"
 
 namespace shakujo::model::expression::relation {
 
@@ -34,7 +34,7 @@ public:
     common::util::ManagedPtr<Expression> right_;
     common::util::ManagedPtr<Expression> condition_;
     std::unique_ptr<key::ExpressionKey> expression_key_;
-    std::unique_ptr<key::VariableKey> variable_key_;
+    std::unique_ptr<key::RelationKey> relation_key_;
 
     Impl() = default;
     ~Impl() noexcept = default;
@@ -120,12 +120,12 @@ JoinExpression& JoinExpression::expression_key(std::unique_ptr<key::ExpressionKe
     return *this;
 }
 
-key::VariableKey* JoinExpression::variable_key() {
-    return impl_->variable_key_.get();
+key::RelationKey* JoinExpression::relation_key() {
+    return impl_->relation_key_.get();
 }
 
-JoinExpression& JoinExpression::variable_key(std::unique_ptr<key::VariableKey> variable_key) {
-    impl_->variable_key_ = std::move(variable_key);
+JoinExpression& JoinExpression::relation_key(std::unique_ptr<key::RelationKey> relation_key) {
+    impl_->relation_key_ = std::move(relation_key);
     return *this;
 }
 

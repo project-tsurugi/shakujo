@@ -23,6 +23,7 @@
 #include "ExpressionBinding.h"
 #include "VariableBinding.h"
 #include "FunctionBinding.h"
+#include "RelationBinding.h"
 
 namespace shakujo::analyzer::binding {
 
@@ -52,6 +53,7 @@ public:
     void serialize(common::util::DataSerializer& printer, model::key::ExpressionKey const* value) override;
     void serialize(common::util::DataSerializer& printer, model::key::FunctionKey const* value) override;
     void serialize(common::util::DataSerializer& printer, model::key::VariableKey const* value) override;
+    void serialize(common::util::DataSerializer& printer, model::key::RelationKey const* value) override;
 
     /**
      * @brief serializes the value into given printer.
@@ -73,6 +75,13 @@ public:
      * @param value the target value
      */
     virtual void serialize(common::util::DataSerializer& printer, FunctionBinding const* value);  // NOLINT
+
+    /**
+     * @brief serializes the value into given printer.
+     * @param printer the destination printer
+     * @param value the target value
+     */
+    virtual void serialize(common::util::DataSerializer& printer, RelationBinding const* value);  // NOLINT
 };
 
 }  // namespace shakujo::analyzer::binding
