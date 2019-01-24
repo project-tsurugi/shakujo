@@ -38,7 +38,7 @@ RelationScope::RelationScope(
                 true);
         }
         for (auto& qualifier : column.qualifiers()) {
-            std::vector qname { qualifier.segments() };
+            auto qname = qualifier.segments(); // take a copy
             qname.push_back(column.name());
             if (!table_.contains(qname)) {
                 table_.put(std::move(qname), binding);
