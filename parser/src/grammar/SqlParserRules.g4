@@ -298,6 +298,7 @@ primaryExpression
     : functionCall
     | name
     | literal
+    | placeholder
     ;
 
 functionCall
@@ -320,6 +321,11 @@ literal
     | K_FALSE
     | K_NULL
     | STRING
+    ;
+
+placeholder
+    : NAMED_PLACEHOLDER
+    | QUESTION
     ;
 
 dataType

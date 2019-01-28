@@ -121,6 +121,16 @@ TEST_F(ParserExpressionTest, function_call_many_args) {
     EXPECT_EQ(3, as_int(args[2]));
 }
 
+TEST_F(ParserExpressionTest, placeholder_named) {
+    auto v = parse_expression<Placeholder>(":ph");
+    EXPECT_EQ(v->name(), "ph");
+}
+
+TEST_F(ParserExpressionTest, placeholder_positional) {
+    auto v = parse_expression<Placeholder>("?");
+    EXPECT_EQ(v->name(), "");
+}
+
 TEST_F(ParserExpressionTest, unary_plus) {
     auto v = parse_expression<UnaryOperator>("+1");
     EXPECT_EQ(UnaryOperator::Kind::PLUS, v->operator_kind());

@@ -23,6 +23,7 @@
 namespace shakujo::parser::impl {
 
 using common::util::is_defined;
+using common::util::to_string;
 
 inline static common::core::DocumentRegion::Position position(antlr4::Token* token, bool head) {
     if (is_defined(token) && head) {
@@ -42,9 +43,9 @@ common::core::DocumentRegion Engine::region(antlr4::ParserRuleContext *first, an
     return common::core::DocumentRegion(location_, begin, end);
 }
 
-[[noreturn]] static void rule_error(antlr4::ParserRuleContext *) {
+[[noreturn]] static void rule_error(antlr4::ParserRuleContext *c) {
     // FIXME: more info
-    throw std::domain_error("unknown rule");
+    throw std::domain_error(to_string("unknown rule: ", c->getText()));
 }
 
 std::unique_ptr<model::program::Program> Engine::visit(Grammar::ProgramEntryContext *c) {
@@ -1013,6 +1014,9 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::PrimaryExp
     if (auto t = c->literal(); is_defined(t)) {
         return visit(t);
     }
+    if (auto t = c->placeholder(); is_defined(t)) {
+        return visit(t);
+    }
     rule_error(c);
 }
 
@@ -1129,6 +1133,17 @@ std::unique_ptr<model::expression::Literal> Engine::visit(Grammar::LiteralContex
         return f.Literal(
                 std::make_unique<common::core::type::String>(common::core::Type::Nullity::NEVER_NULL),
                 std::make_unique<common::core::value::String>(std::move(value))) << region(c);
+    }
+    rule_error(c);
+}
+
+std::unique_ptr<model::expression::Placeholder> Engine::visit(Grammar::PlaceholderContext *c) {
+    if (auto n = c->NAMED_PLACEHOLDER(); is_defined(n)) {
+        auto str = n->getText().substr(1U);
+        return f.Placeholder(std::move(str)) << region(c);
+    }
+    if (is_defined(c->QUESTION())) {
+        return f.Placeholder() << region(c);
     }
     rule_error(c);
 }

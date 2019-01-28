@@ -71,6 +71,8 @@ TILDE: '~';
 
 EQUAL: '=';
 
+QUESTION: '?';
+
 LEFT_PAREN: '(';
 RIGHT_PAREN: ')';
 
@@ -94,6 +96,10 @@ RIGHT_ANGLE_EQUAL: '>=';
 // FIXME: basic lexer rules
 IDENTIFIER
     : [a-zA-Z_][a-zA-Z0-9]*
+    ;
+
+NAMED_PLACEHOLDER
+    : ':' [a-zA-Z_][a-zA-Z0-9]*
     ;
 
 INTEGRAL_NUMBER

@@ -422,6 +422,7 @@ public:
     //     : functionCall
     //     | name
     //     | literal
+    //     | placeholder
     //     ;
     std::unique_ptr<model::expression::Expression> visit(Grammar::PrimaryExpressionContext *);
 
@@ -450,6 +451,12 @@ public:
     //     | STRING
     //     ;
     std::unique_ptr<model::expression::Literal> visit(Grammar::LiteralContext *);
+
+    // placeholder
+    //     : NAMED_PLACEHOLDER
+    //     | QUESTION
+    //     ;
+    std::unique_ptr<model::expression::Placeholder> visit(Grammar::PlaceholderContext *);
 
     // dataType
     //     : K_INT ( dataSize )?
