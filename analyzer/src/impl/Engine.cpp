@@ -791,7 +791,7 @@ void Engine::visit(model::statement::dml::EmitStatement* node, ScopeContext& sco
     }
 }
 
-void Engine::visit(model::expression::relation::ScanExpression* node, ScopeContext&) {
+void Engine::visit(model::expression::relation::ScanExpression* node, ScopeContext& prev) {
     auto& storage = env_.storage_info_provider();
     auto& table_info = storage.find_table(common::core::Name(node->table()->segments()));
     if (!table_info.is_valid()) {
@@ -812,7 +812,24 @@ void Engine::visit(model::expression::relation::ScanExpression* node, ScopeConte
     for (auto& c : table_info.columns()) {
         columns.emplace_back(qualifiers, c.name(), c.type());
     }
-    bless(node, common::core::type::Relation(std::move(columns)));
+    auto relation = std::make_unique<common::core::type::Relation>(std::move(columns));
+    RelationScope vars { bindings(), &prev.variables(), relation.get() };
+    bless(node, vars.binding());
+    if (is_defined(node->condition())) {
+        ScopeContext scope { vars, prev.functions() };
+
+        dispatch(node->condition(), scope);
+        auto cond_expr = extract_binding(node->condition());
+        if (!is_valid(cond_expr)) {
+            bless_undefined<binding::ExpressionBinding>(node);
+            return;
+        }
+        if (!require_boolean(node->condition())) {
+            bless_undefined<binding::ExpressionBinding>(node);
+            return;
+        }
+    }
+    bless(node, std::move(relation));
 }
 
 void Engine::visit(model::expression::relation::SelectionExpression* node, ScopeContext& prev) {

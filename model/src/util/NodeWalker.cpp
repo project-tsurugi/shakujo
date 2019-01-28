@@ -514,6 +514,7 @@ void NodeWalker::walk(expression::relation::ScanExpression* node) {
     if (!enter(node)) return;
     if (node->table()) walk(node->table());
     if (node->alias()) walk(node->alias());
+    if (node->condition()) walk(node->condition());
     exit(node);
 }
 

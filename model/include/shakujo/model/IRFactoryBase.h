@@ -753,12 +753,14 @@ public:
      * @brief returns a new expression::relation::ScanExpression.
      * @param table table name
      * @param alias alias name
+     * @param condition record filter predicate expression
      * @return a created node
      * @see expression::relation::ScanExpression
      */
     std::unique_ptr<expression::relation::ScanExpression> ScanExpression(
             std::unique_ptr<name::Name> table,
-            std::unique_ptr<name::SimpleName> alias = {});
+            std::unique_ptr<name::SimpleName> alias = {},
+            std::unique_ptr<expression::Expression> condition = {});
 
     /**
      * @brief returns a new empty expression::relation::SelectionExpression.

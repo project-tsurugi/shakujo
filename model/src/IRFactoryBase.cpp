@@ -518,10 +518,12 @@ std::unique_ptr<expression::relation::ScanExpression> IRFactoryBase::ScanExpress
 
 std::unique_ptr<expression::relation::ScanExpression> IRFactoryBase::ScanExpression(
         std::unique_ptr<name::Name> table,
-        std::unique_ptr<name::SimpleName> alias) {
+        std::unique_ptr<name::SimpleName> alias,
+        std::unique_ptr<expression::Expression> condition) {
     auto ret = ScanExpression();
     ret->table(std::move(table));
     ret->alias(std::move(alias));
+    ret->condition(std::move(condition));
     return ret;
 }
 

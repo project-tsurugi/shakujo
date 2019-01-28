@@ -23,6 +23,7 @@
 #include "shakujo/model/expression/Expression.h"
 #include "shakujo/model/expression/ExpressionKind.h"
 #include "shakujo/model/key/ExpressionKey.h"
+#include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/name/Name.h"
 #include "shakujo/model/name/SimpleName.h"
 
@@ -31,7 +32,8 @@ namespace shakujo::model::expression::relation {
  * @brief Represents retrieves relation from tables.
  */
 class ScanExpression
-        : public Expression {
+        : public Expression
+        , public key::RelationKey::Provider {
 private:
     class Impl;
     std::unique_ptr<Impl> impl_;
@@ -130,6 +132,33 @@ public:
     std::unique_ptr<name::SimpleName> release_alias();
 
     /**
+     * @brief Returns record filter predicate expression.
+     * @return record filter predicate expression.
+     */
+    Expression* condition();
+
+    /**
+     * @brief Returns record filter predicate expression.
+     * @return record filter predicate expression.
+     */
+    inline Expression const* condition() const {
+        return const_cast<ScanExpression*>(this)->condition();
+    }
+
+    /**
+     * @brief Sets record filter predicate expression.
+     * @param condition record filter predicate expression
+     * @return this
+     */
+    ScanExpression& condition(std::unique_ptr<Expression> condition);
+
+    /**
+     * @brief Releases record filter predicate expression from this node.
+     * @return the released node
+     */
+    std::unique_ptr<Expression> release_condition();
+
+    /**
      * @brief Returns expression key.
      * @return expression key.
      */
@@ -149,6 +178,27 @@ public:
      * @return this
      */
     ScanExpression& expression_key(std::unique_ptr<key::ExpressionKey> expression_key) override;
+
+    /**
+     * @brief Returns relation key.
+     * @return relation key.
+     */
+    key::RelationKey* relation_key() override;
+
+    /**
+     * @brief Returns relation key.
+     * @return relation key.
+     */
+    inline key::RelationKey const* relation_key() const override {
+        return const_cast<ScanExpression*>(this)->relation_key();
+    }
+
+    /**
+     * @brief Sets relation key.
+     * @param relation_key relation key
+     * @return this
+     */
+    ScanExpression& relation_key(std::unique_ptr<key::RelationKey> relation_key) override;
 
     /**
      * @brief Returns a copy of this object.

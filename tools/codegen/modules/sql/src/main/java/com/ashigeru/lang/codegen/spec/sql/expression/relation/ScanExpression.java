@@ -20,11 +20,13 @@ import com.ashigeru.lang.codegen.ir.reflect.Extends;
 import com.ashigeru.lang.codegen.ir.reflect.MetaClass;
 import com.ashigeru.lang.codegen.ir.reflect.Opt;
 import com.ashigeru.lang.codegen.spec.sql.expression.Expression;
+import com.ashigeru.lang.codegen.spec.sql.key.RelationKey;
 import com.ashigeru.lang.codegen.spec.sql.name.Name;
 import com.ashigeru.lang.codegen.spec.sql.name.SimpleName;
 
 @Description("retrieves relation from tables")
 @Extends(Expression.class)
+@Extends(RelationKey.Provider.class)
 @SuppressWarnings("javadoc")
 public class ScanExpression extends MetaClass {
 
@@ -34,4 +36,8 @@ public class ScanExpression extends MetaClass {
     @Description("alias name")
     @Opt
     Property<SimpleName> alias = property();
+
+    @Description("record filter predicate expression")
+    @Opt
+    Property<Expression> condition = property();
 }

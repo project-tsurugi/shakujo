@@ -90,6 +90,22 @@ TEST_F(AnalyzerRelationTest, scan_alias) {
     EXPECT_EQ(names({"TT"}), cols[0].qualifiers());
 }
 
+TEST_F(AnalyzerRelationTest, scan_select) {
+    add(schema::TableInfo { "testing", {
+        { "C1", t::Int(32U, NON_NULL), },
+    }});
+    auto expr = analyze(f.ScanExpression(f.Name("testing"), {}, literal(true, NON_NULL)));
+    success();
+
+    auto* relation = extract_relation_type(expr.get());
+    auto& cols = relation->columns();
+    ASSERT_EQ(1U, cols.size());
+
+    EXPECT_EQ("C1", cols[0].name());
+    EXPECT_EQ(t::Int(32, NON_NULL), *cols[0].type());
+    EXPECT_EQ(names({"testing"}), cols[0].qualifiers());
+}
+
 TEST_F(AnalyzerRelationTest, scan_not_found) {
     auto expr = analyze(f.ScanExpression(f.Name("testing")));
     success(false);
@@ -103,13 +119,6 @@ TEST_F(AnalyzerRelationTest, select) {
             f.ScanExpression(f.Name("testing")),
             literal(true, NON_NULL)));
     success();
-
-    auto* relation = extract_relation_type(expr.get());
-    auto& cols = relation->columns();
-    ASSERT_EQ(1U, cols.size());
-
-    EXPECT_EQ("C1", cols[0].name());
-    EXPECT_EQ(t::Int(32, NON_NULL), *cols[0].type());
 
     ASSERT_EQ(t::Bool(NON_NULL), type(expr->condition()));
 }
