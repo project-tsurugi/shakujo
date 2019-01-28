@@ -16,6 +16,7 @@
 package com.ashigeru.lang.codegen.generator.cpp;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -56,19 +57,24 @@ public class WalkerGenerator {
     /**
      * Generates the node walker.
      * @param typeName the non-const walker type name
+     * @param rootClass the root class name
      * @param baseClasses the base classes
      * @throws IOException if I/O error was occurred
      */
-    public void generate(Name typeName, List<ClassDeclaration> baseClasses) throws IOException {
-        generateWalker(typeName, baseClasses, false);
-        generateWalker(typeName, baseClasses, true);
+    public void generate(Name typeName, ClassDeclaration rootClass, List<ClassDeclaration> baseClasses) throws IOException {
+        generateWalker(typeName, rootClass, baseClasses, false);
+        generateWalker(typeName, rootClass, baseClasses, true);
     }
 
-    private void generateWalker(Name typeName, List<ClassDeclaration> baseClasses, boolean isConst) throws IOException {
-        CppPrinter header = generateWalkerHeader(getTypeName(typeName, isConst), baseClasses, isConst);
+    private void generateWalker(
+            Name typeName,
+            ClassDeclaration rootClass,
+            List<ClassDeclaration> baseClasses,
+            boolean isConst) throws IOException {
+        CppPrinter header = generateWalkerHeader(getTypeName(typeName, isConst), rootClass, baseClasses, isConst);
         header.printTo(filer);
 
-        CppPrinter source = generateWalkerSource(getTypeName(typeName, isConst), baseClasses, isConst);
+        CppPrinter source = generateWalkerSource(getTypeName(typeName, isConst), rootClass, baseClasses, isConst);
         source.printTo(filer);
     }
 
@@ -81,7 +87,11 @@ public class WalkerGenerator {
         }
     }
 
-    private CppPrinter generateWalkerHeader(Name typeName, List<ClassDeclaration> baseClasses, boolean isConst) {
+    private CppPrinter generateWalkerHeader(
+            Name typeName,
+            ClassDeclaration rootClass,
+            List<ClassDeclaration> baseClasses,
+            boolean isConst) {
         CppPrinter printer = CppPrinter.includeFile(typeName);
         typeName.getParent().ifPresent(printer::namespace);
         Map<ClassDeclaration, List<ClassDeclaration>> subtypes = collectSubtypes(baseClasses);
@@ -105,6 +115,7 @@ public class WalkerGenerator {
         });
         printer.put("public:");
         printer.indent(() -> {
+            generateWalkerMethodDecl(printer, rootClass, isConst);
             subtypes.forEach((base, subs) -> {
                 if (base != null) {
                     generateWalkerMethodDecl(printer, base, isConst);
@@ -238,11 +249,15 @@ public class WalkerGenerator {
     }
 
     private CppPrinter generateWalkerSource(
-            Name typeName, List<ClassDeclaration> baseClasses, boolean isConst) {
+            Name typeName,
+            ClassDeclaration rootClass,
+            List<ClassDeclaration> baseClasses,
+            boolean isConst) {
         CppPrinter printer = CppPrinter.sourceFile(typeName);
         typeName.getParent().ifPresent(printer::namespace);
         Map<ClassDeclaration, List<ClassDeclaration>> subtypes = collectSubtypes(baseClasses);
 
+        generateRootMethodDef(printer, rootClass, isConst);
         subtypes.forEach((base, subs) -> {
             if (base != null) {
                 generateWalkerMethodDef(printer, base, subs, isConst);
@@ -252,9 +267,37 @@ public class WalkerGenerator {
         return printer;
     }
 
+    private void generateRootMethodDef(CppPrinter printer, ClassDeclaration rootClass, boolean isConst) {
+        printer.put("void %s::walk(%s%s* node) {",
+                printer.getContextName(printer.getName()),
+                printer.getContextName(rootClass),
+                isConst ? " const" : "");
+        List<ClassDeclaration> targets = repository.getElements().stream()
+            .filter(it -> it instanceof ClassDeclaration)
+            .map(it -> (ClassDeclaration) it)
+            .filter(it -> it.getSuperTypes().contains(rootClass.asTypeMirror()))
+            .sorted(Comparator.comparing(ClassDeclaration::getName))
+            .collect(Collectors.toList());
+        printer.indent(() -> {
+            for (var base : targets) {
+                printer.put("if (auto ptr = dynamic_cast<%s%s*>(node)) {",
+                        printer.getContextName(base),
+                        isConst ? " const" : "");
+                printer.indent(() -> {
+                    printer.put("walk(ptr);");
+                    printer.put("return;");
+                });
+                printer.put("}");
+            }
+            printer.getIncludes().add(IncludeList.Standard.STDLIB);
+            printer.put("std::abort();");
+        });
+        printer.put("}");
+        printer.put();
+    }
+
     private static void generateWalkerMethodDef(
             CppPrinter printer, ClassDeclaration target, List<ClassDeclaration> children, boolean isConst) {
-        printer.getIncludes().add(target.getName());
         printer.put("void %s::walk(%s%s* node) {",
                 printer.getContextName(printer.getName()),
                 printer.getContextName(target),
@@ -263,7 +306,6 @@ public class WalkerGenerator {
             printer.put("switch (node->kind()) {");
             printer.getIncludes().add(KindGenerator.getTypeName(target));
             for (ClassDeclaration child : children) {
-                printer.getIncludes().add(child.getName());
                 printer.put("case %s::%s:",
                         printer.getContextName(KindGenerator.getTypeName(target)),
                         KindGenerator.getConstantName(child));
@@ -286,7 +328,6 @@ public class WalkerGenerator {
     }
 
     private void generateWalkerMethodDef(CppPrinter printer, ClassDeclaration target, boolean isConst) {
-        printer.getIncludes().add(target.getName());
         printer.put("void %s::walk(%s%s* node) {",
                 printer.getContextName(printer.getName()),
                 printer.getContextName(target),

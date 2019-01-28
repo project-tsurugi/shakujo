@@ -16,97 +16,49 @@
 // DON'T EDIT THIS GENERATED FILE //
 #include "shakujo/model/util/ConstNodeWalker.h"
 
+#include <cstdlib>
 #include <stdexcept>
 #include <sstream>
 
-#include "shakujo/model/expression/ArrayCreationExpression.h"
-#include "shakujo/model/expression/ArrayElementLoadExpression.h"
-#include "shakujo/model/expression/ArrayElementStoreExpression.h"
-#include "shakujo/model/expression/AssignExpression.h"
-#include "shakujo/model/expression/BinaryOperator.h"
-#include "shakujo/model/expression/BlockExpression.h"
-#include "shakujo/model/expression/CaseExpression.h"
-#include "shakujo/model/expression/CursorAdvanceExpression.h"
-#include "shakujo/model/expression/CursorCreationExpression.h"
-#include "shakujo/model/expression/CursorElementLoadExpression.h"
-#include "shakujo/model/expression/Expression.h"
 #include "shakujo/model/expression/ExpressionKind.h"
-#include "shakujo/model/expression/FunctionCall.h"
-#include "shakujo/model/expression/ImplicitCast.h"
-#include "shakujo/model/expression/Literal.h"
-#include "shakujo/model/expression/Placeholder.h"
-#include "shakujo/model/expression/StringOperator.h"
-#include "shakujo/model/expression/TupleCreationExpression.h"
-#include "shakujo/model/expression/TupleElementLoadExpression.h"
-#include "shakujo/model/expression/TupleElementStoreExpression.h"
-#include "shakujo/model/expression/TypeOperator.h"
-#include "shakujo/model/expression/UnaryOperator.h"
-#include "shakujo/model/expression/VariableReference.h"
-#include "shakujo/model/expression/VectorCreationExpression.h"
-#include "shakujo/model/expression/VectorElementLoadExpression.h"
-#include "shakujo/model/expression/VectorElementStoreExpression.h"
-#include "shakujo/model/expression/VectorLengthExpression.h"
-#include "shakujo/model/expression/relation/AggregationExpression.h"
-#include "shakujo/model/expression/relation/DistinctExpression.h"
-#include "shakujo/model/expression/relation/JoinExpression.h"
-#include "shakujo/model/expression/relation/LimitExpression.h"
-#include "shakujo/model/expression/relation/OrderExpression.h"
-#include "shakujo/model/expression/relation/ProjectionExpression.h"
-#include "shakujo/model/expression/relation/ScanExpression.h"
-#include "shakujo/model/expression/relation/SelectionExpression.h"
-#include "shakujo/model/name/Index.h"
-#include "shakujo/model/name/Name.h"
 #include "shakujo/model/name/NameKind.h"
-#include "shakujo/model/name/QualifiedName.h"
-#include "shakujo/model/name/SimpleName.h"
-#include "shakujo/model/program/GlobalDeclaration.h"
 #include "shakujo/model/program/GlobalDeclarationKind.h"
-#include "shakujo/model/program/GlobalFunctionDeclaration.h"
-#include "shakujo/model/program/GlobalVariableDeclaration.h"
-#include "shakujo/model/program/Program.h"
-#include "shakujo/model/statement/AnchorDeclaration.h"
-#include "shakujo/model/statement/BlockStatement.h"
-#include "shakujo/model/statement/BranchStatement.h"
-#include "shakujo/model/statement/BreakStatement.h"
-#include "shakujo/model/statement/ContinueStatement.h"
-#include "shakujo/model/statement/EmptyStatement.h"
-#include "shakujo/model/statement/ExpressionStatement.h"
-#include "shakujo/model/statement/ForEachStatement.h"
-#include "shakujo/model/statement/ForStatement.h"
-#include "shakujo/model/statement/LocalVariableDeclaration.h"
-#include "shakujo/model/statement/LogStatement.h"
-#include "shakujo/model/statement/RaiseStatement.h"
-#include "shakujo/model/statement/ReturnStatement.h"
-#include "shakujo/model/statement/Statement.h"
 #include "shakujo/model/statement/StatementKind.h"
-#include "shakujo/model/statement/VectorElementDeleteStatement.h"
-#include "shakujo/model/statement/VectorElementInsertStatement.h"
-#include "shakujo/model/statement/WhileStatement.h"
-#include "shakujo/model/statement/ddl/CreateTableStatement.h"
-#include "shakujo/model/statement/ddl/DropTableStatement.h"
-#include "shakujo/model/statement/dml/DeleteStatement.h"
-#include "shakujo/model/statement/dml/EmitStatement.h"
-#include "shakujo/model/statement/dml/InsertRelationStatement.h"
-#include "shakujo/model/statement/dml/InsertValuesStatement.h"
-#include "shakujo/model/statement/dml/UpdateStatement.h"
-#include "shakujo/model/statement/transaction/TransactionBlockStatement.h"
-#include "shakujo/model/type/ArrayType.h"
-#include "shakujo/model/type/BooleanType.h"
-#include "shakujo/model/type/CharType.h"
-#include "shakujo/model/type/Float32Type.h"
-#include "shakujo/model/type/Float64Type.h"
-#include "shakujo/model/type/Int32Type.h"
-#include "shakujo/model/type/Int64Type.h"
-#include "shakujo/model/type/NullType.h"
-#include "shakujo/model/type/RelationType.h"
-#include "shakujo/model/type/StringType.h"
-#include "shakujo/model/type/TupleType.h"
-#include "shakujo/model/type/Type.h"
 #include "shakujo/model/type/TypeKind.h"
-#include "shakujo/model/type/VarCharType.h"
-#include "shakujo/model/type/VectorType.h"
 
 namespace shakujo::model::util {
+void ConstNodeWalker::walk(Node const* node) {
+    if (auto ptr = dynamic_cast<expression::Expression const*>(node)) {
+        walk(ptr);
+        return;
+    }
+    if (auto ptr = dynamic_cast<name::Index const*>(node)) {
+        walk(ptr);
+        return;
+    }
+    if (auto ptr = dynamic_cast<name::Name const*>(node)) {
+        walk(ptr);
+        return;
+    }
+    if (auto ptr = dynamic_cast<program::GlobalDeclaration const*>(node)) {
+        walk(ptr);
+        return;
+    }
+    if (auto ptr = dynamic_cast<program::Program const*>(node)) {
+        walk(ptr);
+        return;
+    }
+    if (auto ptr = dynamic_cast<statement::Statement const*>(node)) {
+        walk(ptr);
+        return;
+    }
+    if (auto ptr = dynamic_cast<type::Type const*>(node)) {
+        walk(ptr);
+        return;
+    }
+    std::abort();
+}
+
 void ConstNodeWalker::walk(program::GlobalDeclaration const* node) {
     switch (node->kind()) {
     case program::GlobalDeclarationKind::GLOBAL_FUNCTION_DECLARATION:

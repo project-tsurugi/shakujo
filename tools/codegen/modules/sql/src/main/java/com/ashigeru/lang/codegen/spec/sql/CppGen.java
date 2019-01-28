@@ -93,6 +93,8 @@ public class CppGen {
 
     private static final Name NODE_LIST_TYPE = NAMESPACE_MODEL_UTIL.resolve("NodeList");
 
+    private static final Name ROOT_NOTE_TYPE = NAMESPACE_MODEL.resolve("Node");
+
     private static final Name MANAGED_NODE_LIST_TYPE = NAMESPACE_MODEL_UTIL.resolve("ManagedNodeList");
 
     private static final Name FRAGMENT_LIST_TYPE = NAMESPACE_MODEL_UTIL.resolve("FragmentList");
@@ -143,7 +145,10 @@ public class CppGen {
     private void generateWalker() throws IOException {
         System.out.printf("walker: %s%n", WALKER_TYPE);
         WalkerGenerator generator = new WalkerGenerator(repository, filer);
-        generator.generate(WALKER_TYPE, getBaseClasses());
+        generator.generate(
+                WALKER_TYPE,
+                repository.find(ClassDeclaration.class, ROOT_NOTE_TYPE).get(),
+                getBaseClasses());
     }
 
     private void generateSerializer() throws IOException {

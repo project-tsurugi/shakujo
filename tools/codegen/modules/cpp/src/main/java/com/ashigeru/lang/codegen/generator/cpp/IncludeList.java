@@ -128,6 +128,11 @@ public class IncludeList {
         STDINT("cstdint"),
 
         /**
+         * {@code <cstdlib>}.
+         */
+        STDLIB("cstdlib"),
+
+        /**
          * {@code <stdexcept>}.
          */
         STDEXCEPT("stdexcept"),

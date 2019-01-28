@@ -17,6 +17,7 @@
 #ifndef SHAKUJO_MODEL_UTIL_CONST_NODE_WALKER_H_
 #define SHAKUJO_MODEL_UTIL_CONST_NODE_WALKER_H_
 
+#include "shakujo/model/Node.h"
 #include "shakujo/model/expression/ArrayCreationExpression.h"
 #include "shakujo/model/expression/ArrayElementLoadExpression.h"
 #include "shakujo/model/expression/ArrayElementStoreExpression.h"
@@ -2036,6 +2037,13 @@ protected:
     virtual void exitDefault([[maybe_unused]] type::Type const* node) {}
 
 public:
+    /**
+     * @brief Begins to walk Node.
+     * @param node the processing target
+     * @see Node
+     */
+    void walk(Node const* node);
+
     /**
      * @brief Begins to walk GlobalDeclaration.
      * @param node the processing target
