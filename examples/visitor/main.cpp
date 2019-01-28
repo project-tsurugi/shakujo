@@ -13,6 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <sstream>
+
 #include "shakujo/common/core/Type.h"
 #include "shakujo/common/core/type/Int.h"
 #include "shakujo/common/core/Value.h"
@@ -24,23 +29,18 @@
 #include "shakujo/model/util/NodeSerializer.h"
 #include "shakujo/common/util/JsonSerializer.h"
 
-#include <string>
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
+namespace shakujo::example::visitor {
 
-using namespace std;
-using namespace shakujo;
-using namespace shakujo::common;
-using namespace shakujo::common::core;
-using namespace shakujo::model;
 using namespace shakujo::model::expression;
 
-class V : public ConstExpressionVisitor<int> {
-    virtual int visit(Literal const* node) override {
+namespace v = shakujo::common::core::value;
+namespace t = shakujo::common::core::type;
+
+class V : public model::expression::ConstExpressionVisitor<int> {
+    int visit(Literal const* node) override {
         switch (node->value()->kind()) {
-        case Value::Kind::INT:
-            return static_cast<int>(dynamic_cast<value::Int const*>(node->value())->get());
+        case common::core::Value::Kind::INT:
+            return static_cast<int>(dynamic_cast<v::Int const*>(node->value())->get());
         default:
             std::stringstream ss;
             ss << "unknown value kind: " << node->value()->kind();
@@ -48,7 +48,7 @@ class V : public ConstExpressionVisitor<int> {
         }
     }
 
-    virtual int visit(BinaryOperator const* node) override {
+    int visit(BinaryOperator const* node) override {
         switch (node->operator_kind()) {
         case BinaryOperator::Kind::ADD:
             return dispatch(node->left()) + dispatch(node->right());
@@ -63,7 +63,7 @@ class V : public ConstExpressionVisitor<int> {
         }
     }
 
-    virtual int visit(UnaryOperator const* node) override {
+    int visit(UnaryOperator const* node) override {
         switch (node->operator_kind()) {
         case UnaryOperator::Kind::SIGN_INVERSION:
             return -dispatch(node->operand());
@@ -76,10 +76,8 @@ class V : public ConstExpressionVisitor<int> {
     }
 };
 
-int main() {
-    IRFactory f;
-    namespace v = shakujo::common::core::value;
-    namespace t = shakujo::common::core::type;
+static int run() {
+    model::IRFactory f;
     auto expr = f.BinaryOperator(
         BinaryOperator::Kind::ADD,
         f.Literal(t::Int(64U), 100),
@@ -99,10 +97,20 @@ int main() {
     std::cout << std::endl << std::endl;
 
     auto result = V{}.dispatch(expr.get());
-    cout << "result: " << result << endl;
+    std::cout << "result: " << result << std::endl;
     if (result == (100 + (2 * -3))) {
         return 0;
-    } else {
-        return 1;
+    }
+    return 1;
+}
+
+}  // namespace shakujo::example::visitor
+
+int main() {
+    try {
+        return shakujo::example::visitor::run();
+    } catch (std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        return -1;
     }
 }

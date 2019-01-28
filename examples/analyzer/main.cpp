@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <sstream>
+#include <vector>
 
 #include "shakujo/parser/Parser.h"
 #include "shakujo/analyzer/Analyzer.h"
@@ -24,41 +26,43 @@
 #include "shakujo/common/schema/ConfigurableStorageInfoProvider.h"
 #include "shakujo/common/util/JsonSerializer.h"
 
-int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        std::cout << "usage: " << argv[0] << " <shakujo program text>" << std::endl;
+namespace shakujo::example::analyzer {
+
+static int run(std::vector<char*> const& args) {
+    if (args.size() != 2U) {
+        std::cout << "usage: " << args[0] << " <shakujo program text>" << std::endl;
         return -1;
     }
+    std::string input { args[1] };
     std::cout << "input:" << std::endl;
-    std::cout << "    " << argv[1] << std::endl;
+    std::cout << "    " << input << std::endl;
     std::cout << std::endl;
 
     // syntactic analysis
-    std::istringstream ss { argv[1] };
     shakujo::parser::Parser parser;
-    auto program = parser.parse_program("<argv[1]>", ss);
+    auto program = parser.parse_program("<argv[1]>", input);
     if (!program) {
         std::cout << "parse error";
         return -1;
     }
 
     // semantic analysis
-    auto tables = std::make_shared<shakujo::common::schema::ConfigurableStorageInfoProvider>();
-    tables->add(shakujo::common::schema::TableInfo {
+    auto tables = std::make_shared<common::schema::ConfigurableStorageInfoProvider>();
+    tables->add(common::schema::TableInfo {
         "example",
         {
             { // C1 INT64 NOT NULL
                 "C1",
-                shakujo::common::core::type::Int(64U, shakujo::common::core::Type::Nullity::NEVER_NULL),
+                common::core::type::Int(64U, common::core::Type::Nullity::NEVER_NULL),
             },
             { // C2 FLOAT64 NULL
                 "C2",
-                shakujo::common::core::type::Float(64U),
+                common::core::type::Float(64U),
             },
             { // C3 CHAR(20) NOT NULL DEFAULT "Hello, shakujo!"
                 "C3",
-                shakujo::common::core::type::Char(20U, shakujo::common::core::Type::Nullity::NEVER_NULL),
-                shakujo::common::core::value::String("Hello, shakujo!"),
+                common::core::type::Char(20U, common::core::Type::Nullity::NEVER_NULL),
+                common::core::value::String("Hello, shakujo!"),
             },
         }
     });
@@ -79,7 +83,7 @@ int main(int argc, char* argv[]) {
 
     // pretty printing
     std::cout << "IR tree: ";
-    shakujo::common::util::JsonSerializer json { std::cout };
+    common::util::JsonSerializer json { std::cout };
     shakujo::analyzer::binding::BindingSerializer serializer { context.binding_context() };
     serializer.serialize(json, program.get());
     std::cout << std::endl;
@@ -88,4 +92,15 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     return 0;
+}
+
+}  // namespace shakujo::example::analyzer
+
+int main(int argc, char* argv[]) {
+    try {
+        return shakujo::example::analyzer::run(std::vector<char*> { argv, argv + argc });  // NOLINT
+    } catch (std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        return -1;
+    }
 }

@@ -16,32 +16,46 @@
 #include "shakujo/parser/Parser.h"
 
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <sstream>
+#include <vector>
 
 #include "shakujo/model/util/NodeSerializer.h"
 #include "shakujo/common/util/JsonSerializer.h"
 
-int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        std::cout << "usage: " << argv[0] << " <shakujo program text>" << std::endl;
+namespace shakujo::example::parser {
+
+static int run(std::vector<char*> const& args) {
+    if (args.size() != 2U) {
+        std::cout << "usage: " << args[0] << " <shakujo program text>" << std::endl;
         return -1;
     }
-    std::cout << "input: " << argv[1] << std::endl;
-    std::istringstream ss { argv[1] };
+    std::string input { args[1] };
+    std::cout << "input: " << input << std::endl;
 
     shakujo::parser::Parser parser;
     parser.debug(true);
     std::cout << "parse tree: ";
-    auto result = parser.parse_program("<stdin>", ss);
+    auto result = parser.parse_program("<stdin>", input);
     if (!result) {
         return -1;
     }
 
     std::cout << "IR tree: ";
-    shakujo::common::util::JsonSerializer json { std::cout };
-    shakujo::model::util::NodeSerializer serializer {};
+    common::util::JsonSerializer json { std::cout };
+    model::util::NodeSerializer serializer {};
     serializer.serialize(json, result.get());
     std::cout << std::endl;
     return 0;
+}
+}  // namespace shakujo::example::parser
+
+int main(int argc, char* argv[]) {
+    try {
+        return shakujo::example::parser::run(std::vector<char*> { argv, argv + argc });  // NOLINT
+    } catch (std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        return -1;
+    }
 }
