@@ -108,7 +108,7 @@ FLOATING_POINT_NUMBER
     ;
 
 STRING
-    : '"' STRING_CHARACTER* '"'
+    : '\'' STRING_CHARACTER* '\''
     ;
 
 fragment ID_LETTER

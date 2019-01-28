@@ -87,12 +87,14 @@ public:
 
     template<typename T>
     RawCaster<T> cast_node(T* node, std::string_view message = "cast failure") {
-        return RawCaster<T> { node, [=](T* node) { raise(message, *node); }};
+        std::string msg { message };
+        return RawCaster<T> { node, [=](auto node) { raise(msg, *node); }};
     };
 
     template<typename T>
     PtrCaster<T> cast_ptr(std::unique_ptr<T> ptr, std::string_view message = "cast failure") {
-        return PtrCaster<T> { std::move(ptr), [&](std::unique_ptr<T> ptr) { raise(message, *ptr); }};
+        std::string msg { message };
+        return PtrCaster<T> { std::move(ptr), [=](auto ptr) { raise(msg, *ptr); }};
     };
 
     template<typename T>

@@ -43,7 +43,7 @@ add_test(
     NAME example-analyzer-insert
     COMMAND
         example-analyzer
-        "INSERT INTO example VALUES (1, 2.5, \"Hello\")"
+        "INSERT INTO example VALUES (1, 2.5, 'Hello')"
 )
 add_test(
     NAME example-analyzer-insert-columns
@@ -55,5 +55,5 @@ add_test(
         NAME example-analyzer-create-table
         COMMAND
         example-analyzer
-        "CREATE TABLE testing(C1 INT PRIMARY KEY, C2 STRING DEFAULT \"Hello\" NOT NULL)"
+        "CREATE TABLE testing(C1 INT PRIMARY KEY, C2 STRING DEFAULT 'Hello' NOT NULL)"
 )

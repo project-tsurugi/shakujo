@@ -66,21 +66,21 @@ TEST_F(ParserExpressionTest, literal_null) {
 }
 
 TEST_F(ParserExpressionTest, literal_string) {
-    auto v = parse_expression<Literal>("\"Hello, world!\"");
+    auto v = parse_expression<Literal>("'Hello, world!'");
     EXPECT_EQ(t::String(NON_NULL), *v->type());
     EXPECT_EQ(v::String("Hello, world!"), *v->value());
 }
 
 TEST_F(ParserExpressionTest, literal_string_empty) {
-    auto v = parse_expression<Literal>("\"\"");
+    auto v = parse_expression<Literal>("''");
     EXPECT_EQ(t::String(NON_NULL), *v->type());
     EXPECT_EQ(v::String(""), *v->value());
 }
 
 TEST_F(ParserExpressionTest, literal_string_escape) {
-    auto v = parse_expression<Literal>("\"\\\"-\\\\-\\\r-\\\n-\\\t\"");
+    auto v = parse_expression<Literal>("'\\'-\\\\-\\\r-\\\n-\\\t'");
     EXPECT_EQ(t::String(NON_NULL), *v->type());
-    EXPECT_EQ(v::String("\"-\\-\r-\n-\t"), *v->value());
+    EXPECT_EQ(v::String("'-\\-\r-\n-\t"), *v->value());
 }
 
 TEST_F(ParserExpressionTest, simple_name) {
