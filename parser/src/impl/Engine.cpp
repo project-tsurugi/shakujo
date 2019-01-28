@@ -129,16 +129,15 @@ std::unique_ptr<model::statement::Statement> Engine::visit(
         for (std::size_t i = 0, n = values.size(); i < n; i++) {
             columns[i]->value(std::move(values[i]));
         }
-        return f.InsertValuesStatement(
-            std::move(target),
-            std::move(columns)) << region(c);
+        return f.InsertValuesStatement(std::move(target), std::move(columns)) << region(c);
     }
     rule_error(c);
 }
 
 std::vector<std::unique_ptr<model::name::SimpleName>> Engine::visit(Grammar::InsertColumnListContext *c) {
     std::vector<std::unique_ptr<model::name::SimpleName>> results;
-    for (auto element : c->simpleName()) {
+    results.reserve(c->simpleName().size());
+    for (auto* element : c->simpleName()) {
         auto e = visit(element);
         results.emplace_back(std::move(e));
     }
@@ -158,7 +157,8 @@ std::vector<std::unique_ptr<model::expression::Expression>> Engine::visit(
         Grammar::InsertValuesExpressionListContext *c) {
     if (!c->insertValuesExpression().empty()) {
         std::vector<std::unique_ptr<model::expression::Expression>> results;
-        for (auto element : c->insertValuesExpression()) {
+        results.reserve(c->insertValuesExpression().size());
+        for (auto* element : c->insertValuesExpression()) {
             auto e = visit(element);
             results.emplace_back(std::move(e));
         }
@@ -369,10 +369,8 @@ model::expression::relation::JoinExpression::Kind Engine::visit(Grammar::JoinTyp
 //     : K_ON searchCondition
 //     ;
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::JoinSpecificationContext *c) {
-    if (is_defined(c->K_ON())) {
-        if (auto s = c->searchCondition(); is_defined(s)) {
-            return visit(s);
-        }
+    if (auto s = c->searchCondition(); is_defined(c->K_ON()) && is_defined(s)) {
+        return visit(s);
     }
     rule_error(c);
 }
@@ -393,7 +391,8 @@ std::unique_ptr<model::expression::relation::ProjectionExpression> Engine::visit
         Grammar::ProjectionColumnListContext *c,
         std::unique_ptr<model::expression::Expression> source) {
     std::vector<std::unique_ptr<model::expression::relation::ProjectionExpression::Column>> columns;
-    for (auto column : c->projectionColumn()) {
+    columns.reserve(c->projectionColumn().size());
+    for (auto* column : c->projectionColumn()) {
         columns.emplace_back(visit(column));
     }
     return f.ProjectionExpression(std::move(source), {}, std::move(columns)) << region(c);
@@ -563,7 +562,7 @@ void Engine::visit(Grammar::TableDefinitionOptionContext *c, model::statement::d
 
 void Engine::visit(Grammar::TableElementListContext *c, model::statement::ddl::CreateTableStatement *r) {
     if (!c->tableElement().empty()) {
-        for (auto element : c->tableElement()) {
+        for (auto* element : c->tableElement()) {
             visit(element, r);
         }
         return;
@@ -607,7 +606,7 @@ std::vector<std::unique_ptr<model::statement::ddl::CreateTableStatement::Primary
     if (!c->columnOrder().empty()) {
         std::vector<std::unique_ptr<model::statement::ddl::CreateTableStatement::PrimaryKey>> results;
         results.reserve(c->columnOrder().size());
-        for (auto e : c->columnOrder()) {
+        for (auto* e : c->columnOrder()) {
             results.emplace_back(visit(e));
         }
         return results;
@@ -640,10 +639,8 @@ std::unique_ptr<model::name::SimpleName> Engine::visit(Grammar::ColumnNameContex
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::DefaultClauseContext *c) {
-    if (is_defined(c->K_DEFAULT())) {
-        if (auto v = c->literal(); is_defined(v)) {
-            return visit(v);
-        }
+    if (auto v = c->literal(); is_defined(c->K_DEFAULT()) && is_defined(v)) {
+        return visit(v);
     }
     rule_error(c);
 }
@@ -707,7 +704,8 @@ std::unique_ptr<model::statement::ExpressionStatement> Engine::visit(Grammar::Ex
 std::vector<std::unique_ptr<model::expression::Expression>> Engine::visit(Grammar::ExpressionListContext *c) {
     if (!c->expression().empty()) {
         std::vector<std::unique_ptr<model::expression::Expression>> results;
-        for (auto element : c->expression()) {
+        results.reserve(c->expression().size());
+        for (auto* element : c->expression()) {
             auto e = visit(element);
             results.push_back(std::move(e));
         }
@@ -1092,7 +1090,9 @@ std::unique_ptr<model::expression::Literal> Engine::visit(Grammar::LiteralContex
     if (auto n = c->INTEGRAL_NUMBER(); is_defined(n)) {
         try {
             auto value = parse_int(n->getSymbol());
-            return f.Literal(common::core::type::Int(64U, common::core::Type::Nullity::NEVER_NULL), value) << region(c);
+            return f.Literal(
+                    std::make_unique<common::core::type::Int>(64U, common::core::Type::Nullity::NEVER_NULL),
+                    std::make_unique<common::core::value::Int>(value)) << region(c);
         } catch (std::out_of_range&) {
             // FIXME
             rule_error(c);
@@ -1101,24 +1101,34 @@ std::unique_ptr<model::expression::Literal> Engine::visit(Grammar::LiteralContex
     if (auto n = c->FLOATING_POINT_NUMBER(); is_defined(n)) {
         try {
             auto value = parse_float(n->getSymbol());
-            return f.Literal(common::core::type::Float(64U, common::core::Type::Nullity::NEVER_NULL), value) << region(c);
+            return f.Literal(
+                    std::make_unique<common::core::type::Float>(64U, common::core::Type::Nullity::NEVER_NULL),
+                    std::make_unique<common::core::value::Float>(value)) << region(c);
         } catch (std::out_of_range&) {
             // FIXME
             rule_error(c);
         }
     }
     if (is_defined(c->K_TRUE())) {
-        return f.Literal(common::core::type::Bool(common::core::Type::Nullity::NEVER_NULL), true) << region(c);
+        return f.Literal(
+                std::make_unique<common::core::type::Bool>(common::core::Type::Nullity::NEVER_NULL),
+                std::make_unique<common::core::value::Bool>(true)) << region(c);
     }
     if (is_defined(c->K_FALSE())) {
-        return f.Literal(common::core::type::Bool(common::core::Type::Nullity::NEVER_NULL), false) << region(c);
+        return f.Literal(
+                std::make_unique<common::core::type::Bool>(common::core::Type::Nullity::NEVER_NULL),
+                std::make_unique<common::core::value::Bool>(false)) << region(c);
     }
     if (is_defined(c->K_NULL())) {
-        return f.Literal(common::core::type::Null(), nullptr);
+        return f.Literal(
+                std::make_unique<common::core::type::Null>(),
+                std::make_unique<common::core::value::Null>()) << region(c);
     }
     if (auto n = c->STRING(); is_defined(n)) {
         auto value = parse_string(n->getSymbol());
-        return f.Literal(common::core::type::String(common::core::Type::Nullity::NEVER_NULL), value) << region(c);
+        return f.Literal(
+                std::make_unique<common::core::type::String>(common::core::Type::Nullity::NEVER_NULL),
+                std::make_unique<common::core::value::String>(std::move(value))) << region(c);
     }
     rule_error(c);
 }
