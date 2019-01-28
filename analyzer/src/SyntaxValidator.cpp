@@ -296,6 +296,11 @@ protected:
         return true;
     }
 
+    bool enter(model::expression::Placeholder const* node) override {
+        report(node, Diagnostic::Code::UNEXPECTED_ELEMENT, "expression placeholder must have been resolved");
+        return true;
+    }
+
     //bool enter(model::expression::ArrayCreationExpression const* node) override {
     //    // FIXME impl
     //    return ConstNodeWalker::enter(node);
