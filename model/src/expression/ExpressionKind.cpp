@@ -61,6 +61,9 @@ std::ostream& operator<<(std::ostream& out, ExpressionKind value) {
     case ExpressionKind::LITERAL:
         out << "LITERAL";
         break;
+    case ExpressionKind::PLACEHOLDER:
+        out << "PLACEHOLDER";
+        break;
     case ExpressionKind::STRING_OPERATOR:
         out << "STRING_OPERATOR";
         break;

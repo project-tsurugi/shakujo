@@ -31,6 +31,7 @@
 #include "shakujo/model/expression/FunctionCall.h"
 #include "shakujo/model/expression/ImplicitCast.h"
 #include "shakujo/model/expression/Literal.h"
+#include "shakujo/model/expression/Placeholder.h"
 #include "shakujo/model/expression/StringOperator.h"
 #include "shakujo/model/expression/TupleCreationExpression.h"
 #include "shakujo/model/expression/TupleElementLoadExpression.h"
@@ -509,6 +510,30 @@ protected:
      * @see enter()
      */
     virtual void exit([[maybe_unused]] expression::Literal const* node) {
+        exitDefault(node);
+    }
+
+    /**
+     * @brief callback on enter into Placeholder.
+     * @param node the processing target
+     * @return true if continue to enter into child elements of the given node
+     * @return false don't walk into child elements, also the corresponded exit() will not be called
+     * @see expression::Placeholder
+     * @see walk()
+     * @see exit()
+     */
+    virtual bool enter([[maybe_unused]] expression::Placeholder const* node) {
+        return enterDefault(node);
+    }
+
+    /**
+     * @brief callback on exit from Placeholder.
+     * @param node the processing target
+     * @see expression::Placeholder
+     * @see walk()
+     * @see enter()
+     */
+    virtual void exit([[maybe_unused]] expression::Placeholder const* node) {
         exitDefault(node);
     }
 
@@ -2150,6 +2175,13 @@ public:
      * @see expression::Literal
      */
     void walk(expression::Literal const* node);
+
+    /**
+     * @brief Begins to walk Placeholder.
+     * @param node the processing target
+     * @see expression::Placeholder
+     */
+    void walk(expression::Placeholder const* node);
 
     /**
      * @brief Begins to walk StringOperator.

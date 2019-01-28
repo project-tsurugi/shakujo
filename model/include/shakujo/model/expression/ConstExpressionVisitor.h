@@ -35,6 +35,7 @@
 #include "shakujo/model/expression/FunctionCall.h"
 #include "shakujo/model/expression/ImplicitCast.h"
 #include "shakujo/model/expression/Literal.h"
+#include "shakujo/model/expression/Placeholder.h"
 #include "shakujo/model/expression/StringOperator.h"
 #include "shakujo/model/expression/TupleCreationExpression.h"
 #include "shakujo/model/expression/TupleElementLoadExpression.h"
@@ -219,6 +220,17 @@ public:
      * @see Literal
      */
     virtual Return visit(Literal const* node, Args... args) {
+        return visitDefault(node, args...);
+    }
+
+    /**
+     * @brief Processes Placeholder.
+     * @param node the processing target
+     * @param args the processing arguments
+     * @return the result
+     * @see Placeholder
+     */
+    virtual Return visit(Placeholder const* node, Args... args) {
         return visitDefault(node, args...);
     }
 
@@ -465,6 +477,8 @@ public:
             return visit(dynamic_cast<ImplicitCast const*>(node), args...);
         case ExpressionKind::LITERAL:
             return visit(dynamic_cast<Literal const*>(node), args...);
+        case ExpressionKind::PLACEHOLDER:
+            return visit(dynamic_cast<Placeholder const*>(node), args...);
         case ExpressionKind::STRING_OPERATOR:
             return visit(dynamic_cast<StringOperator const*>(node), args...);
         case ExpressionKind::TUPLE_CREATION_EXPRESSION:

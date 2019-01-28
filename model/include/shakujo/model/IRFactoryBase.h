@@ -39,6 +39,7 @@
 #include "shakujo/model/expression/FunctionCall.h"
 #include "shakujo/model/expression/ImplicitCast.h"
 #include "shakujo/model/expression/Literal.h"
+#include "shakujo/model/expression/Placeholder.h"
 #include "shakujo/model/expression/StringOperator.h"
 #include "shakujo/model/expression/TupleCreationExpression.h"
 #include "shakujo/model/expression/TupleElementLoadExpression.h"
@@ -361,6 +362,22 @@ public:
     std::unique_ptr<expression::Literal> Literal(
             std::unique_ptr<common::core::Type> type,
             std::unique_ptr<common::core::Value> value);
+
+    /**
+     * @brief returns a new empty expression::Placeholder.
+     * @return a created empty node
+     * @see expression::Placeholder
+     */
+    virtual std::unique_ptr<expression::Placeholder> Placeholder();
+
+    /**
+     * @brief returns a new expression::Placeholder.
+     * @param name placeholder name
+     * @return a created node
+     * @see expression::Placeholder
+     */
+    std::unique_ptr<expression::Placeholder> Placeholder(
+            std::string name);
 
     /**
      * @brief returns a new empty expression::StringOperator.

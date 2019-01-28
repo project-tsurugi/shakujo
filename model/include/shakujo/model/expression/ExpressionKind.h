@@ -92,6 +92,11 @@ enum class ExpressionKind {
      */
     LITERAL,
     /**
+     * @brief tag for Placeholder.
+     * @see Placeholder
+     */
+    PLACEHOLDER,
+    /**
      * @brief tag for StringOperator.
      * @see StringOperator
      */

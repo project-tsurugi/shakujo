@@ -232,6 +232,17 @@ std::unique_ptr<expression::Literal> IRFactoryBase::Literal(
     return ret;
 }
 
+std::unique_ptr<expression::Placeholder> IRFactoryBase::Placeholder() {
+    return std::make_unique<expression::Placeholder>();
+}
+
+std::unique_ptr<expression::Placeholder> IRFactoryBase::Placeholder(
+        std::string name) {
+    auto ret = Placeholder();
+    ret->name(std::move(name));
+    return ret;
+}
+
 std::unique_ptr<expression::StringOperator> IRFactoryBase::StringOperator() {
     return std::make_unique<expression::StringOperator>();
 }

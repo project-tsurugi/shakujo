@@ -20,70 +20,70 @@
 #include "shakujo/common/util/Clonable.h"
 
 namespace shakujo::model {
+/**
+ * @brief An abstract super interface of IR model node.
+ */
+class Node : public common::util::Clonable {
+private:
+    common::core::DocumentRegion region_;
+
+protected:
     /**
-     * @brief An abstract super interface of IR model node.
+     * @brief Constructs a new object.
      */
-    class Node : public common::util::Clonable {
-    private:
-        common::core::DocumentRegion region_;
+    Node() noexcept = default;
 
-    protected:
-        /**
-         * @brief Constructs a new object.
-         */
-        Node() noexcept = default;
+    /**
+     * @brief Copy constructs a new object.
+     * @param other the source object
+     */
+    Node(const Node& other) = default;
 
-        /**
-         * @brief Copy constructs a new object.
-         * @param other the source object
-         */
-        Node(const Node& other) = default;
+    /**
+     * @brief Move constructs a new object.
+     * @param other the source object
+     */
+    Node(Node&& other) noexcept = default;
 
-        /**
-         * @brief Move constructs a new object.
-         * @param other the source object
-         */
-        Node(Node&& other) noexcept = default;
+    /**
+     * @brief Copy assigns to this object.
+     * @param other the source object
+     * @return this
+     */
+    Node& operator=(const Node& other) = default;
 
-        /**
-         * @brief Copy assigns to this object.
-         * @param other the source object
-         * @return this
-         */
-        Node& operator=(const Node& other) = default;
+    /**
+     * @brief Move assigns to this object.
+     * @param other the source object
+     * @return this
+     */
+    Node& operator=(Node&& other) noexcept = default;
 
-        /**
-         * @brief Move assigns to this object.
-         * @param other the source object
-         * @return this
-         */
-        Node& operator=(Node&& other) noexcept = default;
+public:
+    ~Node() noexcept override = default;
 
-    public:
-        ~Node() noexcept override = default;
+    Node* clone() const & override = 0;
 
-        Node* clone() const & override = 0;
+    Node* clone() && override = 0;
 
-        Node* clone() && override = 0;
+    /**
+     * @brief returns the document region.
+     * @return the document region
+     */
+    const common::core::DocumentRegion& region() const {
+        return region_;
+    }
 
-        /**
-         * @brief returns the document region.
-         * @return the document region
-         */
-        const common::core::DocumentRegion& region() const {
-            return region_;
-        }
-
-        /**
-         * @brief sets the document region.
-         * @param region the document region
-         * @return this
-         */
-        Node& region(common::core::DocumentRegion region) {
-            region_ = std::move(region);
-            return *this;
-        }
-    };
+    /**
+     * @brief sets the document region.
+     * @param region the document region
+     * @return this
+     */
+    Node& region(common::core::DocumentRegion region) {
+        region_ = std::move(region);
+        return *this;
+    }
+};
 }  // namespace shakujo::model
 
 #endif  // SHAKUJO_MODEL_NODE_H_

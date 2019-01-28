@@ -39,6 +39,7 @@
 #include "shakujo/model/expression/FunctionCall.h"
 #include "shakujo/model/expression/ImplicitCast.h"
 #include "shakujo/model/expression/Literal.h"
+#include "shakujo/model/expression/Placeholder.h"
 #include "shakujo/model/expression/StringOperator.h"
 #include "shakujo/model/expression/TupleCreationExpression.h"
 #include "shakujo/model/expression/TupleElementLoadExpression.h"
@@ -544,6 +545,9 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
     case expression::ExpressionKind::LITERAL:
         serialize(printer, dynamic_cast<expression::Literal const*>(value));
         return;
+    case expression::ExpressionKind::PLACEHOLDER:
+        serialize(printer, dynamic_cast<expression::Placeholder const*>(value));
+        return;
     case expression::ExpressionKind::STRING_OPERATOR:
         serialize(printer, dynamic_cast<expression::StringOperator const*>(value));
         return;
@@ -688,6 +692,25 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         printer.exit_property("expression_key");
     }
     printer.exit_object("Literal");
+}
+
+void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expression::Placeholder const* value) {
+    if (value == nullptr) {
+        printer.value(nullptr);
+        return;
+    }
+    printer.enter_object("Placeholder");
+    {
+        printer.enter_property("name");
+        printer.value(value->name());
+        printer.exit_property("name");
+    }
+    {
+        printer.enter_property("expression_key");
+        serialize(printer, value->expression_key());
+        printer.exit_property("expression_key");
+    }
+    printer.exit_object("Placeholder");
 }
 
 void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expression::StringOperator const* value) {

@@ -34,6 +34,7 @@
 #include "shakujo/model/expression/FunctionCall.h"
 #include "shakujo/model/expression/ImplicitCast.h"
 #include "shakujo/model/expression/Literal.h"
+#include "shakujo/model/expression/Placeholder.h"
 #include "shakujo/model/expression/StringOperator.h"
 #include "shakujo/model/expression/TupleCreationExpression.h"
 #include "shakujo/model/expression/TupleElementLoadExpression.h"
@@ -207,6 +208,9 @@ void ConstNodeWalker::walk(expression::Expression const* node) {
     case expression::ExpressionKind::LITERAL:
         walk(dynamic_cast<expression::Literal const*>(node));
         return;
+    case expression::ExpressionKind::PLACEHOLDER:
+        walk(dynamic_cast<expression::Placeholder const*>(node));
+        return;
     case expression::ExpressionKind::STRING_OPERATOR:
         walk(dynamic_cast<expression::StringOperator const*>(node));
         return;
@@ -361,6 +365,11 @@ void ConstNodeWalker::walk(expression::ImplicitCast const* node) {
 }
 
 void ConstNodeWalker::walk(expression::Literal const* node) {
+    if (!enter(node)) return;
+    exit(node);
+}
+
+void ConstNodeWalker::walk(expression::Placeholder const* node) {
     if (!enter(node)) return;
     exit(node);
 }
