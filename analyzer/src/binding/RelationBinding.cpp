@@ -23,7 +23,7 @@ class RelationBinding::Impl {
 public:
     std::vector<std::shared_ptr<VariableBinding>> columns_;
     std::map<std::string, std::any> attributes_;
-    Impl(std::vector<std::shared_ptr<VariableBinding>> columns)
+    explicit Impl(std::vector<std::shared_ptr<VariableBinding>> columns)
         : columns_(std::move(columns))
     {}
 };
