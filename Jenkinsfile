@@ -77,7 +77,7 @@ pipeline {
         stage ('Lint') {
             steps {
                 sh '''#!/bin/bash
-                    python tools/bin/run-clang-tidy.py -quiet -export-fixes=build/clang-tidy-fix.yaml -p build -extra-arg=-Wno-unknown-warning-option -header-filter=$(pwd)'/(include|common|model|parser|analyzer|examples)/.*\\.h$' $(pwd)'(src|(common|model|parser|analyzer)/src|examples)/.*' > build/clang-tidy.log 2> build/clang-tidy-error.log
+                    python tools/bin/run-clang-tidy.py -quiet -export-fixes=build/clang-tidy-fix.yaml -p build -extra-arg=-Wno-unknown-warning-option -header-filter=$(pwd)'/(include|common|model|parser|analyzer|examples)/.*\\.h$' $(pwd)'/(src|(common|model|parser|analyzer)/src|examples)/.*' > build/clang-tidy.log 2> build/clang-tidy-error.log
                 '''
             }
         }
