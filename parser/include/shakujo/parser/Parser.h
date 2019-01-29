@@ -104,12 +104,28 @@ public:
     std::unique_ptr<model::statement::Statement> parse_statement(std::string path, std::istream& input);
 
     /**
+     * @brief parses source input and parses it as a statement model.
+     * @param path the input path
+     * @param input the source input, must be UTF-8 formatted
+     * @return the parsed model
+     */
+    std::unique_ptr<model::statement::Statement> parse_statement(std::string path, std::string const& input);
+
+    /**
      * @brief parses source input and parses it as an expression model.
      * @param path the input path
      * @param input the source input stream, must be UTF-8 formatted
      * @return the parsed model
      */
     std::unique_ptr<model::expression::Expression> parse_expression(std::string path, std::istream& input);
+
+    /**
+     * @brief parses source input and parses it as an expression model.
+     * @param path the input path
+     * @param input the source input, must be UTF-8 formatted
+     * @return the parsed model
+     */
+    std::unique_ptr<model::expression::Expression> parse_expression(std::string path, std::string const& input);
 };
 }  // namespace shakujo::parser
 

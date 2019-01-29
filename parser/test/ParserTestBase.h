@@ -46,8 +46,7 @@ public:
 
     template<typename T>
     std::unique_ptr<T> parse_expression(std::string const& text, std::string_view message = "invalid expression type") {
-        std::istringstream input { text };
-        auto node = parser.parse_expression("<testing>", input);
+        auto node = parser.parse_expression("<testing>", text);
         auto result = cast_ptr(std::move(node), message).to<T>();
         return result;
     }

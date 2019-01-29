@@ -16,6 +16,7 @@
 #include "shakujo/parser/Parser.h"
 
 #include <iostream>
+#include <functional>
 #include <memory>
 #include <string>
 
@@ -38,6 +39,19 @@ public:
             std::cout << context->toStringTree(&parser) << std::endl;
         }
     }
+
+    template<class In, class Context>
+    auto parse(std::string&& path, In& input, std::function<Context*(ShakujoParser&)> entry) {
+        antlr4::ANTLRInputStream is { input };
+        ShakujoLexer lexer { &is };
+        antlr4::CommonTokenStream tokens { &lexer };
+        ShakujoParser parser { &tokens };
+
+        auto tree = entry(parser);
+        debug(tree, parser);
+        impl::Engine engine { std::move(path) };
+        return engine.visit(tree);
+    }
 };
 
 Parser::Parser() : impl_(new Impl()) {}
@@ -50,52 +64,32 @@ Parser& Parser::debug(bool on) {
 }
 
 std::unique_ptr<model::program::Program> Parser::parse_program(std::string path, std::istream& input) {
-    antlr4::ANTLRInputStream is { input };
-    ShakujoLexer lexer { &is };
-    antlr4::CommonTokenStream tokens { &lexer };
-    ShakujoParser parser { &tokens };
-
-    auto tree = parser.programEntry();
-    impl_->debug(tree, parser);
-    impl::Engine engine { std::move(path) };
-    return engine.visit(tree);
+    std::function<ShakujoParser::ProgramEntryContext*(ShakujoParser&)> entry = &ShakujoParser::programEntry;
+    return impl_->parse(std::move(path), input, entry);
 }
 
 std::unique_ptr<model::program::Program> Parser::parse_program(std::string path, std::string const& input) {
-    antlr4::ANTLRInputStream is { input };
-    ShakujoLexer lexer { &is };
-    antlr4::CommonTokenStream tokens { &lexer };
-    ShakujoParser parser { &tokens };
-
-    auto tree = parser.programEntry();
-    impl_->debug(tree, parser);
-    impl::Engine engine { std::move(path) };
-    return engine.visit(tree);
+    std::function<ShakujoParser::ProgramEntryContext*(ShakujoParser&)> entry = &ShakujoParser::programEntry;
+    return impl_->parse(std::move(path), input, entry);
 }
 
 std::unique_ptr<model::statement::Statement> Parser::parse_statement(std::string path, std::istream& input) {
-    // FIXME: remove code dup
-    antlr4::ANTLRInputStream is { input };
-    ShakujoLexer lexer { &is };
-    antlr4::CommonTokenStream tokens { &lexer };
-    ShakujoParser parser { &tokens };
+    std::function<ShakujoParser::StatementEntryContext*(ShakujoParser&)> entry = &ShakujoParser::statementEntry;
+    return impl_->parse(std::move(path), input, entry);
+}
 
-    auto tree = parser.statementEntry();
-    impl_->debug(tree, parser);
-    impl::Engine engine { std::move(path) };
-    return engine.visit(tree);
+std::unique_ptr<model::statement::Statement> Parser::parse_statement(std::string path, std::string const& input) {
+    std::function<ShakujoParser::StatementEntryContext*(ShakujoParser&)> entry = &ShakujoParser::statementEntry;
+    return impl_->parse(std::move(path), input, entry);
 }
 
 std::unique_ptr<model::expression::Expression> Parser::parse_expression(std::string path, std::istream& input) {
-    // FIXME: remove code dup
-    antlr4::ANTLRInputStream is { input };
-    ShakujoLexer lexer { &is };
-    antlr4::CommonTokenStream tokens { &lexer };
-    ShakujoParser parser { &tokens };
+    std::function<ShakujoParser::ExpressionEntryContext*(ShakujoParser&)> entry = &ShakujoParser::expressionEntry;
+    return impl_->parse(std::move(path), input, entry);
+}
 
-    auto tree = parser.expressionEntry();
-    impl_->debug(tree, parser);
-    impl::Engine engine { std::move(path) };
-    return engine.visit(tree);
+std::unique_ptr<model::expression::Expression> Parser::parse_expression(std::string path, std::string const& input) {
+    std::function<ShakujoParser::ExpressionEntryContext*(ShakujoParser&)> entry = &ShakujoParser::expressionEntry;
+    return impl_->parse(std::move(path), input, entry);
 }
 }  // namespace shakujo::parser
