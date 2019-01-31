@@ -33,6 +33,7 @@ public class InsertRelationStatement extends MetaClass {
     @Description("table name")
     Property<Name> table = property();
 
+    // FIXME: differ with InsertValuesStatement
     @Description("destination column names")
     Property<List<SimpleName>> columns = property();
 

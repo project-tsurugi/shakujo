@@ -43,7 +43,8 @@ public:
     /**
      * @brief Represents update column specification.
      */
-    class Column final {
+    class Column final
+            : public key::VariableKey::Provider {
     private:
         class Impl;
         std::unique_ptr<Impl> impl_;
@@ -58,7 +59,7 @@ public:
         /**
          * @brief Destroys this object.
          */
-        ~Column() noexcept;
+        ~Column() noexcept override;
 
         /**
          * @brief Copy-constructs a new object.
@@ -142,16 +143,37 @@ public:
         std::unique_ptr<expression::Expression> release_value();
 
         /**
-         * @brief Returns a copy of this object.
-         * @return a clone of this
+         * @brief Returns referring variable key.
+         * @return referring variable key.
          */
-        Column* clone() const &;
+        key::VariableKey* variable_key() override;
+
+        /**
+         * @brief Returns referring variable key.
+         * @return referring variable key.
+         */
+        inline key::VariableKey const* variable_key() const override {
+            return const_cast<UpdateStatement::Column*>(this)->variable_key();
+        }
+
+        /**
+         * @brief Sets referring variable key.
+         * @param variable_key referring variable key
+         * @return this
+         */
+        UpdateStatement::Column& variable_key(std::unique_ptr<key::VariableKey> variable_key) override;
 
         /**
          * @brief Returns a copy of this object.
          * @return a clone of this
          */
-        Column* clone() &&;
+        Column* clone() const & override;
+
+        /**
+         * @brief Returns a copy of this object.
+         * @return a clone of this
+         */
+        Column* clone() && override;
 
     };
 public:

@@ -23,6 +23,7 @@ import com.ashigeru.lang.codegen.ir.reflect.MetaClass;
 import com.ashigeru.lang.codegen.spec.sql.expression.Expression;
 import com.ashigeru.lang.codegen.spec.sql.key.FunctionKey;
 import com.ashigeru.lang.codegen.spec.sql.key.RelationKey;
+import com.ashigeru.lang.codegen.spec.sql.key.VariableKey;
 import com.ashigeru.lang.codegen.spec.sql.name.Index;
 import com.ashigeru.lang.codegen.spec.sql.name.Name;
 import com.ashigeru.lang.codegen.spec.sql.statement.Statement;
@@ -50,6 +51,7 @@ public class AggregationExpression extends MetaClass {
 
     @Description("aggregation specification")
     @Extends(FunctionKey.Provider.class)
+    @Extends(VariableKey.Provider.class)
     public static class Column extends MetaClass {
 
         @Description("column name")

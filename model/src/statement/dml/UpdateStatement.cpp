@@ -59,6 +59,7 @@ class UpdateStatement::Column::Impl {
 public:
     std::unique_ptr<name::Name> name_;
     common::util::ManagedPtr<expression::Expression> value_;
+    std::unique_ptr<key::VariableKey> variable_key_;
 
     Impl() = default;
     ~Impl() noexcept = default;
@@ -170,6 +171,15 @@ UpdateStatement::Column& UpdateStatement::Column::value(std::unique_ptr<expressi
 
 std::unique_ptr<expression::Expression> UpdateStatement::Column::release_value() {
     return impl_->value_.release();
+}
+
+key::VariableKey* UpdateStatement::Column::variable_key() {
+    return impl_->variable_key_.get();
+}
+
+UpdateStatement::Column& UpdateStatement::Column::variable_key(std::unique_ptr<key::VariableKey> variable_key) {
+    impl_->variable_key_ = std::move(variable_key);
+    return *this;
 }
 
 UpdateStatement::Column* UpdateStatement::Column::clone() const & {

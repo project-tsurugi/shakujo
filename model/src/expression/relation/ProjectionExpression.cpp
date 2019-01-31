@@ -23,6 +23,7 @@
 #include "shakujo/model/expression/Expression.h"
 #include "shakujo/model/key/ExpressionKey.h"
 #include "shakujo/model/key/RelationKey.h"
+#include "shakujo/model/key/VariableKey.h"
 #include "shakujo/model/name/SimpleName.h"
 #include "shakujo/model/statement/Statement.h"
 #include "shakujo/model/util/FragmentList.h"
@@ -70,6 +71,7 @@ class ProjectionExpression::Column::Impl {
 public:
     common::util::ManagedPtr<Expression> value_;
     std::unique_ptr<name::SimpleName> alias_;
+    std::unique_ptr<key::VariableKey> variable_key_;
 
     Impl() = default;
     ~Impl() noexcept = default;
@@ -194,6 +196,15 @@ std::unique_ptr<name::SimpleName> ProjectionExpression::Column::release_alias() 
     std::unique_ptr<name::SimpleName> ret { std::move(impl_->alias_) };
     impl_->alias_ = {};
     return ret;
+}
+
+key::VariableKey* ProjectionExpression::Column::variable_key() {
+    return impl_->variable_key_.get();
+}
+
+ProjectionExpression::Column& ProjectionExpression::Column::variable_key(std::unique_ptr<key::VariableKey> variable_key) {
+    impl_->variable_key_ = std::move(variable_key);
+    return *this;
 }
 
 ProjectionExpression::Column* ProjectionExpression::Column::clone() const & {

@@ -29,6 +29,7 @@ namespace t = shakujo::common::core::type;
 namespace v = shakujo::common::core::value;
 
 using common::util::equals;
+using common::util::is_valid;
 
 class AnalyzerDmlTest : public AnalyzerTestBase, public ::testing::Test {
 public:
@@ -76,6 +77,10 @@ TEST_F(AnalyzerDmlTest, insert_values) {
         auto* c = columns[0];
         EXPECT_TRUE(equals(f.SimpleName("C1"), c->name()));
         EXPECT_EQ(1, get<v::Int>(c->value()));
+
+        auto var = extract_var(c);
+        EXPECT_EQ(var->name(), "C1");
+        EXPECT_EQ(*var->type(), t::Int(32U, NON_NULL));
     }
 }
 
@@ -96,6 +101,10 @@ TEST_F(AnalyzerDmlTest, insert_values_wo_colum_names) {
         auto* c = columns[0];
         EXPECT_TRUE(equals(f.SimpleName("C1"), c->name()));
         EXPECT_EQ(1, get<v::Int>(c->value()));
+
+        auto var = extract_var(c);
+        EXPECT_EQ(var->name(), "C1");
+        EXPECT_EQ(*var->type(), t::Int(32U, NON_NULL));
     }
 }
 
@@ -120,16 +129,28 @@ TEST_F(AnalyzerDmlTest, insert_values_reorder_columns) {
         auto* c = columns[0];
         EXPECT_TRUE(equals(f.SimpleName("C1"), c->name()));
         EXPECT_EQ(1, get<v::Int>(c->value()));
+
+        auto var = extract_var(c);
+        EXPECT_EQ(var->name(), "C1");
+        EXPECT_EQ(*var->type(), t::Int(32U, NON_NULL));
     }
     {
         auto* c = columns[1];
         EXPECT_TRUE(equals(f.SimpleName("C2"), c->name()));
         EXPECT_EQ(2, get<v::Int>(c->value()));
+
+        auto var = extract_var(c);
+        EXPECT_EQ(var->name(), "C2");
+        EXPECT_EQ(*var->type(), t::Int(32U, NON_NULL));
     }
     {
         auto* c = columns[2];
         EXPECT_TRUE(equals(f.SimpleName("C3"), c->name()));
         EXPECT_EQ(3, get<v::Int>(c->value()));
+
+        auto var = extract_var(c);
+        EXPECT_EQ(var->name(), "C3");
+        EXPECT_EQ(*var->type(), t::Int(32U, NON_NULL));
     }
 }
 
@@ -152,11 +173,19 @@ TEST_F(AnalyzerDmlTest, insert_values_omit_columns) {
         auto* c = columns[0];
         EXPECT_TRUE(equals(f.SimpleName("C1"), c->name()));
         EXPECT_EQ(-1, get<v::Int>(c->value()));
+
+        auto var = extract_var(c);
+        EXPECT_EQ(var->name(), "C1");
+        EXPECT_EQ(*var->type(), t::Int(32U, NON_NULL));
     }
     {
         auto* c = columns[1];
         EXPECT_TRUE(equals(f.SimpleName("C2"), c->name()));
         EXPECT_EQ(2, get<v::Int>(c->value()));
+
+        auto var = extract_var(c);
+        EXPECT_EQ(var->name(), "C2");
+        EXPECT_EQ(*var->type(), t::Int(32U, NON_NULL));
     }
     {
         auto* c = columns[2];
@@ -164,6 +193,10 @@ TEST_F(AnalyzerDmlTest, insert_values_omit_columns) {
         auto* cast = as<expression::ImplicitCast>(c->value());
         EXPECT_EQ(t::Int(32U, NULLABLE), *cast->type());
         EXPECT_EQ(v::Null(), *as<expression::Literal>(cast->operand())->value());
+
+        auto var = extract_var(c);
+        EXPECT_EQ(var->name(), "C3");
+        EXPECT_EQ(*var->type(), t::Int(32U, NULLABLE));
     }
 }
 
@@ -184,6 +217,10 @@ TEST_F(AnalyzerDmlTest, insert_values_promote) {
         auto* c = columns[0];
         EXPECT_TRUE(equals(f.SimpleName("C1"), c->name()));
         EXPECT_EQ(t::Int(64U, NON_NULL), cast_type(c->value()));
+
+        auto var = extract_var(c);
+        EXPECT_EQ(var->name(), "C1");
+        EXPECT_EQ(*var->type(), t::Int(64U, NON_NULL));
     }
 }
 
@@ -197,6 +234,10 @@ TEST_F(AnalyzerDmlTest, insert_values_promote_fail) {
             f.InsertValuesStatementColumn(f.SimpleName("C1"), literal(true)),
         }));
     success(false);
+
+    auto& columns = stmt->columns();
+    ASSERT_EQ(1U, columns.size());
+    EXPECT_FALSE(is_valid(extract_var(columns[0], true)));
 }
 
 TEST_F(AnalyzerDmlTest, insert_values_promote_fail_null) {
@@ -210,6 +251,11 @@ TEST_F(AnalyzerDmlTest, insert_values_promote_fail_null) {
             f.InsertValuesStatementColumn(f.SimpleName("C1"), literal(1)),
         }));
     success(false);
+
+    auto& columns = stmt->columns();
+    ASSERT_EQ(2U, columns.size());
+    EXPECT_TRUE(is_valid(extract_var(columns[0], true)));
+    EXPECT_FALSE(is_valid(extract_var(columns[1], true)));
 }
 
 TEST_F(AnalyzerDmlTest, insert_values_unknown_column) {
@@ -222,5 +268,9 @@ TEST_F(AnalyzerDmlTest, insert_values_unknown_column) {
             f.InsertValuesStatementColumn(f.SimpleName("C2"), literal(1, 32U)),
         }));
     success(false);
+
+    auto& columns = stmt->columns();
+    ASSERT_EQ(1U, columns.size());
+    EXPECT_FALSE(is_valid(extract_var(columns[0], true)));
 }
 }  // namespace shakujo::analyzer

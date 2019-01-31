@@ -871,11 +871,13 @@ void Engine::visit(model::expression::relation::ProjectionExpression* node, Scop
     if (!is_valid(source_expr)) {
         bless_undefined<binding::ExpressionBinding>(node);
         bless_undefined<binding::RelationBinding>(node);
+        bless_undefined_each<binding::VariableBinding>(node->columns());
         return;
     }
     if (!require_relation(node->operand())) {
         bless_erroneous_expression(node);
         bless_undefined<binding::RelationBinding>(node);
+        bless_undefined_each<binding::VariableBinding>(node->columns());
         return;
     }
 
@@ -897,14 +899,25 @@ void Engine::visit(model::expression::relation::ProjectionExpression* node, Scop
     for (auto c : node->columns()) {
         dispatch(c->value(), scope);
         auto column_expr = extract_binding(c->value());
+
         // we don't care whether the column_expr is valid or not,
         // because the resulting relation type is valid only if all of column exprs are valid
+
+        // FIXME: infer the column name from expression
+        std::string simple_name;
+        common::core::Name name;
         if (is_defined(c->alias())) {
-            columns.emplace_back(qualifiers, c->alias()->token(), column_expr->type());
-        } else {
-            columns.emplace_back(qualifiers, std::string_view {}, column_expr->type());
+            simple_name = c->alias()->token();
+            name = { simple_name };
         }
-        // FIXME: type restriction
+        auto var = std::make_shared<binding::VariableBinding>(
+            bindings().next_variable_id(),
+            std::move(name),
+            column_expr->type());
+        columns.emplace_back(qualifiers, std::move(simple_name), make_clone(column_expr->type()));
+        bless(c, var);
+
+        // FIXME: restricts non first order types like relations
     }
     bless(node, std::make_unique<common::core::type::Relation>(std::move(columns)));
 }
@@ -1095,6 +1108,7 @@ void Engine::visit(model::statement::dml::InsertValuesStatement* node, ScopeCont
     auto& table_info = storage.find_table(*node->table());
     if (!table_info.is_valid()) {
         report(node, Diagnostic::Code::TABLE_NOT_FOUND, to_string(node->table()));
+        bless_undefined_each<binding::VariableBinding>(node->columns());
         return;
     }
 
@@ -1110,6 +1124,7 @@ void Engine::visit(model::statement::dml::InsertValuesStatement* node, ScopeCont
             report(node, Diagnostic::Code::INCOMPATIBLE_TABLE_SCHEMA, to_string(
                     "target table has ", table_info.columns().size(), " columns, ",
                     "but ", node->columns().size(), " columns were specified"));
+            bless_undefined_each<binding::VariableBinding>(node->columns());
             return;
         }
         std::size_t index = 0;
@@ -1137,6 +1152,7 @@ void Engine::visit(model::statement::dml::InsertValuesStatement* node, ScopeCont
             }
         }
         if (saw_error) {
+            bless_undefined_each<binding::VariableBinding>(node->columns());
             return;
         }
         // restore omitted columns
@@ -1195,8 +1211,14 @@ void Engine::visit(model::statement::dml::InsertValuesStatement* node, ScopeCont
                         table_info.name(), "::", column->name()->token(), " type: ", info.type(), ", ",
                         "expression type: ", expr->type()));
                 }
+                bless_undefined<binding::VariableBinding>(column);
             } else {
                 insert_cast(column->value(), info.type());
+                auto var = std::make_shared<binding::VariableBinding>(
+                    bindings().next_variable_id(),
+                    common::core::Name { info.name() },
+                    make_clone(info.type()));
+                bless(column, var);
             }
         }
     }

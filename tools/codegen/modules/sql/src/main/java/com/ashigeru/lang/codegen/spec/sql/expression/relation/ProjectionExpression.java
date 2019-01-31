@@ -23,6 +23,7 @@ import com.ashigeru.lang.codegen.ir.reflect.MetaClass;
 import com.ashigeru.lang.codegen.ir.reflect.Opt;
 import com.ashigeru.lang.codegen.spec.sql.expression.Expression;
 import com.ashigeru.lang.codegen.spec.sql.key.RelationKey;
+import com.ashigeru.lang.codegen.spec.sql.key.VariableKey;
 import com.ashigeru.lang.codegen.spec.sql.name.SimpleName;
 import com.ashigeru.lang.codegen.spec.sql.statement.Statement;
 
@@ -46,6 +47,7 @@ public class ProjectionExpression extends MetaClass {
     Property<SimpleName> alias = property();
 
     @Description("projection specification")
+    @Extends(VariableKey.Provider.class)
     public static class Column extends MetaClass {
 
         @Description("column value")

@@ -155,6 +155,13 @@ private:
         bless(node, std::make_shared<Binding>());
     }
 
+    template<class Binding, class List>
+    void bless_undefined_each(List& elements) {
+        for (auto* element : elements) {
+            bless(element, std::make_shared<Binding>());
+        }
+    }
+
     void bless(
             model::key::ExpressionKey::Provider* node,
             std::unique_ptr<common::core::Type> type = {},

@@ -24,6 +24,7 @@
 #include "shakujo/model/expression/ExpressionKind.h"
 #include "shakujo/model/key/ExpressionKey.h"
 #include "shakujo/model/key/RelationKey.h"
+#include "shakujo/model/key/VariableKey.h"
 #include "shakujo/model/name/SimpleName.h"
 #include "shakujo/model/statement/Statement.h"
 #include "shakujo/model/util/FragmentList.h"
@@ -45,7 +46,8 @@ public:
     /**
      * @brief Represents projection specification.
      */
-    class Column final {
+    class Column final
+            : public key::VariableKey::Provider {
     private:
         class Impl;
         std::unique_ptr<Impl> impl_;
@@ -60,7 +62,7 @@ public:
         /**
          * @brief Destroys this object.
          */
-        ~Column() noexcept;
+        ~Column() noexcept override;
 
         /**
          * @brief Copy-constructs a new object.
@@ -144,16 +146,37 @@ public:
         std::unique_ptr<name::SimpleName> release_alias();
 
         /**
-         * @brief Returns a copy of this object.
-         * @return a clone of this
+         * @brief Returns referring variable key.
+         * @return referring variable key.
          */
-        Column* clone() const &;
+        key::VariableKey* variable_key() override;
+
+        /**
+         * @brief Returns referring variable key.
+         * @return referring variable key.
+         */
+        inline key::VariableKey const* variable_key() const override {
+            return const_cast<ProjectionExpression::Column*>(this)->variable_key();
+        }
+
+        /**
+         * @brief Sets referring variable key.
+         * @param variable_key referring variable key
+         * @return this
+         */
+        ProjectionExpression::Column& variable_key(std::unique_ptr<key::VariableKey> variable_key) override;
 
         /**
          * @brief Returns a copy of this object.
          * @return a clone of this
          */
-        Column* clone() &&;
+        Column* clone() const & override;
+
+        /**
+         * @brief Returns a copy of this object.
+         * @return a clone of this
+         */
+        Column* clone() && override;
 
     };
 public:

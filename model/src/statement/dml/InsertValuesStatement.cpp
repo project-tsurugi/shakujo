@@ -21,6 +21,7 @@
 
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/expression/Expression.h"
+#include "shakujo/model/key/VariableKey.h"
 #include "shakujo/model/name/Name.h"
 #include "shakujo/model/name/SimpleName.h"
 #include "shakujo/model/util/FragmentList.h"
@@ -56,6 +57,7 @@ class InsertValuesStatement::Column::Impl {
 public:
     std::unique_ptr<name::SimpleName> name_;
     common::util::ManagedPtr<expression::Expression> value_;
+    std::unique_ptr<key::VariableKey> variable_key_;
 
     Impl() = default;
     ~Impl() noexcept = default;
@@ -145,6 +147,15 @@ InsertValuesStatement::Column& InsertValuesStatement::Column::value(std::unique_
 
 std::unique_ptr<expression::Expression> InsertValuesStatement::Column::release_value() {
     return impl_->value_.release();
+}
+
+key::VariableKey* InsertValuesStatement::Column::variable_key() {
+    return impl_->variable_key_.get();
+}
+
+InsertValuesStatement::Column& InsertValuesStatement::Column::variable_key(std::unique_ptr<key::VariableKey> variable_key) {
+    impl_->variable_key_ = std::move(variable_key);
+    return *this;
 }
 
 InsertValuesStatement::Column* InsertValuesStatement::Column::clone() const & {

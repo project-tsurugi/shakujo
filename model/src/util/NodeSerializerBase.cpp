@@ -1160,6 +1160,11 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         serialize(printer, value->function_key());
         printer.exit_property("function_key");
     }
+    {
+        printer.enter_property("variable_key");
+        serialize(printer, value->variable_key());
+        printer.exit_property("variable_key");
+    }
     if (!show_fragment_kind()) {
         printer.exit_object({});
     } else if (show_qualified_kind()) {
@@ -1350,6 +1355,11 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         serialize(printer, value->direction());
         printer.exit_property("direction");
     }
+    {
+        printer.enter_property("variable_key");
+        serialize(printer, value->variable_key());
+        printer.exit_property("variable_key");
+    }
     if (!show_fragment_kind()) {
         printer.exit_object({});
     } else if (show_qualified_kind()) {
@@ -1427,6 +1437,11 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         printer.enter_property("alias");
         serialize(printer, value->alias());
         printer.exit_property("alias");
+    }
+    {
+        printer.enter_property("variable_key");
+        serialize(printer, value->variable_key());
+        printer.exit_property("variable_key");
     }
     if (!show_fragment_kind()) {
         printer.exit_object({});
@@ -2653,6 +2668,11 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, statem
         serialize(printer, value->value());
         printer.exit_property("value");
     }
+    {
+        printer.enter_property("variable_key");
+        serialize(printer, value->variable_key());
+        printer.exit_property("variable_key");
+    }
     if (!show_fragment_kind()) {
         printer.exit_object({});
     } else if (show_qualified_kind()) {
@@ -2714,6 +2734,11 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, statem
         printer.enter_property("value");
         serialize(printer, value->value());
         printer.exit_property("value");
+    }
+    {
+        printer.enter_property("variable_key");
+        serialize(printer, value->variable_key());
+        printer.exit_property("variable_key");
     }
     if (!show_fragment_kind()) {
         printer.exit_object({});

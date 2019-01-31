@@ -233,18 +233,32 @@ TEST_F(AnalyzerRelationTest, projection) {
         }
     ));
     success();
+    {
+        auto* relation = extract_relation_type(expr.get());
+        auto& cols = relation->columns();
+        ASSERT_EQ(2U, cols.size());
+        EXPECT_EQ("", cols[0].name());
+        EXPECT_EQ(t::Int(32, NON_NULL), *cols[0].type());
+        EXPECT_EQ(names({}), cols[0].qualifiers());
 
-    auto* relation = extract_relation_type(expr.get());
-    auto& cols = relation->columns();
-    ASSERT_EQ(2U, cols.size());
-
-    EXPECT_EQ("", cols[0].name());
-    EXPECT_EQ(t::Int(32, NON_NULL), *cols[0].type());
-    EXPECT_EQ(names({}), cols[0].qualifiers());
-
-    EXPECT_EQ("", cols[1].name());
-    EXPECT_EQ(t::Bool(NON_NULL), *cols[1].type());
-    EXPECT_EQ(names({}), cols[1].qualifiers());
+        EXPECT_EQ("", cols[1].name());
+        EXPECT_EQ(t::Bool(NON_NULL), *cols[1].type());
+        EXPECT_EQ(names({}), cols[1].qualifiers());
+    }
+    {
+        auto& cols = expr->columns();
+        ASSERT_EQ(2U, cols.size());
+        {
+            auto var = extract_var(cols[0]);
+            EXPECT_EQ(var->name(), common::core::Name());
+            EXPECT_EQ(*var->type(), t::Int(32U, NON_NULL));
+        }
+        {
+            auto var = extract_var(cols[1]);
+            EXPECT_EQ(var->name(), common::core::Name());
+            EXPECT_EQ(*var->type(), t::Bool(NON_NULL));
+        }
+    }
 }
 
 TEST_F(AnalyzerRelationTest, projection_invalid_relation) {
@@ -258,6 +272,10 @@ TEST_F(AnalyzerRelationTest, projection_invalid_relation) {
     success(false);
     EXPECT_FALSE(is_propagated_error(expr.get()));
     EXPECT_FALSE(is_valid(extract_relation(expr.get(), true)));
+
+    auto& cols = expr->columns();
+    ASSERT_EQ(1U, cols.size());
+    EXPECT_FALSE(is_valid(extract_var(cols[0], true)));
 }
 
 TEST_F(AnalyzerRelationTest, projection_propagate_error) {
@@ -301,6 +319,20 @@ TEST_F(AnalyzerRelationTest, projection_named_relation) {
     EXPECT_EQ("", cols[1].name());
     EXPECT_EQ(t::Bool(NON_NULL), *cols[1].type());
     EXPECT_EQ(names({"X"}), cols[1].qualifiers());
+    {
+        auto& cols = expr->columns();
+        ASSERT_EQ(2U, cols.size());
+        {
+            auto var = extract_var(cols[0]);
+            EXPECT_EQ(var->name(), common::core::Name());
+            EXPECT_EQ(*var->type(), t::Int(32U, NON_NULL));
+        }
+        {
+            auto var = extract_var(cols[1]);
+            EXPECT_EQ(var->name(), common::core::Name());
+            EXPECT_EQ(*var->type(), t::Bool(NON_NULL));
+        }
+    }
 }
 
 TEST_F(AnalyzerRelationTest, projection_named_columns) {
@@ -330,6 +362,20 @@ TEST_F(AnalyzerRelationTest, projection_named_columns) {
     EXPECT_EQ("D2", cols[1].name());
     EXPECT_EQ(t::Bool(NON_NULL), *cols[1].type());
     EXPECT_EQ(names({}), cols[1].qualifiers());
+    {
+        auto& cols = expr->columns();
+        ASSERT_EQ(2U, cols.size());
+        {
+            auto var = extract_var(cols[0]);
+            EXPECT_EQ(var->name(), "D1");
+            EXPECT_EQ(*var->type(), t::Int(32U, NON_NULL));
+        }
+        {
+            auto var = extract_var(cols[1]);
+            EXPECT_EQ(var->name(), "D2");
+            EXPECT_EQ(*var->type(), t::Bool(NON_NULL));
+        }
+    }
 }
 
 TEST_F(AnalyzerRelationTest, projection_free) {

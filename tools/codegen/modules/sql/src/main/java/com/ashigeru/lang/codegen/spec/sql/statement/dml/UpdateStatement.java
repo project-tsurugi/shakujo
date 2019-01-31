@@ -43,8 +43,8 @@ public class UpdateStatement extends MetaClass {
     Property<Expression> condition = property();
 
     // TODO: init block
-
     @Description("update column specification")
+    @Extends(VariableKey.Provider.class)
     public static class Column extends MetaClass {
 
         @Description("destination column name")

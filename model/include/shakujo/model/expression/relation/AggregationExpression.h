@@ -25,6 +25,7 @@
 #include "shakujo/model/key/ExpressionKey.h"
 #include "shakujo/model/key/FunctionKey.h"
 #include "shakujo/model/key/RelationKey.h"
+#include "shakujo/model/key/VariableKey.h"
 #include "shakujo/model/name/Index.h"
 #include "shakujo/model/name/Name.h"
 #include "shakujo/model/statement/Statement.h"
@@ -50,7 +51,8 @@ public:
      * @brief Represents aggregation specification.
      */
     class Column final
-            : public key::FunctionKey::Provider {
+            : public key::FunctionKey::Provider
+            , public key::VariableKey::Provider {
     private:
         class Impl;
         std::unique_ptr<Impl> impl_;
@@ -208,6 +210,27 @@ public:
          * @return this
          */
         AggregationExpression::Column& function_key(std::unique_ptr<key::FunctionKey> function_key) override;
+
+        /**
+         * @brief Returns referring variable key.
+         * @return referring variable key.
+         */
+        key::VariableKey* variable_key() override;
+
+        /**
+         * @brief Returns referring variable key.
+         * @return referring variable key.
+         */
+        inline key::VariableKey const* variable_key() const override {
+            return const_cast<AggregationExpression::Column*>(this)->variable_key();
+        }
+
+        /**
+         * @brief Sets referring variable key.
+         * @param variable_key referring variable key
+         * @return this
+         */
+        AggregationExpression::Column& variable_key(std::unique_ptr<key::VariableKey> variable_key) override;
 
         /**
          * @brief Returns a copy of this object.
