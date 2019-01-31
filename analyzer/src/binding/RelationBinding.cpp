@@ -16,36 +16,4 @@
 #include "shakujo/analyzer/binding/RelationBinding.h"
 
 namespace shakujo::analyzer::binding {
-
-static const std::any EMPTY_ANY;  // NOLINT
-
-class RelationBinding::Impl {
-public:
-    std::vector<std::shared_ptr<VariableBinding>> columns_;
-    std::map<std::string, std::any> attributes_;
-    explicit Impl(std::vector<std::shared_ptr<VariableBinding>> columns)
-        : columns_(std::move(columns))
-    {}
-};
-
-RelationBinding::RelationBinding(std::vector<std::shared_ptr<VariableBinding>> columns)
-    : impl_(new Impl(std::move(columns)))
-{}
-
-RelationBinding::~RelationBinding() noexcept = default;
-
-std::vector<std::shared_ptr<VariableBinding>>& RelationBinding::columns() {
-    return impl_->columns_;
-}
-
-std::map<std::string, std::any>& RelationBinding::attributes() {
-    return impl_->attributes_;
-}
-
-std::any const& RelationBinding::find_attribute(std::string const& key) const {
-    if (auto it = attributes().find(key); it != attributes().end()) {
-        return it->second;
-    }
-    return EMPTY_ANY;
-}
 }  // namespace shakujo::analyzer::binding

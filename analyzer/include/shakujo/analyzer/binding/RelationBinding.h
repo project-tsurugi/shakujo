@@ -29,6 +29,9 @@
 
 #include "VariableBinding.h"
 
+#include "shakujo/common/schema/TableInfo.h"
+#include "shakujo/common/schema/IndexInfo.h"
+
 #include "shakujo/model/key/RelationKey.h"
 
 namespace shakujo::analyzer::binding {
@@ -37,10 +40,6 @@ namespace shakujo::analyzer::binding {
  * @brief provides semantic information of current processing relations.
  */
 class RelationBinding final {
-private:
-    class Impl;
-    std::unique_ptr<Impl> impl_;
-
 public:
     /**
      * @brief the key type.
@@ -48,15 +47,70 @@ public:
     using key_type = model::key::RelationKey;
 
     /**
+     * @brief an order term.
+     */
+    class Order {
+    public:
+        /**
+         * @brief represents sort order of columns.
+         */
+        enum class Direction {
+
+            /**
+             * @brief ascendant order.
+             */
+            ASCENDANT,
+
+            /**
+             * @brief descendant order.
+             */
+            DESCENDANT,
+        };
+
+        /**
+         * @brief constructs a new object.
+         * @param column the column binding
+         * @param direction the sort direction
+         */
+        Order(std::shared_ptr<VariableBinding> column, Direction direction = Direction::ASCENDANT)  // NOLINT
+                : column_(std::move(column))
+                , direction_(direction)
+        {}
+
+        /**
+         * @brief returns the column binding.
+         * @return the column binding
+         */
+        std::shared_ptr<VariableBinding> column() const {
+            return column_;
+        }
+
+        /**
+         * @brief returns the sort direction
+         * @return the sort direction
+         */
+        Direction direction() const {
+            return direction_;
+        }
+
+    private:
+        std::shared_ptr<VariableBinding> column_;
+        Direction direction_;
+    };
+
+
+    /**
      * @brief Constructs a new object.
      * @param columns bindings of individual columns
      */
-    explicit RelationBinding(std::vector<std::shared_ptr<VariableBinding>> columns = {});
+    explicit RelationBinding(std::vector<std::shared_ptr<VariableBinding>> columns = {})
+        : columns_(std::move(columns))
+    {}
 
     /**
      * @brief Destroys this object.
      */
-    ~RelationBinding() noexcept;
+    ~RelationBinding() noexcept = default;
 
     RelationBinding(RelationBinding const&) = delete;
     RelationBinding(RelationBinding&&) noexcept = delete;
@@ -67,7 +121,9 @@ public:
      * @brief returns the variables that reflect individual row columns.
      * @return the column variables
      */
-    std::vector<std::shared_ptr<VariableBinding>>& columns();
+    std::vector<std::shared_ptr<VariableBinding>>& columns() {
+        return columns_;
+    }
 
     /**
      * @brief returns the variables that reflect individual row columns.
@@ -78,10 +134,73 @@ public:
     }
 
     /**
+     * @brief returns the source table information.
+     * @return the source table information
+     *      only if the corresponded relation only contains the set of rows in the table
+     * @return the invalid TableInfo otherwise
+     */
+    common::schema::TableInfo const& source_table() const {
+        if (source_table_) {
+            return *source_table_;
+        }
+        static common::schema::TableInfo const INVALID {};
+        return INVALID;
+    }
+
+    /**
+     * @brief sets the source table information.
+     * @param info the source table
+     * @return this
+     */
+    RelationBinding& source_table(common::schema::TableInfo const& info) {
+        source_table_ = info.is_valid() ? &info : nullptr;
+        return *this;
+    }
+
+    /**
+     * @brief return the order of rows in the corresponded relation.
+     * @return order if rows are sorted by the resulting elements
+     * @return empty if rows are not ordered
+     */
+    std::vector<Order>& order() {
+        return order_;
+    }
+
+    /**
+     * @brief return the order of rows in the corresponded relation.
+     * @return order if rows are sorted by the resulting elements
+     * @return empty if rows are not ordered
+     */
+    inline std::vector<Order> const& order() const {
+        return const_cast<RelationBinding*>(this)->order();
+    }
+
+    /**
+     * @brief returns whether or not the the corresponded relation only consists of distinct rows.
+     * @return true if the relation does not have any duplicated rows
+     * @return false if the relation may have duplicated rows
+     */
+    bool distinct() const {
+        return distinct_;
+    }
+
+    /**
+     * @brief sets whether or not the the corresponded relation only consists of distinct rows.
+     * @param distinct true if the relation dows not have any duplicated rows, otherwise false
+     * @return this
+     */
+    RelationBinding& distinct(bool distinct) {
+        distinct_ = distinct;
+        return *this;
+    }
+
+    /**
      * @brief returns the view of extra attributes.
      * @return the view of extra attributes
      */
-    std::map<std::string, std::any>& attributes();
+    std::map<std::string, std::any>& attributes() {
+        return attributes_;
+    }
 
     /**
      * @brief returns the view of extra attributes.
@@ -109,7 +228,13 @@ public:
      * @return the corresponded attribute value if it is defined
      * @return empty object if there is no such an attribute (or explicitly added an empty value)
      */
-    std::any const& find_attribute(std::string const& key) const;
+    std::any const& find_attribute(std::string const& key) const {
+        if (auto it = attributes().find(key); it != attributes().end()) {
+            return it->second;
+        }
+        static std::any const EMPTY;
+        return EMPTY;
+    }
 
     /**
      * @brief returns a raw attribute value for the given key.
@@ -157,6 +282,14 @@ public:
         }
         return true;
     }
+
+private:
+    std::vector<std::shared_ptr<VariableBinding>> columns_ {};
+    std::map<std::string, std::any> attributes_ {};
+
+    common::schema::TableInfo const* source_table_ {};
+    std::vector<Order> order_ {};
+    bool distinct_ { false };
 };
 }  // namespace shakujo::analyzer::binding
 

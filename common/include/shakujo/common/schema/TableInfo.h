@@ -223,8 +223,17 @@ public:
      * @return true if this is valid
      * @return false otherwise
      */
-    inline bool is_valid() const noexcept {
+    bool is_valid() const noexcept {
         return !name_.empty() && !columns_.empty();
+    }
+
+    /**
+     * @brief returns whether or not this table information is valid.
+     * @return true if this is valid
+     * @return false otherwise
+     */
+    inline explicit operator bool() const noexcept {
+        return is_valid();
     }
 
     /**

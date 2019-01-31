@@ -148,10 +148,20 @@ public:
 
     /**
      * @brief returns whether or not this index information is valid.
-     * @return
+     * @return true if this is valid
+     * @return false otherwise
      */
-    explicit operator bool() const {
+    bool is_valid() const noexcept {
         return !columns_.empty();
+    }
+
+    /**
+     * @brief returns whether or not this index information is valid.
+     * @return true if this is valid
+     * @return false otherwise
+     */
+    inline explicit operator bool() const noexcept {
+        return is_valid();
     }
 
     /**
