@@ -21,12 +21,14 @@ import com.ashigeru.lang.codegen.ir.reflect.Description;
 import com.ashigeru.lang.codegen.ir.reflect.Extends;
 import com.ashigeru.lang.codegen.ir.reflect.MetaClass;
 import com.ashigeru.lang.codegen.spec.sql.expression.Expression;
+import com.ashigeru.lang.codegen.spec.sql.key.RelationKey;
 import com.ashigeru.lang.codegen.spec.sql.name.Name;
 import com.ashigeru.lang.codegen.spec.sql.name.SimpleName;
 import com.ashigeru.lang.codegen.spec.sql.statement.Statement;
 
 @Description("insert relation statement")
 @Extends(Statement.class)
+@Extends(RelationKey.Provider.class)
 @SuppressWarnings("javadoc")
 public class InsertRelationStatement extends MetaClass {
 

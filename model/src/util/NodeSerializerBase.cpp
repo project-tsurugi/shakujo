@@ -2574,9 +2574,9 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, statem
         printer.exit_property("condition");
     }
     {
-        printer.enter_property("variable_key");
-        serialize(printer, value->variable_key());
-        printer.exit_property("variable_key");
+        printer.enter_property("relation_key");
+        serialize(printer, value->relation_key());
+        printer.exit_property("relation_key");
     }
     printer.exit_object("DeleteStatement");
 }
@@ -2591,6 +2591,11 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, statem
         printer.enter_property("source");
         serialize(printer, value->source());
         printer.exit_property("source");
+    }
+    {
+        printer.enter_property("relation_key");
+        serialize(printer, value->relation_key());
+        printer.exit_property("relation_key");
     }
     printer.exit_object("EmitStatement");
 }
@@ -2622,6 +2627,11 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, statem
         serialize(printer, value->source());
         printer.exit_property("source");
     }
+    {
+        printer.enter_property("relation_key");
+        serialize(printer, value->relation_key());
+        printer.exit_property("relation_key");
+    }
     printer.exit_object("InsertRelationStatement");
 }
 
@@ -2646,6 +2656,11 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, statem
         }
         printer.exit_array(size);
         printer.exit_property("columns");
+    }
+    {
+        printer.enter_property("relation_key");
+        serialize(printer, value->relation_key());
+        printer.exit_property("relation_key");
     }
     printer.exit_object("InsertValuesStatement");
 }
@@ -2710,9 +2725,9 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, statem
         printer.exit_property("condition");
     }
     {
-        printer.enter_property("variable_key");
-        serialize(printer, value->variable_key());
-        printer.exit_property("variable_key");
+        printer.enter_property("relation_key");
+        serialize(printer, value->relation_key());
+        printer.exit_property("relation_key");
     }
     printer.exit_object("UpdateStatement");
 }

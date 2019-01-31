@@ -21,6 +21,7 @@
 
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/expression/Expression.h"
+#include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/name/Name.h"
 #include "shakujo/model/name/SimpleName.h"
 #include "shakujo/model/util/NodeList.h"
@@ -32,6 +33,7 @@ public:
     std::unique_ptr<name::Name> table_;
     util::NodeList<name::SimpleName> columns_;
     common::util::ManagedPtr<expression::Expression> source_;
+    std::unique_ptr<key::RelationKey> relation_key_;
 
     Impl() = default;
     ~Impl() noexcept = default;
@@ -94,6 +96,15 @@ InsertRelationStatement& InsertRelationStatement::source(std::unique_ptr<express
 
 std::unique_ptr<expression::Expression> InsertRelationStatement::release_source() {
     return impl_->source_.release();
+}
+
+key::RelationKey* InsertRelationStatement::relation_key() {
+    return impl_->relation_key_.get();
+}
+
+InsertRelationStatement& InsertRelationStatement::relation_key(std::unique_ptr<key::RelationKey> relation_key) {
+    impl_->relation_key_ = std::move(relation_key);
+    return *this;
 }
 
 InsertRelationStatement* InsertRelationStatement::clone() const & {

@@ -21,7 +21,7 @@
 
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/expression/Expression.h"
-#include "shakujo/model/key/VariableKey.h"
+#include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/name/Name.h"
 
 namespace shakujo::model::statement::dml {
@@ -30,7 +30,7 @@ class DeleteStatement::Impl {
 public:
     std::unique_ptr<name::Name> table_;
     common::util::ManagedPtr<expression::Expression> condition_;
-    std::unique_ptr<key::VariableKey> variable_key_;
+    std::unique_ptr<key::RelationKey> relation_key_;
 
     Impl() = default;
     ~Impl() noexcept = default;
@@ -85,12 +85,12 @@ std::unique_ptr<expression::Expression> DeleteStatement::release_condition() {
     return impl_->condition_.release();
 }
 
-key::VariableKey* DeleteStatement::variable_key() {
-    return impl_->variable_key_.get();
+key::RelationKey* DeleteStatement::relation_key() {
+    return impl_->relation_key_.get();
 }
 
-DeleteStatement& DeleteStatement::variable_key(std::unique_ptr<key::VariableKey> variable_key) {
-    impl_->variable_key_ = std::move(variable_key);
+DeleteStatement& DeleteStatement::relation_key(std::unique_ptr<key::RelationKey> relation_key) {
+    impl_->relation_key_ = std::move(relation_key);
     return *this;
 }
 

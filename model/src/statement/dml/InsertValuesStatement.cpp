@@ -21,6 +21,7 @@
 
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/expression/Expression.h"
+#include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/key/VariableKey.h"
 #include "shakujo/model/name/Name.h"
 #include "shakujo/model/name/SimpleName.h"
@@ -32,6 +33,7 @@ class InsertValuesStatement::Impl {
 public:
     std::unique_ptr<name::Name> table_;
     util::FragmentList<InsertValuesStatement::Column> columns_;
+    std::unique_ptr<key::RelationKey> relation_key_;
 
     Impl() = default;
     ~Impl() noexcept = default;
@@ -101,6 +103,15 @@ std::unique_ptr<name::Name> InsertValuesStatement::release_table() {
 
 util::FragmentList<InsertValuesStatement::Column>& InsertValuesStatement::columns() {
     return impl_->columns_;
+}
+
+key::RelationKey* InsertValuesStatement::relation_key() {
+    return impl_->relation_key_.get();
+}
+
+InsertValuesStatement& InsertValuesStatement::relation_key(std::unique_ptr<key::RelationKey> relation_key) {
+    impl_->relation_key_ = std::move(relation_key);
+    return *this;
 }
 
 InsertValuesStatement* InsertValuesStatement::clone() const & {

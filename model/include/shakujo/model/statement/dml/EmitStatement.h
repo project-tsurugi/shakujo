@@ -21,6 +21,7 @@
 #include <memory>
 
 #include "shakujo/model/expression/Expression.h"
+#include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/statement/Statement.h"
 #include "shakujo/model/statement/StatementKind.h"
 
@@ -29,7 +30,8 @@ namespace shakujo::model::statement::dml {
  * @brief Represents emit relation statement.
  */
 class EmitStatement
-        : public Statement {
+        : public Statement
+        , public key::RelationKey::Provider {
 private:
     class Impl;
     std::unique_ptr<Impl> impl_;
@@ -99,6 +101,27 @@ public:
      * @return the released node
      */
     std::unique_ptr<expression::Expression> release_source();
+
+    /**
+     * @brief Returns relation key.
+     * @return relation key.
+     */
+    key::RelationKey* relation_key() override;
+
+    /**
+     * @brief Returns relation key.
+     * @return relation key.
+     */
+    inline key::RelationKey const* relation_key() const override {
+        return const_cast<EmitStatement*>(this)->relation_key();
+    }
+
+    /**
+     * @brief Sets relation key.
+     * @param relation_key relation key
+     * @return this
+     */
+    EmitStatement& relation_key(std::unique_ptr<key::RelationKey> relation_key) override;
 
     /**
      * @brief Returns a copy of this object.

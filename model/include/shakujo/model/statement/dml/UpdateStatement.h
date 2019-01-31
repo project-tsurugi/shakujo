@@ -21,6 +21,7 @@
 #include <memory>
 
 #include "shakujo/model/expression/Expression.h"
+#include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/key/VariableKey.h"
 #include "shakujo/model/name/Name.h"
 #include "shakujo/model/statement/Statement.h"
@@ -33,7 +34,7 @@ namespace shakujo::model::statement::dml {
  */
 class UpdateStatement
         : public Statement
-        , public key::VariableKey::Provider {
+        , public key::RelationKey::Provider {
 private:
     class Impl;
     std::unique_ptr<Impl> impl_;
@@ -282,25 +283,25 @@ public:
     std::unique_ptr<expression::Expression> release_condition();
 
     /**
-     * @brief Returns referring variable key.
-     * @return referring variable key.
+     * @brief Returns relation key.
+     * @return relation key.
      */
-    key::VariableKey* variable_key() override;
+    key::RelationKey* relation_key() override;
 
     /**
-     * @brief Returns referring variable key.
-     * @return referring variable key.
+     * @brief Returns relation key.
+     * @return relation key.
      */
-    inline key::VariableKey const* variable_key() const override {
-        return const_cast<UpdateStatement*>(this)->variable_key();
+    inline key::RelationKey const* relation_key() const override {
+        return const_cast<UpdateStatement*>(this)->relation_key();
     }
 
     /**
-     * @brief Sets referring variable key.
-     * @param variable_key referring variable key
+     * @brief Sets relation key.
+     * @param relation_key relation key
      * @return this
      */
-    UpdateStatement& variable_key(std::unique_ptr<key::VariableKey> variable_key) override;
+    UpdateStatement& relation_key(std::unique_ptr<key::RelationKey> relation_key) override;
 
     /**
      * @brief Returns a copy of this object.

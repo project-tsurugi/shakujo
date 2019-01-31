@@ -21,12 +21,14 @@
 
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/expression/Expression.h"
+#include "shakujo/model/key/RelationKey.h"
 
 namespace shakujo::model::statement::dml {
 
 class EmitStatement::Impl {
 public:
     common::util::ManagedPtr<expression::Expression> source_;
+    std::unique_ptr<key::RelationKey> relation_key_;
 
     Impl() = default;
     ~Impl() noexcept = default;
@@ -63,6 +65,15 @@ EmitStatement& EmitStatement::source(std::unique_ptr<expression::Expression> sou
 
 std::unique_ptr<expression::Expression> EmitStatement::release_source() {
     return impl_->source_.release();
+}
+
+key::RelationKey* EmitStatement::relation_key() {
+    return impl_->relation_key_.get();
+}
+
+EmitStatement& EmitStatement::relation_key(std::unique_ptr<key::RelationKey> relation_key) {
+    impl_->relation_key_ = std::move(relation_key);
+    return *this;
 }
 
 EmitStatement* EmitStatement::clone() const & {

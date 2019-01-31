@@ -21,6 +21,7 @@
 
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/expression/Expression.h"
+#include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/key/VariableKey.h"
 #include "shakujo/model/name/Name.h"
 #include "shakujo/model/util/FragmentList.h"
@@ -32,7 +33,7 @@ public:
     std::unique_ptr<name::Name> table_;
     util::FragmentList<UpdateStatement::Column> columns_;
     common::util::ManagedPtr<expression::Expression> condition_;
-    std::unique_ptr<key::VariableKey> variable_key_;
+    std::unique_ptr<key::RelationKey> relation_key_;
 
     Impl() = default;
     ~Impl() noexcept = default;
@@ -118,12 +119,12 @@ std::unique_ptr<expression::Expression> UpdateStatement::release_condition() {
     return impl_->condition_.release();
 }
 
-key::VariableKey* UpdateStatement::variable_key() {
-    return impl_->variable_key_.get();
+key::RelationKey* UpdateStatement::relation_key() {
+    return impl_->relation_key_.get();
 }
 
-UpdateStatement& UpdateStatement::variable_key(std::unique_ptr<key::VariableKey> variable_key) {
-    impl_->variable_key_ = std::move(variable_key);
+UpdateStatement& UpdateStatement::relation_key(std::unique_ptr<key::RelationKey> relation_key) {
+    impl_->relation_key_ = std::move(relation_key);
     return *this;
 }
 
