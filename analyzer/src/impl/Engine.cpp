@@ -791,12 +791,38 @@ void Engine::visit(model::statement::dml::EmitStatement* node, ScopeContext& sco
     }
 }
 
+void Engine::enrich_relation_binding(
+        model::Node* node, binding::RelationBinding& relation,
+        common::schema::TableInfo const& table, common::schema::IndexInfo const& index) {
+    relation.source_table(table);
+    if (table.primary_index().is_valid()) {
+        // FIXME: or index was unique
+        relation.distinct(true);
+    }
+    if (index.is_valid()) {
+        auto& order = relation.order();
+        order.reserve(index.columns().size());
+        for (auto& column: index.columns()) {
+            auto column_at = table.index_of(column.name());
+            std::shared_ptr<binding::VariableBinding> column_binding;
+            if (!column_at.has_value()) {
+                report(node, Diagnostic::Code::COLUMN_NOT_FOUND, to_string(column.name()));
+                column_binding = std::make_shared<binding::VariableBinding>();
+            } else {
+                column_binding = relation.columns()[column_at.value()];
+            }
+            order.emplace_back(std::move(column_binding), column.direction());
+        }
+    }
+}
+
 void Engine::visit(model::expression::relation::ScanExpression* node, ScopeContext& prev) {
     auto& storage = env_.storage_info_provider();
     auto& table_info = storage.find_table(common::core::Name(node->table()->segments()));
     if (!table_info.is_valid()) {
         report(node, Diagnostic::Code::TABLE_NOT_FOUND, to_string(node->table()));
         bless_erroneous_expression(node);
+        bless_undefined<binding::RelationBinding>(node);
         return;
     }
 
@@ -814,7 +840,11 @@ void Engine::visit(model::expression::relation::ScanExpression* node, ScopeConte
     }
     auto relation = std::make_unique<common::core::type::Relation>(std::move(columns));
     RelationScope vars { bindings(), &prev.variables(), relation.get() };
-    bless(node, vars.binding());
+
+    auto relation_binding = vars.binding();
+    enrich_relation_binding(node, *relation_binding, table_info, table_info.primary_index());
+    bless(node, std::move(relation_binding));
+
     if (is_defined(node->condition())) {
         ScopeContext scope { vars, prev.functions() };
 

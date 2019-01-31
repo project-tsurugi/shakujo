@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -200,6 +201,36 @@ public:
      */
     std::vector<Column> const& columns() const {
         return columns_;
+    }
+
+    /**
+     * @brief returns the column index of the name.
+     * @param name the column name
+     * @return the index of found column (0-origin)
+     * @return empty if there no such a column
+     */
+    std::optional<std::size_t> index_of(std::string_view name) const {
+        for (std::size_t i = 0U, n = columns_.size(); i < n; ++i) {
+            if (columns_[i].name() == name) {
+                return std::make_optional(i);
+            }
+        }
+        return {};
+    }
+
+    /**
+     * @brief returns the column index of the name.
+     * @param name the column name
+     * @return the index of found column (0-origin)
+     * @return empty if there no such a column
+     */
+    std::optional<std::size_t> index_of(core::Name const& name) const {
+        for (std::size_t i = 0U, n = columns_.size(); i < n; ++i) {
+            if (columns_[i].name() == name) {
+                return std::make_optional(i);
+            }
+        }
+        return {};
     }
 
     /**

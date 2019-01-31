@@ -34,18 +34,5 @@ std::ostream& operator<<(std::ostream &out, const IndexInfo::Column &value) {
     return out;
 }
 
-std::ostream& operator<<(std::ostream &out, IndexInfo::Column::Direction value) {
-    using Direction = IndexInfo::Column::Direction;
-    switch (value) {
-        case Direction::ASCENDANT:
-            out << "ASCENDANT";
-            break;
-        case Direction::DESCENDANT:
-            out << "DESCENDANT";
-            break;
-    }
-    return out;
-}
-
 }  // namespace shakujo::common::schema
 

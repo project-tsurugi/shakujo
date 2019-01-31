@@ -29,6 +29,7 @@
 
 #include "VariableBinding.h"
 
+#include "shakujo/common/core/Direction.h"
 #include "shakujo/common/schema/TableInfo.h"
 #include "shakujo/common/schema/IndexInfo.h"
 
@@ -54,18 +55,7 @@ public:
         /**
          * @brief represents sort order of columns.
          */
-        enum class Direction {
-
-            /**
-             * @brief ascendant order.
-             */
-            ASCENDANT,
-
-            /**
-             * @brief descendant order.
-             */
-            DESCENDANT,
-        };
+        using Direction = common::core::Direction;
 
         /**
          * @brief constructs a new object.

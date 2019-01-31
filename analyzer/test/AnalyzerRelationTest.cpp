@@ -72,6 +72,12 @@ TEST_F(AnalyzerRelationTest, scan) {
     EXPECT_EQ("C1", cols[0].name());
     EXPECT_EQ(t::Int(32, NON_NULL), *cols[0].type());
     EXPECT_EQ(names({"testing"}), cols[0].qualifiers());
+
+    auto binding = extract_relation(expr.get());
+    ASSERT_TRUE(is_valid(binding));
+    EXPECT_TRUE(binding->source_table());
+    EXPECT_EQ(binding->order().size(), 0U);
+    EXPECT_FALSE(binding->distinct());
 }
 
 TEST_F(AnalyzerRelationTest, scan_alias) {

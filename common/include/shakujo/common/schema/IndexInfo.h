@@ -24,6 +24,7 @@
 
 #include "shakujo/common/util/utility.h"
 
+#include "shakujo/common/core/Direction.h"
 #include "shakujo/common/core/Name.h"
 
 namespace shakujo::common::schema {
@@ -41,18 +42,7 @@ public:
         /**
          * @brief represents sort order of columns.
          */
-        enum class Direction {
-
-            /**
-             * @brief ascendant order.
-             */
-            ASCENDANT,
-
-            /**
-             * @brief descendant order.
-             */
-            DESCENDANT,
-        };
+        using Direction = core::Direction;
 
     private:
         std::string name_;
@@ -172,16 +162,6 @@ public:
      */
     friend std::ostream& operator<<(std::ostream& out, IndexInfo const& value);
 };
-
-
-/**
- * @brief Appends the object information into the given output stream.
- * @param out the target output stream
- * @param value the target object
- * @return the output stream
- */
-std::ostream& operator<<(std::ostream& out, IndexInfo::Column::Direction value);
-
 }  // namespace shakujo::common::schema
 
 #endif  // SHAKUJO_COMMON_SCHEMA_INDEX_INFO_H_

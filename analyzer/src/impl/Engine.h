@@ -200,6 +200,10 @@ private:
 
     std::unique_ptr<common::core::Type> resolve_index(model::name::Index*, common::core::type::Tuple const*);
 
+    void enrich_relation_binding(
+            model::Node*, binding::RelationBinding&,
+            common::schema::TableInfo const&, common::schema::IndexInfo const&);
+
     inline void report(common::core::DocumentRegion region, Diagnostic::Code code, std::string message) {
         env_.reporter().report(Diagnostic(std::move(region), code, std::move(message)));
     }

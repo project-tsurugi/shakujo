@@ -49,8 +49,8 @@ public:
     RelationScope& operator=(const RelationScope& other) = delete;
     RelationScope& operator=(RelationScope&& other) noexcept = default;
 
-    std::unique_ptr<binding::RelationBinding> binding() {
-        return std::make_unique<binding::RelationBinding>(columns_);
+    std::shared_ptr<binding::RelationBinding> binding() {
+        return std::make_shared<binding::RelationBinding>(columns_);
     }
 
     scope::Result<binding::VariableBinding> find(model::name::Name const* name) const override;
