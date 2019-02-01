@@ -15,6 +15,8 @@
  */
 #include "RelationScope.h"
 
+#include <cassert>
+
 namespace shakujo::analyzer::impl {
 
 RelationScope::RelationScope(
