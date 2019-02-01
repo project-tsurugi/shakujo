@@ -19,6 +19,7 @@
 #include <any>
 #include <map>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -63,8 +64,8 @@ public:
          * @param direction the sort direction
          */
         Order(std::shared_ptr<VariableBinding> column, Direction direction = Direction::ASCENDANT)  // NOLINT
-                : column_(std::move(column))
-                , direction_(direction)
+            : column_(std::move(column))
+            , direction_(direction)
         {}
 
         /**
@@ -88,13 +89,169 @@ public:
         Direction direction_;
     };
 
+    /**
+     * @brief represents input/output relation profile.
+     */
+    class Profile {
+    public:
+        /**
+         * @brief constructs a new object.
+         */
+        Profile(std::vector<std::shared_ptr<VariableBinding>> columns = {})  // NOLINT
+            : columns_(std::move(columns))
+        {}
+
+        /**
+         * @brief returns the variables that reflect individual row columns.
+         * @return the column variables
+         */
+        std::vector<std::shared_ptr<VariableBinding>>& columns() {
+            return columns_;
+        }
+
+        /**
+         * @brief returns the variables that reflect individual row columns.
+         * @return the column variables
+         */
+        std::vector<std::shared_ptr<VariableBinding>> const& columns() const {
+            return const_cast<Profile*>(this)->columns();
+        }
+
+        /**
+         * @brief returns the index of the column.
+         * @param binding the column binding
+         * @return the column index (0-origin)
+         * @return empty if the binding does not indicates any columns in the corresponded relation
+         */
+        std::optional<std::size_t> index_of(VariableBinding const& binding) {
+            for (std::size_t i = 0, n = columns_.size(); i < n; ++i) {
+                if (columns_[i]->id() == binding.id()) {
+                    return std::make_optional(i);
+                }
+            }
+            return {};
+        }
+
+        /**
+         * @brief returns the source table information.
+         * @return the source table information
+         *      only if the corresponded relation only contains the set of rows in the table
+         * @return the invalid TableInfo otherwise
+         */
+        common::schema::TableInfo const& source_table() const {
+            using common::util::is_defined;
+            if (is_defined(source_table_)) {
+                return *source_table_;
+            }
+            static common::schema::TableInfo const INVALID {};
+            return INVALID;
+        }
+
+        /**
+         * @brief sets the source table information.
+         * @param info the source table
+         * @return this
+         */
+        Profile& source_table(common::schema::TableInfo const& info) {
+            source_table_ = info.is_valid() ? &info : nullptr;
+            return *this;
+        }
+
+        /**
+         * @brief returns the source index information.
+         * @return the source index information
+         *      only if the source_table() is valid and the corresponded relation comes from the index
+         * @return the invalid IndexInfo otherwise
+         */
+        common::schema::IndexInfo const& source_index() const {
+            using common::util::is_defined;
+            if (is_defined(source_index_)) {
+                return *source_index_;
+            }
+            static common::schema::IndexInfo const INVALID {};
+            return INVALID;
+        }
+
+        /**
+         * @brief sets the source index information.
+         * @param info the source index
+         * @return this
+         */
+        Profile& source_index(common::schema::IndexInfo const& info) {
+            source_index_ = info.is_valid() ? &info : nullptr;
+            return *this;
+        }
+
+        /**
+         * @brief return the order of rows in the corresponded relation.
+         * @return order if rows are sorted by the resulting elements
+         * @return empty if rows are not ordered
+         */
+        std::vector<Order>& order() {
+            return order_;
+        }
+
+        /**
+         * @brief return the order of rows in the corresponded relation.
+         * @return order if rows are sorted by the resulting elements
+         * @return empty if rows are not ordered
+         */
+        inline std::vector<Order> const& order() const {
+            return const_cast<Profile*>(this)->order();
+        }
+
+        /**
+         * @brief returns whether or not the the corresponded relation only consists of distinct rows.
+         * @return true if the relation does not have any duplicated rows
+         * @return false if the relation may have duplicated rows
+         */
+        bool distinct() const {
+            return distinct_;
+        }
+
+        /**
+         * @brief sets whether or not the the corresponded relation only consists of distinct rows.
+         * @param distinct true if the relation dows not have any duplicated rows, otherwise false
+         * @return this
+         */
+        Profile& distinct(bool distinct) {
+            distinct_ = distinct;
+            return *this;
+        }
+
+        /**
+         * @brief returns whether or not this profile is valid.
+         * @return true if it is valid
+         * @return false if it has some errors
+         */
+        bool is_valid() const {
+            namespace util = common::util;
+            if (columns().empty()) {
+                return false;
+            }
+            for (auto&& c : columns()) {
+                if (!util::is_valid(c)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+    private:
+        std::vector<std::shared_ptr<VariableBinding>> columns_ {};
+        common::schema::TableInfo const* source_table_ {};
+        common::schema::IndexInfo const* source_index_ {};
+        std::vector<Order> order_ {};
+        bool distinct_ { false };
+    };
 
     /**
-     * @brief Constructs a new object.
-     * @param columns bindings of individual columns
+     * @brief constructs a new object.
+     * @param process a profile while processing the corresponded operator itself
+     * @param output a profile of operator result
      */
-    explicit RelationBinding(std::vector<std::shared_ptr<VariableBinding>> columns = {})
-        : columns_(std::move(columns))
+    explicit RelationBinding(Profile process = {}, Profile output = {})
+        : process_(std::move(process)), output_(std::move(output))
     {}
 
     /**
@@ -108,80 +265,39 @@ public:
     RelationBinding& operator=(RelationBinding&&) noexcept = delete;
 
     /**
-     * @brief returns the variables that reflect individual row columns.
-     * @return the column variables
+     * @brief returns the profile for processing the corresponded operator.
+     * @return the profile for processing the corresponded operator
      */
-    std::vector<std::shared_ptr<VariableBinding>>& columns() {
-        return columns_;
+    inline Profile& process() {
+        return process_;
     }
 
     /**
-     * @brief returns the variables that reflect individual row columns.
-     * @return the column variables
+     * @brief returns the profile for processing the corresponded operator.
+     * If the corresponded operation is a statement (not expression), this profile represents the relation of
+     * operation target (e.g. insert/update/delete target, or emitting relation).
+     * @return the profile for processing the corresponded operator
      */
-    std::vector<std::shared_ptr<VariableBinding>> const& columns() const {
-        return const_cast<RelationBinding*>(this)->columns();
+    inline Profile const& process() const {
+        return process_;
     }
 
     /**
-     * @brief returns the source table information.
-     * @return the source table information
-     *      only if the corresponded relation only contains the set of rows in the table
-     * @return the invalid TableInfo otherwise
+     * @brief returns the output profile.
+     * If the corresponded operation is a statement (not expression), this profile represents the relation of
+     * operation target (e.g. insert/update/delete target, or emitting relation).
+     * @return the output profile
      */
-    common::schema::TableInfo const& source_table() const {
-        if (source_table_) {
-            return *source_table_;
-        }
-        static common::schema::TableInfo const INVALID {};
-        return INVALID;
+    inline Profile& output() {
+        return output_;
     }
 
     /**
-     * @brief sets the source table information.
-     * @param info the source table
-     * @return this
+     * @brief returns the output profile.
+     * @return the output profile
      */
-    RelationBinding& source_table(common::schema::TableInfo const& info) {
-        source_table_ = info.is_valid() ? &info : nullptr;
-        return *this;
-    }
-
-    /**
-     * @brief return the order of rows in the corresponded relation.
-     * @return order if rows are sorted by the resulting elements
-     * @return empty if rows are not ordered
-     */
-    std::vector<Order>& order() {
-        return order_;
-    }
-
-    /**
-     * @brief return the order of rows in the corresponded relation.
-     * @return order if rows are sorted by the resulting elements
-     * @return empty if rows are not ordered
-     */
-    inline std::vector<Order> const& order() const {
-        return const_cast<RelationBinding*>(this)->order();
-    }
-
-    /**
-     * @brief returns whether or not the the corresponded relation only consists of distinct rows.
-     * @return true if the relation does not have any duplicated rows
-     * @return false if the relation may have duplicated rows
-     */
-    bool distinct() const {
-        return distinct_;
-    }
-
-    /**
-     * @brief sets whether or not the the corresponded relation only consists of distinct rows.
-     * @param distinct true if the relation dows not have any duplicated rows, otherwise false
-     * @return this
-     */
-    RelationBinding& distinct(bool distinct) {
-        distinct_ = distinct;
-        return *this;
+    inline Profile const& output() const {
+        return output_;
     }
 
     /**
@@ -261,25 +377,23 @@ public:
      * @return false if it has some errors
      */
     bool is_valid() const {
-        namespace util = common::util;
-        if (columns().empty()) {
-            return false;
-        }
-        for (auto&& c : columns()) {
-            if (!util::is_valid(c)) {
+        if (!process_.columns().empty()) {
+            if (!process_.is_valid()) {
                 return false;
             }
         }
-        return true;
+        if (!output_.columns().empty()) {
+            if (!output_.is_valid()) {
+                return false;
+            }
+        }
+        return !process_.columns().empty() || !output_.columns().empty();
     }
 
 private:
-    std::vector<std::shared_ptr<VariableBinding>> columns_ {};
+    Profile process_;
+    Profile output_;
     std::map<std::string, std::any> attributes_ {};
-
-    common::schema::TableInfo const* source_table_ {};
-    std::vector<Order> order_ {};
-    bool distinct_ { false };
 };
 }  // namespace shakujo::analyzer::binding
 

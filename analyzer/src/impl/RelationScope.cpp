@@ -20,14 +20,22 @@ namespace shakujo::analyzer::impl {
 RelationScope::RelationScope(
         binding::BindingContext& context,
         scope::Scope<binding::VariableBinding> const* parent,
-        common::core::type::Relation const* relation)
+        common::core::type::Relation const* relation,
+        std::vector<std::shared_ptr<binding::VariableBinding>> const& columns)
     : parent_(parent)
 {
+    assert(columns.empty() || relation->columns().size() == columns.size());  // NOLINT
+    std::size_t index = 0;
     for (auto& column : relation->columns()) {
-        auto binding = std::make_shared<binding::VariableBinding>(
-            context.next_variable_id(),
-            common::core::Name(column.name()),
-            column.type());
+        std::shared_ptr<binding::VariableBinding> binding;
+        if (!columns.empty()) {
+            binding = columns[index];
+        } else {
+            binding = std::make_shared<binding::VariableBinding>(
+                context.next_variable_id(),
+                common::core::Name(column.name()),
+                column.type());
+        }
         columns_.push_back(binding);
         if (!table_.contains(column.name())) {
             table_.put(column.name(), binding);
@@ -49,6 +57,7 @@ RelationScope::RelationScope(
                     true);
             }
         }
+        ++index;
     }
 }
 

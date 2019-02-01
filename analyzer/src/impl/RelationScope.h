@@ -19,6 +19,7 @@
 #include <map>
 #include <memory>
 #include <utility>
+#include <vector>
 
 #include "shakujo/analyzer/scope/Scope.h"
 #include "shakujo/analyzer/scope/Result.h"
@@ -41,7 +42,8 @@ public:
     RelationScope(
             binding::BindingContext& context,
             scope::Scope<binding::VariableBinding> const* parent,
-            common::core::type::Relation const* relation);
+            common::core::type::Relation const* relation,
+            std::vector<std::shared_ptr<binding::VariableBinding>> const& columns);
 
     ~RelationScope() noexcept override = default;
     RelationScope(const RelationScope& other) = delete;
@@ -49,8 +51,8 @@ public:
     RelationScope& operator=(const RelationScope& other) = delete;
     RelationScope& operator=(RelationScope&& other) noexcept = default;
 
-    std::shared_ptr<binding::RelationBinding> binding() {
-        return std::make_shared<binding::RelationBinding>(columns_);
+    binding::RelationBinding::Profile profile() {
+        return { columns_ };
     }
 
     scope::Result<binding::VariableBinding> find(model::name::Name const* name) const override;

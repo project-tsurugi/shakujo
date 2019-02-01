@@ -75,9 +75,9 @@ TEST_F(AnalyzerRelationTest, scan) {
 
     auto binding = extract_relation(expr.get());
     ASSERT_TRUE(is_valid(binding));
-    EXPECT_TRUE(binding->source_table());
-    EXPECT_EQ(binding->order().size(), 0U);
-    EXPECT_FALSE(binding->distinct());
+    EXPECT_TRUE(binding->output().source_table());
+    EXPECT_EQ(binding->output().order().size(), 0U);
+    EXPECT_FALSE(binding->output().distinct());
 }
 
 TEST_F(AnalyzerRelationTest, scan_alias) {
@@ -169,9 +169,9 @@ TEST_F(AnalyzerRelationTest, select_ref_simple) {
                     literal(1, 32U, NON_NULL))));
     success();
     auto relation_decl = extract_relation(expr.get());
-    ASSERT_EQ(relation_decl->columns().size(), 1U);
+    ASSERT_EQ(relation_decl->process().columns().size(), 1U);
 
-    auto&& c0_ref = relation_decl->columns()[0];
+    auto&& c0_ref = relation_decl->process().columns()[0];
 
     auto* relation = extract_relation_type(expr.get());
     auto& cols = relation->columns();
@@ -195,9 +195,9 @@ TEST_F(AnalyzerRelationTest, select_ref_qualified) {
                     literal(1, 32U, NON_NULL))));
     success();
     auto relation_decl = extract_relation(expr.get());
-    ASSERT_EQ(relation_decl->columns().size(), 1U);
+    ASSERT_EQ(relation_decl->process().columns().size(), 1U);
 
-    auto&& c0_ref = relation_decl->columns()[0];
+    auto&& c0_ref = relation_decl->process().columns()[0];
 
     auto* relation = extract_relation_type(expr.get());
     auto& cols = relation->columns();
@@ -457,7 +457,7 @@ TEST_F(AnalyzerRelationTest, join_inner) {
     success();
 
     auto relation = extract_relation(expr.get());
-    auto& cols = relation->columns();
+    auto& cols = relation->process().columns();
     ASSERT_EQ(2U, cols.size());
 
     auto* cond = as<expression::BinaryOperator>(expr->condition());
@@ -721,7 +721,7 @@ TEST_F(AnalyzerRelationTest, join_qualified_column) {
     success();
 
     auto relation = extract_relation(expr.get());
-    auto& cols = relation->columns();
+    auto& cols = relation->process().columns();
     ASSERT_EQ(2U, cols.size());
 
     auto* cond = as<expression::BinaryOperator>(expr->condition());

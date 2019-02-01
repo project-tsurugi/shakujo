@@ -131,8 +131,22 @@ protected:
     void visit(model::statement::ddl::CreateTableStatement*, ScopeContext&) override;
 
 private:
-    std::shared_ptr<binding::ExpressionBinding> extract_binding(
-            model::key::ExpressionKey::Provider const* node);
+    std::shared_ptr<binding::ExpressionBinding> extract_binding(model::key::ExpressionKey::Provider const* node) {
+        using common::util::is_defined;
+        auto ptr = bindings().get(node->expression_key());
+        assert(is_defined(ptr));  // NOLINT
+        return ptr;
+    }
+
+    std::shared_ptr<binding::RelationBinding> extract_relation(model::expression::Expression const* node) {
+        using common::util::is_defined;
+        if (auto* provider = dynamic_cast<typename model::key::RelationKey::Provider const*>(node); is_defined(provider)) {
+            auto binding = bindings().find(provider->relation_key());
+            assert(is_defined(binding));  // NOLINT
+            return binding;
+        }
+        throw std::domain_error("invalid expression");
+    }
 
     void insert_cast(model::expression::Expression*, common::core::Type const*);
 
@@ -200,8 +214,8 @@ private:
 
     std::unique_ptr<common::core::Type> resolve_index(model::name::Index*, common::core::type::Tuple const*);
 
-    void enrich_relation_binding(
-            model::Node*, binding::RelationBinding&,
+    void enrich_relation_profile(
+            model::Node*, binding::RelationBinding::Profile&,
             common::schema::TableInfo const&, common::schema::IndexInfo const&);
 
     inline void report(common::core::DocumentRegion region, Diagnostic::Code code, std::string message) {

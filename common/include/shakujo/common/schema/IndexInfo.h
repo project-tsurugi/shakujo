@@ -96,6 +96,15 @@ public:
     IndexInfo() noexcept = default;
 
     /**
+     * @brief constructs a new object that represents a primary index.
+     * @param name the index name
+     * @param columns the columns
+     */
+    IndexInfo(std::vector<Column> columns)  // NOLINT
+        : columns_(std::move(columns))
+    {}
+
+    /**
      * @brief constructs a new object.
      * @param name the index name
      * @param columns the columns
@@ -118,6 +127,15 @@ public:
         : name_(name)
         , columns_(std::move(columns))
     {}
+
+    /**
+     * @brief returns whether or not this index is primary.
+     * @return true if it is primary index
+     * @return false otherwise
+     */
+    bool is_primary() const {
+        return name_.empty();
+    }
 
     /**
      * @brief returns the index name.
