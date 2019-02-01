@@ -16,6 +16,7 @@
 #ifndef SHAKUJO_ANALYZER_IMPL_ENGINE_H_
 #define SHAKUJO_ANALYZER_IMPL_ENGINE_H_
 
+#include <cassert>
 #include <memory>
 #include <string>
 #include <string_view>
