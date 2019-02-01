@@ -19,7 +19,6 @@
 #include <utility>
 #include <memory>
 #include <set>
-#include <iostream>
 
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/expression/Expression.h"
@@ -126,15 +125,6 @@ LocalVariableDeclaration* LocalVariableDeclaration::clone() const & {
 
 LocalVariableDeclaration* LocalVariableDeclaration::clone() && {
     return new LocalVariableDeclaration(std::move(impl_));  // NOLINT
-}
-
-std::ostream& operator<<(std::ostream& out, LocalVariableDeclaration::Attribute value) {
-    switch (value) {
-    case LocalVariableDeclaration::Attribute::CONST:
-        out << "CONST";
-        break;
-    }
-    return out;
 }
 
 }  // namespace shakujo::model::statement

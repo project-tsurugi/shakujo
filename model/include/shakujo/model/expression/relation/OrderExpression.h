@@ -19,6 +19,8 @@
 
 #include <utility>
 #include <memory>
+#include <string>
+#include <string_view>
 #include <iostream>
 
 #include "shakujo/model/expression/Expression.h"
@@ -300,13 +302,29 @@ public:
 
 };
 /**
- * @brief Appends short name into the given output stream.
+ * @brief returns string representation of the given value.
+ * @param value the target enum constant
+ * @return string representation
+ * @see OrderExpression::Direction
+ */
+inline constexpr std::string_view to_string_view(OrderExpression::Direction value) {
+    switch (value) {
+        case OrderExpression::Direction::ASCENDANT: return "ASCENDANT";
+        case OrderExpression::Direction::DESCENDANT: return "DESCENDANT";
+    }
+    return "(unknown)";
+}
+
+/**
+ * @brief appends short name into the given output stream.
  * @param out the target output stream
  * @param value the target enum constant
  * @return the output stream
  * @see OrderExpression::Direction
  */
-std::ostream& operator<<(std::ostream& out, OrderExpression::Direction value);
+inline std::ostream& operator<<(std::ostream& out, OrderExpression::Direction value) {
+    return out << to_string_view(value);
+}
 
 }  // namespace shakujo::model::expression::relation
 

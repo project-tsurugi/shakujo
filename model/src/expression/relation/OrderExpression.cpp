@@ -18,7 +18,6 @@
 
 #include <utility>
 #include <memory>
-#include <iostream>
 
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/expression/Expression.h"
@@ -169,18 +168,6 @@ OrderExpression::Element* OrderExpression::Element::clone() const & {
 
 OrderExpression::Element* OrderExpression::Element::clone() && {
     return new OrderExpression::Element(std::move(impl_));  // NOLINT
-}
-
-std::ostream& operator<<(std::ostream& out, OrderExpression::Direction value) {
-    switch (value) {
-    case OrderExpression::Direction::ASCENDANT:
-        out << "ASCENDANT";
-        break;
-    case OrderExpression::Direction::DESCENDANT:
-        out << "DESCENDANT";
-        break;
-    }
-    return out;
 }
 
 }  // namespace shakujo::model::expression::relation

@@ -17,6 +17,8 @@
 #ifndef SHAKUJO_MODEL_PROGRAM_GLOBAL_DECLARATION_KIND_H_
 #define SHAKUJO_MODEL_PROGRAM_GLOBAL_DECLARATION_KIND_H_
 
+#include <string>
+#include <string_view>
 #include <iostream>
 
 
@@ -39,13 +41,29 @@ enum class GlobalDeclarationKind {
 };
 
 /**
+ * @brief returns string representation of the given value.
+ * @param value the target enum constant
+ * @return string representation
+ * @see GlobalDeclarationKind
+ */
+inline constexpr std::string_view to_string_view(GlobalDeclarationKind value) {
+    switch (value) {
+        case GlobalDeclarationKind::GLOBAL_FUNCTION_DECLARATION: return "GLOBAL_FUNCTION_DECLARATION";
+        case GlobalDeclarationKind::GLOBAL_VARIABLE_DECLARATION: return "GLOBAL_VARIABLE_DECLARATION";
+    }
+    return "(unknown)";
+}
+
+/**
  * @brief Appends short name into the given output stream.
  * @param out the target output stream
  * @param value the target enum constant
  * @return the output stream
  * @see GlobalDeclarationKind
  */
-std::ostream& operator<<(std::ostream& out, GlobalDeclarationKind value);
+inline std::ostream& operator<<(std::ostream& out, GlobalDeclarationKind value) {
+    return out << to_string_view(value);
+}
 
 }  // namespace shakujo::model::program
 

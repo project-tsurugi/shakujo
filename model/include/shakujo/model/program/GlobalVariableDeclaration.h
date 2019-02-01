@@ -19,6 +19,8 @@
 
 #include <utility>
 #include <memory>
+#include <string>
+#include <string_view>
 #include <set>
 #include <iostream>
 
@@ -234,13 +236,29 @@ public:
 
 };
 /**
- * @brief Appends short name into the given output stream.
+ * @brief returns string representation of the given value.
+ * @param value the target enum constant
+ * @return string representation
+ * @see GlobalVariableDeclaration::Attribute
+ */
+inline constexpr std::string_view to_string_view(GlobalVariableDeclaration::Attribute value) {
+    switch (value) {
+        case GlobalVariableDeclaration::Attribute::CONST: return "CONST";
+        case GlobalVariableDeclaration::Attribute::PARAMETER: return "PARAMETER";
+    }
+    return "(unknown)";
+}
+
+/**
+ * @brief appends short name into the given output stream.
  * @param out the target output stream
  * @param value the target enum constant
  * @return the output stream
  * @see GlobalVariableDeclaration::Attribute
  */
-std::ostream& operator<<(std::ostream& out, GlobalVariableDeclaration::Attribute value);
+inline std::ostream& operator<<(std::ostream& out, GlobalVariableDeclaration::Attribute value) {
+    return out << to_string_view(value);
+}
 
 }  // namespace shakujo::model::program
 

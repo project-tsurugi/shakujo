@@ -19,6 +19,8 @@
 
 #include <utility>
 #include <memory>
+#include <string>
+#include <string_view>
 #include <set>
 #include <iostream>
 
@@ -473,31 +475,79 @@ public:
 
 };
 /**
- * @brief Appends short name into the given output stream.
+ * @brief returns string representation of the given value.
+ * @param value the target enum constant
+ * @return string representation
+ * @see CreateTableStatement::Attribute
+ */
+inline constexpr std::string_view to_string_view(CreateTableStatement::Attribute value) {
+    switch (value) {
+        case CreateTableStatement::Attribute::IF_NOT_EXISTS: return "IF_NOT_EXISTS";
+    }
+    return "(unknown)";
+}
+
+/**
+ * @brief appends short name into the given output stream.
  * @param out the target output stream
  * @param value the target enum constant
  * @return the output stream
  * @see CreateTableStatement::Attribute
  */
-std::ostream& operator<<(std::ostream& out, CreateTableStatement::Attribute value);
+inline std::ostream& operator<<(std::ostream& out, CreateTableStatement::Attribute value) {
+    return out << to_string_view(value);
+}
 
 /**
- * @brief Appends short name into the given output stream.
+ * @brief returns string representation of the given value.
+ * @param value the target enum constant
+ * @return string representation
+ * @see CreateTableStatement::Column::Attribute
+ */
+inline constexpr std::string_view to_string_view(CreateTableStatement::Column::Attribute value) {
+    switch (value) {
+        case CreateTableStatement::Column::Attribute::NOT_NULL: return "NOT_NULL";
+        case CreateTableStatement::Column::Attribute::PRIMARY_KEY: return "PRIMARY_KEY";
+    }
+    return "(unknown)";
+}
+
+/**
+ * @brief appends short name into the given output stream.
  * @param out the target output stream
  * @param value the target enum constant
  * @return the output stream
  * @see CreateTableStatement::Column::Attribute
  */
-std::ostream& operator<<(std::ostream& out, CreateTableStatement::Column::Attribute value);
+inline std::ostream& operator<<(std::ostream& out, CreateTableStatement::Column::Attribute value) {
+    return out << to_string_view(value);
+}
 
 /**
- * @brief Appends short name into the given output stream.
+ * @brief returns string representation of the given value.
+ * @param value the target enum constant
+ * @return string representation
+ * @see CreateTableStatement::PrimaryKey::Direction
+ */
+inline constexpr std::string_view to_string_view(CreateTableStatement::PrimaryKey::Direction value) {
+    switch (value) {
+        case CreateTableStatement::PrimaryKey::Direction::DONT_CARE: return "DONT_CARE";
+        case CreateTableStatement::PrimaryKey::Direction::ASCENDANT: return "ASCENDANT";
+        case CreateTableStatement::PrimaryKey::Direction::DESCENDANT: return "DESCENDANT";
+    }
+    return "(unknown)";
+}
+
+/**
+ * @brief appends short name into the given output stream.
  * @param out the target output stream
  * @param value the target enum constant
  * @return the output stream
  * @see CreateTableStatement::PrimaryKey::Direction
  */
-std::ostream& operator<<(std::ostream& out, CreateTableStatement::PrimaryKey::Direction value);
+inline std::ostream& operator<<(std::ostream& out, CreateTableStatement::PrimaryKey::Direction value) {
+    return out << to_string_view(value);
+}
 
 }  // namespace shakujo::model::statement::ddl
 

@@ -18,7 +18,6 @@
 
 #include <utility>
 #include <memory>
-#include <iostream>
 
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/expression/Expression.h"
@@ -135,51 +134,6 @@ JoinExpression* JoinExpression::clone() const & {
 
 JoinExpression* JoinExpression::clone() && {
     return new JoinExpression(std::move(impl_));  // NOLINT
-}
-
-std::ostream& operator<<(std::ostream& out, JoinExpression::Kind value) {
-    switch (value) {
-    case JoinExpression::Kind::CROSS:
-        out << "CROSS";
-        break;
-    case JoinExpression::Kind::INNER:
-        out << "INNER";
-        break;
-    case JoinExpression::Kind::LEFT_OUTER:
-        out << "LEFT_OUTER";
-        break;
-    case JoinExpression::Kind::RIGHT_OUTER:
-        out << "RIGHT_OUTER";
-        break;
-    case JoinExpression::Kind::FULL_OUTER:
-        out << "FULL_OUTER";
-        break;
-    case JoinExpression::Kind::NATURAL_INNER:
-        out << "NATURAL_INNER";
-        break;
-    case JoinExpression::Kind::NATURAL_LEFT_OUTER:
-        out << "NATURAL_LEFT_OUTER";
-        break;
-    case JoinExpression::Kind::NATURAL_RIGHT_OUTER:
-        out << "NATURAL_RIGHT_OUTER";
-        break;
-    case JoinExpression::Kind::NATURAL_FULL_OUTER:
-        out << "NATURAL_FULL_OUTER";
-        break;
-    case JoinExpression::Kind::UNION_OUTER:
-        out << "UNION_OUTER";
-        break;
-    case JoinExpression::Kind::LEFT_SEMI:
-        out << "LEFT_SEMI";
-        break;
-    case JoinExpression::Kind::RIGHT_SEMI:
-        out << "RIGHT_SEMI";
-        break;
-    case JoinExpression::Kind::INVALID:
-        out << "INVALID";
-        break;
-    }
-    return out;
 }
 
 }  // namespace shakujo::model::expression::relation

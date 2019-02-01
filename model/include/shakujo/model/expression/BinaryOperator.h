@@ -19,6 +19,8 @@
 
 #include <utility>
 #include <memory>
+#include <string>
+#include <string_view>
 #include <iostream>
 
 #include "shakujo/model/expression/Expression.h"
@@ -347,13 +349,58 @@ public:
 
 };
 /**
- * @brief Appends short name into the given output stream.
+ * @brief returns string representation of the given value.
+ * @param value the target enum constant
+ * @return string representation
+ * @see BinaryOperator::Kind
+ */
+inline constexpr std::string_view to_string_view(BinaryOperator::Kind value) {
+    switch (value) {
+        case BinaryOperator::Kind::ADD: return "ADD";
+        case BinaryOperator::Kind::SUBTRACT: return "SUBTRACT";
+        case BinaryOperator::Kind::MULTIPLY: return "MULTIPLY";
+        case BinaryOperator::Kind::DIVIDE: return "DIVIDE";
+        case BinaryOperator::Kind::REMAINDER: return "REMAINDER";
+        case BinaryOperator::Kind::BITWISE_AND: return "BITWISE_AND";
+        case BinaryOperator::Kind::BITWISE_OR: return "BITWISE_OR";
+        case BinaryOperator::Kind::BITWISE_XOR: return "BITWISE_XOR";
+        case BinaryOperator::Kind::SHIFT_LEFT: return "SHIFT_LEFT";
+        case BinaryOperator::Kind::SHIFT_RIGHT_ARITHMETIC: return "SHIFT_RIGHT_ARITHMETIC";
+        case BinaryOperator::Kind::SHIFT_RIGHT_LOGICAL: return "SHIFT_RIGHT_LOGICAL";
+        case BinaryOperator::Kind::EQUAL: return "EQUAL";
+        case BinaryOperator::Kind::NOT_EQUAL: return "NOT_EQUAL";
+        case BinaryOperator::Kind::LESS_THAN: return "LESS_THAN";
+        case BinaryOperator::Kind::GREATER_THAN: return "GREATER_THAN";
+        case BinaryOperator::Kind::LESS_THAN_OR_EQUAL: return "LESS_THAN_OR_EQUAL";
+        case BinaryOperator::Kind::GREATER_THAN_OR_EQUAL: return "GREATER_THAN_OR_EQUAL";
+        case BinaryOperator::Kind::IN: return "IN";
+        case BinaryOperator::Kind::LOGICAL_AND: return "LOGICAL_AND";
+        case BinaryOperator::Kind::LOGICAL_OR: return "LOGICAL_OR";
+        case BinaryOperator::Kind::LOGICAL_XOR: return "LOGICAL_XOR";
+        case BinaryOperator::Kind::CONDITIONAL_AND: return "CONDITIONAL_AND";
+        case BinaryOperator::Kind::CONDITIONAL_OR: return "CONDITIONAL_OR";
+        case BinaryOperator::Kind::RELATION_IN: return "RELATION_IN";
+        case BinaryOperator::Kind::RELATION_UNION: return "RELATION_UNION";
+        case BinaryOperator::Kind::RELATION_INTERSECTION: return "RELATION_INTERSECTION";
+        case BinaryOperator::Kind::RELATION_DIFFERENCE: return "RELATION_DIFFERENCE";
+        case BinaryOperator::Kind::RELATION_UNION_ALL: return "RELATION_UNION_ALL";
+        case BinaryOperator::Kind::RELATION_INTERSECTION_ALL: return "RELATION_INTERSECTION_ALL";
+        case BinaryOperator::Kind::RELATION_DIFFERENCE_ALL: return "RELATION_DIFFERENCE_ALL";
+        case BinaryOperator::Kind::INVALID: return "INVALID";
+    }
+    return "(unknown)";
+}
+
+/**
+ * @brief appends short name into the given output stream.
  * @param out the target output stream
  * @param value the target enum constant
  * @return the output stream
  * @see BinaryOperator::Kind
  */
-std::ostream& operator<<(std::ostream& out, BinaryOperator::Kind value);
+inline std::ostream& operator<<(std::ostream& out, BinaryOperator::Kind value) {
+    return out << to_string_view(value);
+}
 
 }  // namespace shakujo::model::expression
 

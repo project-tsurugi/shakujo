@@ -18,7 +18,6 @@
 
 #include <utility>
 #include <memory>
-#include <iostream>
 
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/expression/Expression.h"
@@ -112,18 +111,6 @@ TypeOperator* TypeOperator::clone() const & {
 
 TypeOperator* TypeOperator::clone() && {
     return new TypeOperator(std::move(impl_));  // NOLINT
-}
-
-std::ostream& operator<<(std::ostream& out, TypeOperator::Kind value) {
-    switch (value) {
-    case TypeOperator::Kind::CAST:
-        out << "CAST";
-        break;
-    case TypeOperator::Kind::INVALID:
-        out << "INVALID";
-        break;
-    }
-    return out;
 }
 
 }  // namespace shakujo::model::expression

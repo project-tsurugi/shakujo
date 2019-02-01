@@ -18,7 +18,6 @@
 
 #include <utility>
 #include <memory>
-#include <iostream>
 
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/expression/Expression.h"
@@ -109,105 +108,6 @@ BinaryOperator* BinaryOperator::clone() const & {
 
 BinaryOperator* BinaryOperator::clone() && {
     return new BinaryOperator(std::move(impl_));  // NOLINT
-}
-
-std::ostream& operator<<(std::ostream& out, BinaryOperator::Kind value) {
-    switch (value) {
-    case BinaryOperator::Kind::ADD:
-        out << "ADD";
-        break;
-    case BinaryOperator::Kind::SUBTRACT:
-        out << "SUBTRACT";
-        break;
-    case BinaryOperator::Kind::MULTIPLY:
-        out << "MULTIPLY";
-        break;
-    case BinaryOperator::Kind::DIVIDE:
-        out << "DIVIDE";
-        break;
-    case BinaryOperator::Kind::REMAINDER:
-        out << "REMAINDER";
-        break;
-    case BinaryOperator::Kind::BITWISE_AND:
-        out << "BITWISE_AND";
-        break;
-    case BinaryOperator::Kind::BITWISE_OR:
-        out << "BITWISE_OR";
-        break;
-    case BinaryOperator::Kind::BITWISE_XOR:
-        out << "BITWISE_XOR";
-        break;
-    case BinaryOperator::Kind::SHIFT_LEFT:
-        out << "SHIFT_LEFT";
-        break;
-    case BinaryOperator::Kind::SHIFT_RIGHT_ARITHMETIC:
-        out << "SHIFT_RIGHT_ARITHMETIC";
-        break;
-    case BinaryOperator::Kind::SHIFT_RIGHT_LOGICAL:
-        out << "SHIFT_RIGHT_LOGICAL";
-        break;
-    case BinaryOperator::Kind::EQUAL:
-        out << "EQUAL";
-        break;
-    case BinaryOperator::Kind::NOT_EQUAL:
-        out << "NOT_EQUAL";
-        break;
-    case BinaryOperator::Kind::LESS_THAN:
-        out << "LESS_THAN";
-        break;
-    case BinaryOperator::Kind::GREATER_THAN:
-        out << "GREATER_THAN";
-        break;
-    case BinaryOperator::Kind::LESS_THAN_OR_EQUAL:
-        out << "LESS_THAN_OR_EQUAL";
-        break;
-    case BinaryOperator::Kind::GREATER_THAN_OR_EQUAL:
-        out << "GREATER_THAN_OR_EQUAL";
-        break;
-    case BinaryOperator::Kind::IN:
-        out << "IN";
-        break;
-    case BinaryOperator::Kind::LOGICAL_AND:
-        out << "LOGICAL_AND";
-        break;
-    case BinaryOperator::Kind::LOGICAL_OR:
-        out << "LOGICAL_OR";
-        break;
-    case BinaryOperator::Kind::LOGICAL_XOR:
-        out << "LOGICAL_XOR";
-        break;
-    case BinaryOperator::Kind::CONDITIONAL_AND:
-        out << "CONDITIONAL_AND";
-        break;
-    case BinaryOperator::Kind::CONDITIONAL_OR:
-        out << "CONDITIONAL_OR";
-        break;
-    case BinaryOperator::Kind::RELATION_IN:
-        out << "RELATION_IN";
-        break;
-    case BinaryOperator::Kind::RELATION_UNION:
-        out << "RELATION_UNION";
-        break;
-    case BinaryOperator::Kind::RELATION_INTERSECTION:
-        out << "RELATION_INTERSECTION";
-        break;
-    case BinaryOperator::Kind::RELATION_DIFFERENCE:
-        out << "RELATION_DIFFERENCE";
-        break;
-    case BinaryOperator::Kind::RELATION_UNION_ALL:
-        out << "RELATION_UNION_ALL";
-        break;
-    case BinaryOperator::Kind::RELATION_INTERSECTION_ALL:
-        out << "RELATION_INTERSECTION_ALL";
-        break;
-    case BinaryOperator::Kind::RELATION_DIFFERENCE_ALL:
-        out << "RELATION_DIFFERENCE_ALL";
-        break;
-    case BinaryOperator::Kind::INVALID:
-        out << "INVALID";
-        break;
-    }
-    return out;
 }
 
 }  // namespace shakujo::model::expression

@@ -18,7 +18,6 @@
 
 #include <utility>
 #include <memory>
-#include <iostream>
 
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/expression/Expression.h"
@@ -94,63 +93,6 @@ UnaryOperator* UnaryOperator::clone() const & {
 
 UnaryOperator* UnaryOperator::clone() && {
     return new UnaryOperator(std::move(impl_));  // NOLINT
-}
-
-std::ostream& operator<<(std::ostream& out, UnaryOperator::Kind value) {
-    switch (value) {
-    case UnaryOperator::Kind::PLUS:
-        out << "PLUS";
-        break;
-    case UnaryOperator::Kind::SIGN_INVERSION:
-        out << "SIGN_INVERSION";
-        break;
-    case UnaryOperator::Kind::BITWISE_COMPLEMENT:
-        out << "BITWISE_COMPLEMENT";
-        break;
-    case UnaryOperator::Kind::LOGICAL_NOT:
-        out << "LOGICAL_NOT";
-        break;
-    case UnaryOperator::Kind::CONDITIONAL_NOT:
-        out << "CONDITIONAL_NOT";
-        break;
-    case UnaryOperator::Kind::IS_NULL:
-        out << "IS_NULL";
-        break;
-    case UnaryOperator::Kind::IS_NOT_NULL:
-        out << "IS_NOT_NULL";
-        break;
-    case UnaryOperator::Kind::IS_TRUE:
-        out << "IS_TRUE";
-        break;
-    case UnaryOperator::Kind::IS_NOT_TRUE:
-        out << "IS_NOT_TRUE";
-        break;
-    case UnaryOperator::Kind::IS_FALSE:
-        out << "IS_FALSE";
-        break;
-    case UnaryOperator::Kind::IS_NOT_FALSE:
-        out << "IS_NOT_FALSE";
-        break;
-    case UnaryOperator::Kind::CHECK_NULL:
-        out << "CHECK_NULL";
-        break;
-    case UnaryOperator::Kind::RELATION_ALL:
-        out << "RELATION_ALL";
-        break;
-    case UnaryOperator::Kind::RELATION_ANY:
-        out << "RELATION_ANY";
-        break;
-    case UnaryOperator::Kind::RELATION_EXISTS:
-        out << "RELATION_EXISTS";
-        break;
-    case UnaryOperator::Kind::RELATION_NOT_EXISTS:
-        out << "RELATION_NOT_EXISTS";
-        break;
-    case UnaryOperator::Kind::INVALID:
-        out << "INVALID";
-        break;
-    }
-    return out;
 }
 
 }  // namespace shakujo::model::expression

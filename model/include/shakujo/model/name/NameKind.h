@@ -17,6 +17,8 @@
 #ifndef SHAKUJO_MODEL_NAME_NAME_KIND_H_
 #define SHAKUJO_MODEL_NAME_NAME_KIND_H_
 
+#include <string>
+#include <string_view>
 #include <iostream>
 
 
@@ -39,13 +41,29 @@ enum class NameKind {
 };
 
 /**
+ * @brief returns string representation of the given value.
+ * @param value the target enum constant
+ * @return string representation
+ * @see NameKind
+ */
+inline constexpr std::string_view to_string_view(NameKind value) {
+    switch (value) {
+        case NameKind::QUALIFIED_NAME: return "QUALIFIED_NAME";
+        case NameKind::SIMPLE_NAME: return "SIMPLE_NAME";
+    }
+    return "(unknown)";
+}
+
+/**
  * @brief Appends short name into the given output stream.
  * @param out the target output stream
  * @param value the target enum constant
  * @return the output stream
  * @see NameKind
  */
-std::ostream& operator<<(std::ostream& out, NameKind value);
+inline std::ostream& operator<<(std::ostream& out, NameKind value) {
+    return out << to_string_view(value);
+}
 
 }  // namespace shakujo::model::name
 

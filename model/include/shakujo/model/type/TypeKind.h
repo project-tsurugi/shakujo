@@ -17,6 +17,8 @@
 #ifndef SHAKUJO_MODEL_TYPE_TYPE_KIND_H_
 #define SHAKUJO_MODEL_TYPE_TYPE_KIND_H_
 
+#include <string>
+#include <string_view>
 #include <iostream>
 
 
@@ -94,13 +96,40 @@ enum class TypeKind {
 };
 
 /**
+ * @brief returns string representation of the given value.
+ * @param value the target enum constant
+ * @return string representation
+ * @see TypeKind
+ */
+inline constexpr std::string_view to_string_view(TypeKind value) {
+    switch (value) {
+        case TypeKind::ARRAY_TYPE: return "ARRAY_TYPE";
+        case TypeKind::BOOLEAN_TYPE: return "BOOLEAN_TYPE";
+        case TypeKind::CHAR_TYPE: return "CHAR_TYPE";
+        case TypeKind::FLOAT32_TYPE: return "FLOAT32_TYPE";
+        case TypeKind::FLOAT64_TYPE: return "FLOAT64_TYPE";
+        case TypeKind::INT32_TYPE: return "INT32_TYPE";
+        case TypeKind::INT64_TYPE: return "INT64_TYPE";
+        case TypeKind::NULL_TYPE: return "NULL_TYPE";
+        case TypeKind::RELATION_TYPE: return "RELATION_TYPE";
+        case TypeKind::STRING_TYPE: return "STRING_TYPE";
+        case TypeKind::TUPLE_TYPE: return "TUPLE_TYPE";
+        case TypeKind::VAR_CHAR_TYPE: return "VAR_CHAR_TYPE";
+        case TypeKind::VECTOR_TYPE: return "VECTOR_TYPE";
+    }
+    return "(unknown)";
+}
+
+/**
  * @brief Appends short name into the given output stream.
  * @param out the target output stream
  * @param value the target enum constant
  * @return the output stream
  * @see TypeKind
  */
-std::ostream& operator<<(std::ostream& out, TypeKind value);
+inline std::ostream& operator<<(std::ostream& out, TypeKind value) {
+    return out << to_string_view(value);
+}
 
 }  // namespace shakujo::model::type
 

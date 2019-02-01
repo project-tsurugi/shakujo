@@ -153,6 +153,11 @@ public class IncludeList {
         STRING("string"),
 
         /**
+         * {@code <string_view>}.
+         */
+        STRING_VIEW("string_view"),
+
+        /**
          * {@code <vector>}.
          */
         VECTOR("vector"),

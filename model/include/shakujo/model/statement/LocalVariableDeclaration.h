@@ -19,6 +19,8 @@
 
 #include <utility>
 #include <memory>
+#include <string>
+#include <string_view>
 #include <set>
 #include <iostream>
 
@@ -229,13 +231,28 @@ public:
 
 };
 /**
- * @brief Appends short name into the given output stream.
+ * @brief returns string representation of the given value.
+ * @param value the target enum constant
+ * @return string representation
+ * @see LocalVariableDeclaration::Attribute
+ */
+inline constexpr std::string_view to_string_view(LocalVariableDeclaration::Attribute value) {
+    switch (value) {
+        case LocalVariableDeclaration::Attribute::CONST: return "CONST";
+    }
+    return "(unknown)";
+}
+
+/**
+ * @brief appends short name into the given output stream.
  * @param out the target output stream
  * @param value the target enum constant
  * @return the output stream
  * @see LocalVariableDeclaration::Attribute
  */
-std::ostream& operator<<(std::ostream& out, LocalVariableDeclaration::Attribute value);
+inline std::ostream& operator<<(std::ostream& out, LocalVariableDeclaration::Attribute value) {
+    return out << to_string_view(value);
+}
 
 }  // namespace shakujo::model::statement
 

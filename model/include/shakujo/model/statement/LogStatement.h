@@ -19,6 +19,8 @@
 
 #include <utility>
 #include <memory>
+#include <string>
+#include <string_view>
 #include <iostream>
 
 #include "shakujo/model/expression/Expression.h"
@@ -179,13 +181,34 @@ public:
 
 };
 /**
- * @brief Appends short name into the given output stream.
+ * @brief returns string representation of the given value.
+ * @param value the target enum constant
+ * @return string representation
+ * @see LogStatement::Level
+ */
+inline constexpr std::string_view to_string_view(LogStatement::Level value) {
+    switch (value) {
+        case LogStatement::Level::TRACE: return "TRACE";
+        case LogStatement::Level::DEBUG: return "DEBUG";
+        case LogStatement::Level::INFO: return "INFO";
+        case LogStatement::Level::MESSAGE: return "MESSAGE";
+        case LogStatement::Level::WARNING: return "WARNING";
+        case LogStatement::Level::ERROR: return "ERROR";
+        case LogStatement::Level::CRITICAL: return "CRITICAL";
+    }
+    return "(unknown)";
+}
+
+/**
+ * @brief appends short name into the given output stream.
  * @param out the target output stream
  * @param value the target enum constant
  * @return the output stream
  * @see LogStatement::Level
  */
-std::ostream& operator<<(std::ostream& out, LogStatement::Level value);
+inline std::ostream& operator<<(std::ostream& out, LogStatement::Level value) {
+    return out << to_string_view(value);
+}
 
 }  // namespace shakujo::model::statement
 

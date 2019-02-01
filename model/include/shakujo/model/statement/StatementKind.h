@@ -17,6 +17,8 @@
 #ifndef SHAKUJO_MODEL_STATEMENT_STATEMENT_KIND_H_
 #define SHAKUJO_MODEL_STATEMENT_STATEMENT_KIND_H_
 
+#include <string>
+#include <string_view>
 #include <iostream>
 
 
@@ -149,13 +151,51 @@ enum class StatementKind {
 };
 
 /**
+ * @brief returns string representation of the given value.
+ * @param value the target enum constant
+ * @return string representation
+ * @see StatementKind
+ */
+inline constexpr std::string_view to_string_view(StatementKind value) {
+    switch (value) {
+        case StatementKind::ANCHOR_DECLARATION: return "ANCHOR_DECLARATION";
+        case StatementKind::BLOCK_STATEMENT: return "BLOCK_STATEMENT";
+        case StatementKind::BRANCH_STATEMENT: return "BRANCH_STATEMENT";
+        case StatementKind::BREAK_STATEMENT: return "BREAK_STATEMENT";
+        case StatementKind::CONTINUE_STATEMENT: return "CONTINUE_STATEMENT";
+        case StatementKind::EMPTY_STATEMENT: return "EMPTY_STATEMENT";
+        case StatementKind::EXPRESSION_STATEMENT: return "EXPRESSION_STATEMENT";
+        case StatementKind::FOR_EACH_STATEMENT: return "FOR_EACH_STATEMENT";
+        case StatementKind::FOR_STATEMENT: return "FOR_STATEMENT";
+        case StatementKind::LOCAL_VARIABLE_DECLARATION: return "LOCAL_VARIABLE_DECLARATION";
+        case StatementKind::LOG_STATEMENT: return "LOG_STATEMENT";
+        case StatementKind::RAISE_STATEMENT: return "RAISE_STATEMENT";
+        case StatementKind::RETURN_STATEMENT: return "RETURN_STATEMENT";
+        case StatementKind::VECTOR_ELEMENT_DELETE_STATEMENT: return "VECTOR_ELEMENT_DELETE_STATEMENT";
+        case StatementKind::VECTOR_ELEMENT_INSERT_STATEMENT: return "VECTOR_ELEMENT_INSERT_STATEMENT";
+        case StatementKind::WHILE_STATEMENT: return "WHILE_STATEMENT";
+        case StatementKind::CREATE_TABLE_STATEMENT: return "CREATE_TABLE_STATEMENT";
+        case StatementKind::DROP_TABLE_STATEMENT: return "DROP_TABLE_STATEMENT";
+        case StatementKind::DELETE_STATEMENT: return "DELETE_STATEMENT";
+        case StatementKind::EMIT_STATEMENT: return "EMIT_STATEMENT";
+        case StatementKind::INSERT_RELATION_STATEMENT: return "INSERT_RELATION_STATEMENT";
+        case StatementKind::INSERT_VALUES_STATEMENT: return "INSERT_VALUES_STATEMENT";
+        case StatementKind::UPDATE_STATEMENT: return "UPDATE_STATEMENT";
+        case StatementKind::TRANSACTION_BLOCK_STATEMENT: return "TRANSACTION_BLOCK_STATEMENT";
+    }
+    return "(unknown)";
+}
+
+/**
  * @brief Appends short name into the given output stream.
  * @param out the target output stream
  * @param value the target enum constant
  * @return the output stream
  * @see StatementKind
  */
-std::ostream& operator<<(std::ostream& out, StatementKind value);
+inline std::ostream& operator<<(std::ostream& out, StatementKind value) {
+    return out << to_string_view(value);
+}
 
 }  // namespace shakujo::model::statement
 

@@ -19,7 +19,6 @@
 #include <utility>
 #include <memory>
 #include <string>
-#include <iostream>
 
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/expression/Expression.h"
@@ -106,24 +105,6 @@ StringOperator* StringOperator::clone() const & {
 
 StringOperator* StringOperator::clone() && {
     return new StringOperator(std::move(impl_));  // NOLINT
-}
-
-std::ostream& operator<<(std::ostream& out, StringOperator::Kind value) {
-    switch (value) {
-    case StringOperator::Kind::LIKE:
-        out << "LIKE";
-        break;
-    case StringOperator::Kind::LIKE_IGNORECASE:
-        out << "LIKE_IGNORECASE";
-        break;
-    case StringOperator::Kind::REGEX:
-        out << "REGEX";
-        break;
-    case StringOperator::Kind::INVALID:
-        out << "INVALID";
-        break;
-    }
-    return out;
 }
 
 }  // namespace shakujo::model::expression

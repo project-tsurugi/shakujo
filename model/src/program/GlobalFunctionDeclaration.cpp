@@ -19,7 +19,6 @@
 #include <utility>
 #include <memory>
 #include <set>
-#include <iostream>
 
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/key/FunctionKey.h"
@@ -225,24 +224,6 @@ GlobalFunctionDeclaration::Parameter* GlobalFunctionDeclaration::Parameter::clon
 
 GlobalFunctionDeclaration::Parameter* GlobalFunctionDeclaration::Parameter::clone() && {
     return new GlobalFunctionDeclaration::Parameter(std::move(impl_));  // NOLINT
-}
-
-std::ostream& operator<<(std::ostream& out, GlobalFunctionDeclaration::Attribute value) {
-    switch (value) {
-    case GlobalFunctionDeclaration::Attribute::INLINE:
-        out << "INLINE";
-        break;
-    }
-    return out;
-}
-
-std::ostream& operator<<(std::ostream& out, GlobalFunctionDeclaration::Parameter::Attribute value) {
-    switch (value) {
-    case GlobalFunctionDeclaration::Parameter::Attribute::CONST:
-        out << "CONST";
-        break;
-    }
-    return out;
 }
 
 }  // namespace shakujo::model::program

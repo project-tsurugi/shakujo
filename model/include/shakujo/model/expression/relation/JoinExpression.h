@@ -19,6 +19,8 @@
 
 #include <utility>
 #include <memory>
+#include <string>
+#include <string_view>
 #include <iostream>
 
 #include "shakujo/model/expression/Expression.h"
@@ -307,13 +309,40 @@ public:
 
 };
 /**
- * @brief Appends short name into the given output stream.
+ * @brief returns string representation of the given value.
+ * @param value the target enum constant
+ * @return string representation
+ * @see JoinExpression::Kind
+ */
+inline constexpr std::string_view to_string_view(JoinExpression::Kind value) {
+    switch (value) {
+        case JoinExpression::Kind::CROSS: return "CROSS";
+        case JoinExpression::Kind::INNER: return "INNER";
+        case JoinExpression::Kind::LEFT_OUTER: return "LEFT_OUTER";
+        case JoinExpression::Kind::RIGHT_OUTER: return "RIGHT_OUTER";
+        case JoinExpression::Kind::FULL_OUTER: return "FULL_OUTER";
+        case JoinExpression::Kind::NATURAL_INNER: return "NATURAL_INNER";
+        case JoinExpression::Kind::NATURAL_LEFT_OUTER: return "NATURAL_LEFT_OUTER";
+        case JoinExpression::Kind::NATURAL_RIGHT_OUTER: return "NATURAL_RIGHT_OUTER";
+        case JoinExpression::Kind::NATURAL_FULL_OUTER: return "NATURAL_FULL_OUTER";
+        case JoinExpression::Kind::UNION_OUTER: return "UNION_OUTER";
+        case JoinExpression::Kind::LEFT_SEMI: return "LEFT_SEMI";
+        case JoinExpression::Kind::RIGHT_SEMI: return "RIGHT_SEMI";
+        case JoinExpression::Kind::INVALID: return "INVALID";
+    }
+    return "(unknown)";
+}
+
+/**
+ * @brief appends short name into the given output stream.
  * @param out the target output stream
  * @param value the target enum constant
  * @return the output stream
  * @see JoinExpression::Kind
  */
-std::ostream& operator<<(std::ostream& out, JoinExpression::Kind value);
+inline std::ostream& operator<<(std::ostream& out, JoinExpression::Kind value) {
+    return out << to_string_view(value);
+}
 
 }  // namespace shakujo::model::expression::relation
 

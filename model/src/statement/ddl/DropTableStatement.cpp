@@ -19,7 +19,6 @@
 #include <utility>
 #include <memory>
 #include <set>
-#include <iostream>
 
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/name/Name.h"
@@ -81,15 +80,6 @@ DropTableStatement* DropTableStatement::clone() const & {
 
 DropTableStatement* DropTableStatement::clone() && {
     return new DropTableStatement(std::move(impl_));  // NOLINT
-}
-
-std::ostream& operator<<(std::ostream& out, DropTableStatement::Attribute value) {
-    switch (value) {
-    case DropTableStatement::Attribute::IF_EXISTS:
-        out << "IF_EXISTS";
-        break;
-    }
-    return out;
 }
 
 }  // namespace shakujo::model::statement::ddl

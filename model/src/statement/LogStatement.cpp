@@ -18,7 +18,6 @@
 
 #include <utility>
 #include <memory>
-#include <iostream>
 
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/expression/Expression.h"
@@ -83,33 +82,6 @@ LogStatement* LogStatement::clone() const & {
 
 LogStatement* LogStatement::clone() && {
     return new LogStatement(std::move(impl_));  // NOLINT
-}
-
-std::ostream& operator<<(std::ostream& out, LogStatement::Level value) {
-    switch (value) {
-    case LogStatement::Level::TRACE:
-        out << "TRACE";
-        break;
-    case LogStatement::Level::DEBUG:
-        out << "DEBUG";
-        break;
-    case LogStatement::Level::INFO:
-        out << "INFO";
-        break;
-    case LogStatement::Level::MESSAGE:
-        out << "MESSAGE";
-        break;
-    case LogStatement::Level::WARNING:
-        out << "WARNING";
-        break;
-    case LogStatement::Level::ERROR:
-        out << "ERROR";
-        break;
-    case LogStatement::Level::CRITICAL:
-        out << "CRITICAL";
-        break;
-    }
-    return out;
 }
 
 }  // namespace shakujo::model::statement

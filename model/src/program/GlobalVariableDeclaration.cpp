@@ -19,7 +19,6 @@
 #include <utility>
 #include <memory>
 #include <set>
-#include <iostream>
 
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/expression/Expression.h"
@@ -126,18 +125,6 @@ GlobalVariableDeclaration* GlobalVariableDeclaration::clone() const & {
 
 GlobalVariableDeclaration* GlobalVariableDeclaration::clone() && {
     return new GlobalVariableDeclaration(std::move(impl_));  // NOLINT
-}
-
-std::ostream& operator<<(std::ostream& out, GlobalVariableDeclaration::Attribute value) {
-    switch (value) {
-    case GlobalVariableDeclaration::Attribute::CONST:
-        out << "CONST";
-        break;
-    case GlobalVariableDeclaration::Attribute::PARAMETER:
-        out << "PARAMETER";
-        break;
-    }
-    return out;
 }
 
 }  // namespace shakujo::model::program

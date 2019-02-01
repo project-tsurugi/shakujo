@@ -19,7 +19,6 @@
 #include <utility>
 #include <memory>
 #include <set>
-#include <iostream>
 
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/expression/Expression.h"
@@ -258,42 +257,6 @@ CreateTableStatement::PrimaryKey* CreateTableStatement::PrimaryKey::clone() cons
 
 CreateTableStatement::PrimaryKey* CreateTableStatement::PrimaryKey::clone() && {
     return new CreateTableStatement::PrimaryKey(std::move(impl_));  // NOLINT
-}
-
-std::ostream& operator<<(std::ostream& out, CreateTableStatement::Attribute value) {
-    switch (value) {
-    case CreateTableStatement::Attribute::IF_NOT_EXISTS:
-        out << "IF_NOT_EXISTS";
-        break;
-    }
-    return out;
-}
-
-std::ostream& operator<<(std::ostream& out, CreateTableStatement::Column::Attribute value) {
-    switch (value) {
-    case CreateTableStatement::Column::Attribute::NOT_NULL:
-        out << "NOT_NULL";
-        break;
-    case CreateTableStatement::Column::Attribute::PRIMARY_KEY:
-        out << "PRIMARY_KEY";
-        break;
-    }
-    return out;
-}
-
-std::ostream& operator<<(std::ostream& out, CreateTableStatement::PrimaryKey::Direction value) {
-    switch (value) {
-    case CreateTableStatement::PrimaryKey::Direction::DONT_CARE:
-        out << "DONT_CARE";
-        break;
-    case CreateTableStatement::PrimaryKey::Direction::ASCENDANT:
-        out << "ASCENDANT";
-        break;
-    case CreateTableStatement::PrimaryKey::Direction::DESCENDANT:
-        out << "DESCENDANT";
-        break;
-    }
-    return out;
 }
 
 }  // namespace shakujo::model::statement::ddl

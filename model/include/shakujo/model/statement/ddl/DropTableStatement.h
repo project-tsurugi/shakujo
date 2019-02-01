@@ -19,6 +19,8 @@
 
 #include <utility>
 #include <memory>
+#include <string>
+#include <string_view>
 #include <set>
 #include <iostream>
 
@@ -150,13 +152,28 @@ public:
 
 };
 /**
- * @brief Appends short name into the given output stream.
+ * @brief returns string representation of the given value.
+ * @param value the target enum constant
+ * @return string representation
+ * @see DropTableStatement::Attribute
+ */
+inline constexpr std::string_view to_string_view(DropTableStatement::Attribute value) {
+    switch (value) {
+        case DropTableStatement::Attribute::IF_EXISTS: return "IF_EXISTS";
+    }
+    return "(unknown)";
+}
+
+/**
+ * @brief appends short name into the given output stream.
  * @param out the target output stream
  * @param value the target enum constant
  * @return the output stream
  * @see DropTableStatement::Attribute
  */
-std::ostream& operator<<(std::ostream& out, DropTableStatement::Attribute value);
+inline std::ostream& operator<<(std::ostream& out, DropTableStatement::Attribute value) {
+    return out << to_string_view(value);
+}
 
 }  // namespace shakujo::model::statement::ddl
 

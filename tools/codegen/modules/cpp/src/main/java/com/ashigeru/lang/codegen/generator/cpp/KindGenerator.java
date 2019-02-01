@@ -49,7 +49,6 @@ public class KindGenerator {
      */
     public void generate(CppFiler filer, TypeDeclaration baseClass) throws IOException {
         generateHeader(filer, baseClass);
-        generateSource(filer, baseClass);
     }
 
     private void generateHeader(CppFiler filer, TypeDeclaration baseClass) throws IOException {
@@ -81,7 +80,7 @@ public class KindGenerator {
         baseClass.getName().getParent().ifPresent(printer::namespace);
         generateBody(printer, baseClass, targets);
         printer.put();
-        processPrintingDecl(printer);
+        processPrinting(printer, targets);
         return printer;
     }
 
@@ -103,7 +102,32 @@ public class KindGenerator {
         printer.put("};");
     }
 
-    private static void processPrintingDecl(CppPrinter printer) {
+    private static void processPrinting(CppPrinter printer, List<ClassDeclaration> targets) {
+        printer.getIncludes().add(IncludeList.Standard.STRING);
+        printer.getIncludes().add(IncludeList.Standard.STRING_VIEW);
+        printer.put("/**");
+        printer.put(" * @brief returns string representation of the given value.");
+        printer.put(" * @param value the target enum constant");
+        printer.put(" * @return string representation");
+        printer.put(" * @see %s", printer.getContextName(printer.getName()));
+        printer.put(" */");
+        printer.put("inline constexpr std::string_view to_string_view(%s value) {",
+                printer.getContextName(printer.getName()));
+        printer.indent(() -> {
+            printer.put("switch (value) {");
+            for (ClassDeclaration c : targets) {
+                printer.indent(() -> {
+                    printer.put("case %s::%s: return \"%s\";",
+                            printer.getContextName(printer.getName()),
+                            getConstantName(c),
+                            getConstantName(c));
+                });
+            }
+            printer.put("}");
+            printer.put("return \"(unknown)\";");
+        });
+        printer.put("}");
+        printer.put();
         printer.getIncludes().add(IncludeList.Standard.IOSTREAM);
         printer.put("/**");
         printer.put(" * @brief Appends short name into the given output stream.");
@@ -112,41 +136,10 @@ public class KindGenerator {
         printer.put(" * @return the output stream");
         printer.put(" * @see %s", printer.getContextName(printer.getName()));
         printer.put(" */");
-        printer.put("std::ostream& operator<<(std::ostream& out, %s value);",
-                printer.getContextName(printer.getName()));
-        printer.put();
-    }
-
-    private void generateSource(CppFiler filer, TypeDeclaration baseClass) throws IOException {
-        CppPrinter printer = generateSource(baseClass);
-        printer.printTo(filer);
-    }
-
-    private CppPrinter generateSource(TypeDeclaration baseClass) {
-        CppPrinter printer = CppPrinter.sourceFile(getTypeName(baseClass));
-        List<ClassDeclaration> targets = repository.getSubtypes(baseClass.asTypeMirror());
-        baseClass.getName().getParent().ifPresent(printer::namespace);
-        processPrintingBody(printer, targets);
-        return printer;
-    }
-
-    private static void processPrintingBody(CppPrinter printer, List<ClassDeclaration> targets) {
-        printer.getIncludes().add(IncludeList.Standard.IOSTREAM);
-        printer.put("std::ostream& operator<<(std::ostream& out, %s value) {",
+        printer.put("inline std::ostream& operator<<(std::ostream& out, %s value) {",
                 printer.getContextName(printer.getName()));
         printer.indent(() -> {
-            printer.put("switch (value) {");
-            for (ClassDeclaration c : targets) {
-                printer.put("case %s::%s:",
-                        printer.getContextName(printer.getName()),
-                        getConstantName(c));
-                printer.indent(() -> {
-                    printer.put("out << \"%s\";", getConstantName(c));
-                    printer.put("break;");
-                });
-            }
-            printer.put("}");
-            printer.put("return out;");
+            printer.put("return out << to_string_view(value);");
         });
         printer.put("}");
         printer.put();

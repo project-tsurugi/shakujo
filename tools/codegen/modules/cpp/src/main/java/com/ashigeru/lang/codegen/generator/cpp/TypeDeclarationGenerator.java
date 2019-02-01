@@ -931,15 +931,42 @@ public class TypeDeclarationGenerator {
         }
 
         private void processEnumPrinting(EnumTypeDeclaration decl) {
+            printer.getIncludes().add(IncludeList.Standard.STRING);
+            printer.getIncludes().add(IncludeList.Standard.STRING_VIEW);
+            printer.put("/**");
+            printer.put(" * @brief returns string representation of the given value.");
+            printer.put(" * @param value the target enum constant");
+            printer.put(" * @return string representation");
+            printer.put(" * @see %s", printer.getContextName(decl));
+            printer.put(" */");
+            printer.put("inline constexpr std::string_view to_string_view(%s value) {",
+                    printer.getContextName(decl));
+            printer.indent(() -> {
+                printer.put("switch (value) {");
+                printer.indent(() -> {
+                    for (EnumConstantDeclaration c : decl.getMembers()) {
+                        printer.put("case %s: return \"%s\";", printer.getContextName(c), Util.getSimpleName(c));
+                    }
+                });
+                printer.put("}");
+                printer.put("return \"(unknown)\";");
+            });
+            printer.put("}");
+            printer.put();
             printer.getIncludes().add(IncludeList.Standard.IOSTREAM);
             printer.put("/**");
-            printer.put(" * @brief Appends short name into the given output stream.");
+            printer.put(" * @brief appends short name into the given output stream.");
             printer.put(" * @param out the target output stream");
             printer.put(" * @param value the target enum constant");
             printer.put(" * @return the output stream");
             printer.put(" * @see %s", printer.getContextName(decl));
             printer.put(" */");
-            printer.put("std::ostream& operator<<(std::ostream& out, %s value);", printer.getContextName(decl));
+            printer.put("inline std::ostream& operator<<(std::ostream& out, %s value) {",
+                    printer.getContextName(decl));
+            printer.indent(() -> {
+                printer.put("return out << to_string_view(value);");
+            });
+            printer.put("}");
             printer.put();
         }
 
@@ -1027,7 +1054,6 @@ public class TypeDeclarationGenerator {
 
             processImplClass(topLevel);
             processWrapperClass(topLevel);
-            processEnumPrinting(topLevel);
         }
 
         private void processImplClass(ClassDeclaration decl) {
@@ -1543,32 +1569,6 @@ public class TypeDeclarationGenerator {
                     printer.put("return new %s();  // NOLINT", 
                             printer.getContextName(decl));
                 }
-            });
-            printer.put("}");
-            printer.put();
-        }
-
-        private void processEnumPrinting(TypeDeclaration decl) {
-            if (decl instanceof EnumTypeDeclaration) {
-                processEnumPrinting((EnumTypeDeclaration) decl);
-            }
-            decl.members(TypeDeclaration.class).forEach(this::processEnumPrinting);
-        }
-
-        private void processEnumPrinting(EnumTypeDeclaration decl) {
-            printer.getIncludes().add(IncludeList.Standard.IOSTREAM);
-            printer.put("std::ostream& operator<<(std::ostream& out, %s value) {", printer.getContextName(decl));
-            printer.indent(() -> {
-                printer.put("switch (value) {");
-                for (EnumConstantDeclaration c : decl.getMembers()) {
-                    printer.put("case %s:", printer.getContextName(c));
-                    printer.indent(() -> {
-                        printer.put("out << \"%s\";", Util.getSimpleName(c));
-                        printer.put("break;");
-                    });
-                }
-                printer.put("}");
-                printer.put("return out;");
             });
             printer.put("}");
             printer.put();

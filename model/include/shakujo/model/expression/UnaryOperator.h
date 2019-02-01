@@ -19,6 +19,8 @@
 
 #include <utility>
 #include <memory>
+#include <string>
+#include <string_view>
 #include <iostream>
 
 #include "shakujo/model/expression/Expression.h"
@@ -250,13 +252,44 @@ public:
 
 };
 /**
- * @brief Appends short name into the given output stream.
+ * @brief returns string representation of the given value.
+ * @param value the target enum constant
+ * @return string representation
+ * @see UnaryOperator::Kind
+ */
+inline constexpr std::string_view to_string_view(UnaryOperator::Kind value) {
+    switch (value) {
+        case UnaryOperator::Kind::PLUS: return "PLUS";
+        case UnaryOperator::Kind::SIGN_INVERSION: return "SIGN_INVERSION";
+        case UnaryOperator::Kind::BITWISE_COMPLEMENT: return "BITWISE_COMPLEMENT";
+        case UnaryOperator::Kind::LOGICAL_NOT: return "LOGICAL_NOT";
+        case UnaryOperator::Kind::CONDITIONAL_NOT: return "CONDITIONAL_NOT";
+        case UnaryOperator::Kind::IS_NULL: return "IS_NULL";
+        case UnaryOperator::Kind::IS_NOT_NULL: return "IS_NOT_NULL";
+        case UnaryOperator::Kind::IS_TRUE: return "IS_TRUE";
+        case UnaryOperator::Kind::IS_NOT_TRUE: return "IS_NOT_TRUE";
+        case UnaryOperator::Kind::IS_FALSE: return "IS_FALSE";
+        case UnaryOperator::Kind::IS_NOT_FALSE: return "IS_NOT_FALSE";
+        case UnaryOperator::Kind::CHECK_NULL: return "CHECK_NULL";
+        case UnaryOperator::Kind::RELATION_ALL: return "RELATION_ALL";
+        case UnaryOperator::Kind::RELATION_ANY: return "RELATION_ANY";
+        case UnaryOperator::Kind::RELATION_EXISTS: return "RELATION_EXISTS";
+        case UnaryOperator::Kind::RELATION_NOT_EXISTS: return "RELATION_NOT_EXISTS";
+        case UnaryOperator::Kind::INVALID: return "INVALID";
+    }
+    return "(unknown)";
+}
+
+/**
+ * @brief appends short name into the given output stream.
  * @param out the target output stream
  * @param value the target enum constant
  * @return the output stream
  * @see UnaryOperator::Kind
  */
-std::ostream& operator<<(std::ostream& out, UnaryOperator::Kind value);
+inline std::ostream& operator<<(std::ostream& out, UnaryOperator::Kind value) {
+    return out << to_string_view(value);
+}
 
 }  // namespace shakujo::model::expression
 
