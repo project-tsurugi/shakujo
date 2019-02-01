@@ -35,6 +35,7 @@ namespace shakujo::analyzer::binding {
 
 /**
  * @brief Provides semantic information of variables.
+ * FIXME: accept name aliases
  */
 class VariableBinding final {
 private:

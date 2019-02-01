@@ -246,6 +246,119 @@ public:
     };
 
     /**
+     * @brief join operation detail of each resulting column.
+     */
+    class JoinColumn {
+    public:
+        /**
+         * @brief constructs a new object.
+         * @param qualifiers the output variable qualifiers - FIXME: variable binding with aliases instead
+         * @param output the output column binding
+         * @param left_source the source column binding from the left operand
+         * @param nullify_left_source whether or not the value from the left operand must be nullified
+         * @param right_source the source column binding from the right operand
+         * @param nullify_right_source whether or not the value from the right operand must be nullified
+         */
+        JoinColumn(
+                std::vector<common::core::Name> qualifiers,
+                std::shared_ptr<binding::VariableBinding> output,
+                std::shared_ptr<binding::VariableBinding> left_source, bool nullify_left_source,
+                std::shared_ptr<binding::VariableBinding> right_source, bool nullify_right_source)
+            : qualifiers_(std::move(qualifiers)), output_(std::move(output))
+            , left_source_(std::move(left_source)), nullify_left_source_(nullify_left_source)
+            , right_source_(std::move(right_source)), nullify_right_source_(nullify_right_source)
+        {}
+
+        /**
+         * @brief constructs a new object which refers the left operand.
+         * @param output the output column binding
+         * @param source the source column binding from the left operand
+         * @param nullify whether or not the value from the left operand must be nullified
+         * @return the created object
+         */
+        inline static JoinColumn left(
+                std::vector<common::core::Name> qualifiers,
+                std::shared_ptr<binding::VariableBinding> output,
+                std::shared_ptr<binding::VariableBinding> source, bool nullify) {
+            return { std::move(qualifiers), std::move(output), std::move(source), nullify, {}, {} };
+        }
+
+        /**
+         * @brief constructs a new object which refers the left operand.
+         * @param output the output column binding
+         * @param source the source column binding from the left operand
+         * @param nullify whether or not the value from the left operand must be nullified
+         * @return the created object
+         */
+        inline static JoinColumn right(
+                std::vector<common::core::Name> qualifiers,
+                std::shared_ptr<binding::VariableBinding> output,
+                std::shared_ptr<binding::VariableBinding> source, bool nullify) {
+            return { std::move(qualifiers), std::move(output), {}, {}, std::move(source), nullify };
+        }
+
+        /**
+         * @brief returns the available output column qualifiers.
+         * @return output column qualifiers
+         */
+        std::vector<common::core::Name> const& qualifiers() const {
+            return qualifiers_;
+        }
+
+        /**
+         * @brief returns the output column binding.
+         * @return the output column binding
+         */
+        std::shared_ptr<binding::VariableBinding> output() const {
+            return output_;
+        }
+
+        /**
+         * @brief returns the source column binding from the left operand.
+         * @return the source column binding
+         * @return empty if the target output does not refer column from the left operand
+         */
+        std::shared_ptr<binding::VariableBinding> left_source() const {
+            return left_source_;
+        }
+
+        /**
+         * @brief returns the source column binding from the right operand.
+         * @return the source column binding
+         * @return empty if the target output does not refer column from the right operand
+         */
+        std::shared_ptr<binding::VariableBinding> right_source() const {
+            return right_source_;
+        }
+
+        /**
+         * @brief returns whether or not the value from left operand must be nullified before compare or output.
+         * @return true if the output column value must be nullified
+         * @return false otherwise, or the target output does not refer value from the left operand
+         */
+        bool nullify_left_source() const {
+            return nullify_left_source_;
+        }
+
+        /**
+         * @brief returns whether or not the value from right operand must be nullified before compare or output.
+         * @return true if the output column value must be nullified
+         * @return false otherwise, or the target output does not refer value from the right operand
+         */
+        bool nullify_right_source() const {
+            return nullify_right_source_;
+        }
+
+    private:
+        std::vector<common::core::Name> qualifiers_;
+        std::shared_ptr<binding::VariableBinding> output_;
+        std::shared_ptr<binding::VariableBinding> left_source_;
+        bool nullify_left_source_;
+        std::shared_ptr<binding::VariableBinding> right_source_;
+        bool nullify_right_source_;
+    };
+
+    /**
      * @brief constructs a new object.
      * @param process a profile while processing the corresponded operator itself
      * @param output a profile of operator result
@@ -298,6 +411,26 @@ public:
      */
     inline Profile const& output() const {
         return output_;
+    }
+
+    /**
+     * @brief returns the join operation of individual columns.
+     * This is only available for JoinExpressions.
+     * @return the join operations
+     * @return empty if the corresponded operation is not a valid JoinExpression
+     */
+    std::vector<JoinColumn>& join_columns() {
+        return join_columns_;
+    }
+
+    /**
+     * @brief returns the join operation of individual columns.
+     * This is only available for JoinExpressions.
+     * @return the join operations
+     * @return empty if the corresponded operation is not a valid JoinExpression
+     */
+    std::vector<JoinColumn> const& join_columns() const {
+        return join_columns_;
     }
 
     /**
@@ -393,6 +526,7 @@ public:
 private:
     Profile process_;
     Profile output_;
+    std::vector<JoinColumn> join_columns_ {};
     std::map<std::string, std::any> attributes_ {};
 };
 }  // namespace shakujo::analyzer::binding

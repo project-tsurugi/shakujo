@@ -43,6 +43,14 @@ public:
             binding::BindingContext& context,
             scope::Scope<binding::VariableBinding> const* parent,
             common::core::type::Relation const* relation,
+            std::vector<std::shared_ptr<binding::VariableBinding>> const& columns)
+        : RelationScope(context, parent, std::vector { relation }, columns)
+    {}
+
+    RelationScope(
+            binding::BindingContext& context,
+            scope::Scope<binding::VariableBinding> const* parent,
+            std::vector<common::core::type::Relation const*> relations,
             std::vector<std::shared_ptr<binding::VariableBinding>> const& columns);
 
     ~RelationScope() noexcept override = default;

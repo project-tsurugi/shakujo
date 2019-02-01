@@ -219,6 +219,16 @@ private:
             model::Node*, binding::RelationBinding::Profile&,
             common::schema::TableInfo const&, common::schema::IndexInfo const&);
 
+    std::vector<binding::RelationBinding::JoinColumn> compute_join_columns(
+            model::expression::relation::JoinExpression const* node,
+            std::vector<std::shared_ptr<binding::VariableBinding>> const& left_variables,
+            std::vector<std::shared_ptr<binding::VariableBinding>> const& right_variables,
+            common::core::type::Relation const* left,
+            common::core::type::Relation const* right,
+            bool natural,
+            bool left_null,
+            bool right_null);
+
     inline void report(common::core::DocumentRegion region, Diagnostic::Code code, std::string message) {
         env_.reporter().report(Diagnostic(std::move(region), code, std::move(message)));
     }

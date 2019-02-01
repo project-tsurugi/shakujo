@@ -15,6 +15,7 @@
  */
 #include "RelationScope.h"
 
+#include <algorithm>
 #include <cassert>
 
 namespace shakujo::analyzer::impl {
@@ -22,44 +23,46 @@ namespace shakujo::analyzer::impl {
 RelationScope::RelationScope(
         binding::BindingContext& context,
         scope::Scope<binding::VariableBinding> const* parent,
-        common::core::type::Relation const* relation,
+        std::vector<common::core::type::Relation const*> relations,
         std::vector<std::shared_ptr<binding::VariableBinding>> const& columns)
     : parent_(parent)
 {
-    assert(columns.empty() || relation->columns().size() == columns.size());  // NOLINT
     std::size_t index = 0;
-    for (auto& column : relation->columns()) {
-        std::shared_ptr<binding::VariableBinding> binding;
-        if (!columns.empty()) {
-            binding = columns[index];
-        } else {
-            binding = std::make_shared<binding::VariableBinding>(
-                context.next_variable_id(),
-                common::core::Name(column.name()),
-                column.type());
-        }
-        columns_.push_back(binding);
-        if (!table_.contains(column.name())) {
-            table_.put(column.name(), binding);
-        } else {
-            table_.put(
-                column.name(),
-                std::make_shared<binding::VariableBinding>(), // ambiguous
-                true);
-        }
-        for (auto& qualifier : column.qualifiers()) {
-            auto qname = qualifier.segments(); // take a copy
-            qname.push_back(column.name());
-            if (!table_.contains(qname)) {
-                table_.put(std::move(qname), binding);
+    for (auto* relation : relations) {
+        for (auto& column : relation->columns()) {
+            std::shared_ptr<binding::VariableBinding> binding;
+            if (!columns.empty()) {
+                assert(index < columns.size());  // NOLINT
+                binding = columns[index];
+            } else {
+                binding = std::make_shared<binding::VariableBinding>(
+                    context.next_variable_id(),
+                    common::core::Name(column.name()),
+                    column.type());
+            }
+            columns_.push_back(binding);
+            if (!table_.contains(column.name())) {
+                table_.put(column.name(), binding);
             } else {
                 table_.put(
-                    std::move(qname),
+                    column.name(),
                     std::make_shared<binding::VariableBinding>(), // ambiguous
                     true);
             }
+            for (auto& qualifier : column.qualifiers()) {
+                auto qname = qualifier.segments(); // take a copy
+                qname.push_back(column.name());
+                if (!table_.contains(qname)) {
+                    table_.put(std::move(qname), binding);
+                } else {
+                    table_.put(
+                        std::move(qname),
+                        std::make_shared<binding::VariableBinding>(), // ambiguous
+                        true);
+                }
+            }
+            ++index;
         }
-        ++index;
     }
 }
 

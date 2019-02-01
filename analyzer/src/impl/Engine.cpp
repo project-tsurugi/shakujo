@@ -954,82 +954,114 @@ void Engine::visit(model::expression::relation::ProjectionExpression* node, Scop
     bless(node, std::make_unique<common::core::type::Relation>(std::move(columns)));
 }
 
-static inline bool is_natural_join(model::expression::relation::JoinExpression::Kind kind) {
-    using Kind = model::expression::relation::JoinExpression::Kind;
-    switch (kind) {
-    case Kind::NATURAL_INNER:
-    case Kind::NATURAL_LEFT_OUTER:
-    case Kind::NATURAL_RIGHT_OUTER:
-    case Kind::NATURAL_FULL_OUTER:
-        return true;
-    case Kind::CROSS:
-    case Kind::INNER:
-    case Kind::LEFT_OUTER:
-    case Kind::RIGHT_OUTER:
-    case Kind::FULL_OUTER:
-    case Kind::UNION_OUTER:
-    case Kind::LEFT_SEMI:
-    case Kind::RIGHT_SEMI:
-    case Kind::INVALID:
-        return false;
-    }
-    abort();
-}
-
-static inline std::unique_ptr<common::core::type::Relation> compute_join_type(
+std::vector<binding::RelationBinding::JoinColumn> Engine::compute_join_columns(
+        model::expression::relation::JoinExpression const* node,
+        std::vector<std::shared_ptr<binding::VariableBinding>> const& left_variables,
+        std::vector<std::shared_ptr<binding::VariableBinding>> const& right_variables,
         common::core::type::Relation const* left,
         common::core::type::Relation const* right,
         bool natural,
         bool left_null,
         bool right_null) {
-    std::map<std::string, std::vector<common::core::Name>> unified_qualifiers {};
+    std::map<std::string, std::size_t> natural_joined {};
+    bool saw_error = false;
     if (natural) {
-        for (auto& left_column : left->columns()) {
-            for (auto& right_column : right->columns()) {
+        for (auto&& left_column : left->columns()) {
+            for (std::size_t i_right = 0, n_right = right->columns().size(); i_right < n_right; ++i_right) {
+                auto&& right_column = right->columns()[i_right];
                 if (left_column.name() == right_column.name()) {
-                    std::vector<common::core::Name> qualifier {};
-                    for (auto& q : left_column.qualifiers()) {
-                        qualifier.emplace_back(q);
+                    if (natural_joined.find(left_column.name()) == natural_joined.end()) {
+                        natural_joined.emplace(left_column.name(), i_right);
+                        if (!typing::is_equality_comparable(left_column.type(), right_column.type())) {
+                            saw_error = true;
+                            report(node->right(), Diagnostic::Code::INCOMPATIBLE_EXPRESSION_TYPE, to_string(
+                                "cannot compare equality, ",
+                                "left: ", left_column.type(), " (", left_column.name(), "), ",
+                                "right: ", left_column.type(), " (", right_column.name(), ")"));
+                        }
+                    } else {
+                        saw_error = true;
+                        report(node->right(), Diagnostic::Code::DUPLICATE_COLUMN, to_string(
+                            "duplicate natural join column: ", left_column.name()));
                     }
-                    for (auto& q : right_column.qualifiers()) {
-                        qualifier.emplace_back(q);
-                    }
-                    unified_qualifiers.emplace(left_column.name(), std::move(qualifier));
                 }
             }
         }
+        if (natural_joined.empty()) {
+            saw_error = true;
+            report(node->right(), Diagnostic::Code::MISSING_NATURAL_JOIN_PAIR, "no common columns");
+        }
+    }
+    if (saw_error) {
+        return {};
     }
 
-    std::vector<common::core::type::Relation::Column> columns {};
-    for (auto& column : left->columns()) {
-        std::vector<common::core::Name> qualifiers {};
-        auto iter = unified_qualifiers.find(column.name());
-        if (iter == unified_qualifiers.end()) {
-            qualifiers = column.qualifiers();
-        } else {
-            qualifiers = std::move(iter->second);
-        }
-        std::unique_ptr<common::core::Type> type {};
-        if (left_null && !typing::is_nullable(column.type())) {
-            type = typing::nullity(column.type(), common::core::Type::Nullity::NULLABLE);
-        } else {
-            type = make_clone(column.type());
-        }
-        columns.emplace_back(std::move(qualifiers), column.name(), std::move(type));
-    }
-    for (auto& column : right->columns()) {
-        std::unique_ptr<common::core::Type> type {};
-        if (right_null && !typing::is_nullable(column.type())) {
-            type = typing::nullity(column.type(), common::core::Type::Nullity::NULLABLE);
-        } else {
-            type = make_clone(column.type());
-        }
-        if (auto iter = unified_qualifiers.find(column.name()); iter == unified_qualifiers.end()) {
-            columns.emplace_back(column.qualifiers(), column.name(), std::move(type));
-        }
-    }
+    std::vector<binding::RelationBinding::JoinColumn> columns {};
+    for (std::size_t i = 0, n = left->columns().size(); i < n; ++i) {
+        auto&& left_column = left->columns()[i];
+        auto left_variable = left_variables[i];
+        decltype(left_variable) right_variable {};
+        bool left_nullify = false;
+        bool right_nullify = false;
 
-    return std::make_unique<common::core::type::Relation>(std::move(columns));
+        std::unique_ptr<common::core::Type> type {};
+        if (left_null && !typing::is_nullable(left_column.type())) {
+            type = typing::nullity(left_column.type(), common::core::Type::Nullity::NULLABLE);
+            left_nullify = true;
+        } else {
+            type = make_clone(left_column.type());
+        }
+        std::vector<common::core::Name> qualifiers { left_column.qualifiers() };
+        if (auto iter = natural_joined.find(left_column.name()); iter != natural_joined.end()) {
+            auto&& right_column = right->columns()[iter->second];
+            right_variable = right_variables[iter->second];
+            right_nullify = typing::is_nullable(type.get()) && !typing::is_nullable(right_column.type());
+            qualifiers.reserve(left_column.qualifiers().size() + right_column.qualifiers().size());
+            for (auto&& q: right_column.qualifiers()) {
+                qualifiers.emplace_back(q);
+            }
+        }
+        columns.emplace_back(
+            std::move(qualifiers),
+            std::make_shared<binding::VariableBinding>(
+                bindings().next_variable_id(),
+                common::core::Name { left_column.name() },
+                std::move(type)),
+            std::move(left_variable),
+            left_nullify,
+            std::move(right_variable),
+            right_nullify
+        );
+    }
+    for (std::size_t i = 0, n = right->columns().size(); i < n; ++i) {
+        auto&& right_column = right->columns()[i];
+        if (natural) {
+            if (auto iter = natural_joined.find(right_column.name()); iter != natural_joined.end()) {
+                // already appeared in the left relation (natural join only)
+                continue;
+            }
+        }
+        bool right_nullify { false };
+        std::unique_ptr<common::core::Type> type {};
+        if (right_null && !typing::is_nullable(right_column.type())) {
+            type = typing::nullity(right_column.type(), common::core::Type::Nullity::NULLABLE);
+            right_nullify = true;
+        } else {
+            type = make_clone(right_column.type());
+        }
+        columns.emplace_back(
+            right_column.qualifiers(),
+            std::make_shared<binding::VariableBinding>(
+                bindings().next_variable_id(),
+                common::core::Name { right_column.name() },
+                std::move(type)),
+            std::shared_ptr<binding::VariableBinding> {},
+            false,
+            right_variables[i],
+            right_nullify
+        );
+    }
+    return columns;
 }
 
 void Engine::visit(model::expression::relation::JoinExpression* node, ScopeContext& prev) {
@@ -1048,84 +1080,122 @@ void Engine::visit(model::expression::relation::JoinExpression* node, ScopeConte
         bless_undefined<binding::RelationBinding>(node);
         return;
     }
+    auto left_relation = extract_relation(node->left());
+    auto right_relation = extract_relation(node->right());
+    if (!require(is_valid(left_relation), is_valid(right_relation))) {
+        bless_erroneous_expression(node);
+        bless_undefined<binding::RelationBinding>(node);
+        return;
+    }
+
     auto* left_type = dynamic_cast<common::core::type::Relation const*>(left_expr->type());
     auto* right_type = dynamic_cast<common::core::type::Relation const*>(right_expr->type());
-    if (is_natural_join(node->operator_kind())) {
-        std::set<std::string> saw {};
-        bool saw_error = false;
-        for (auto& left_column : left_type->columns()) {
-            for (auto& right_column : right_type->columns()) {
-                if (left_column.name() == right_column.name()) {
-                    if (saw.find(left_column.name()) == saw.end()) {
-                        saw.emplace(left_column.name());
-                        if (!typing::is_equality_comparable(left_column.type(), right_column.type())) {
-                            saw_error = true;
-                            report(node->right(), Diagnostic::Code::INCOMPATIBLE_EXPRESSION_TYPE, to_string(
-                                "cannot compare equality, ",
-                                "left: ", left_expr->type(), " (", left_column.name(), "), ",
-                                "right: ", right_expr->type(), " (", right_column.name(), ")"));
-                        }
-                    } else {
-                        saw_error = true;
-                        report(node->right(), Diagnostic::Code::DUPLICATE_COLUMN, to_string(
-                            "duplicate natural join column: ", left_column.name()));
-                    }
-                }
-            }
-        }
-        if (saw.empty()) {
-            saw_error = true;
-            report(node->right(), Diagnostic::Code::MISSING_NATURAL_JOIN_PAIR, "no common columns");
-        }
-        if (saw_error) {
-            bless_erroneous_expression(node);
-            bless_undefined<binding::RelationBinding>(node);
-            return;
-        }
-    }
-    std::unique_ptr<common::core::type::Relation> type;
+    auto&& left_variables = left_relation->output().columns();
+    auto&& right_variables = right_relation->output().columns();
+    std::vector<binding::RelationBinding::JoinColumn> result_join_columns {};
     switch (node->operator_kind()) {
         case Kind::CROSS:
         case Kind::INNER:
-            type = compute_join_type(left_type, right_type, false, false, false);
+            result_join_columns = compute_join_columns(
+                node,
+                left_variables, right_variables,
+                left_type, right_type,
+                false, false, false);
             break;
         case Kind::LEFT_OUTER:
-            type = compute_join_type(left_type, right_type, false, false, true);
+            result_join_columns = compute_join_columns(
+                node,
+                left_variables, right_variables,
+                left_type, right_type,
+                false, false, true);
             break;
         case Kind::RIGHT_OUTER:
-            type = compute_join_type(left_type, right_type, false, true, false);
+            result_join_columns = compute_join_columns(
+                node,
+                left_variables, right_variables,
+                left_type, right_type,
+                false, true, false);
             break;
         case Kind::FULL_OUTER:
         case Kind::UNION_OUTER:
-            type = compute_join_type(left_type, right_type, false, true, true);
+            result_join_columns = compute_join_columns(
+                node,
+                left_variables, right_variables,
+                left_type, right_type,
+                false, true, true);
             break;
         case Kind::NATURAL_INNER:
-            type = compute_join_type(left_type, right_type, true, false, false);
+            result_join_columns = compute_join_columns(
+                node,
+                left_variables, right_variables,
+                left_type, right_type,
+                true, false, false);
             break;
         case Kind::NATURAL_LEFT_OUTER:
-            type = compute_join_type(left_type, right_type, true, false, true);
+            result_join_columns = compute_join_columns(
+                node,
+                left_variables, right_variables,
+                left_type, right_type,
+                true, false, true);
             break;
         case Kind::NATURAL_RIGHT_OUTER:
-            type = compute_join_type(left_type, right_type, true, true, false);
+            result_join_columns = compute_join_columns(
+                node,
+                left_variables, right_variables,
+                left_type, right_type,
+                true, true, false);
             break;
         case Kind::NATURAL_FULL_OUTER:
-            type = compute_join_type(left_type, right_type, true, true, true);
+            result_join_columns = compute_join_columns(
+                node,
+                left_variables, right_variables,
+                left_type, right_type,
+                true, true, true);
             break;
         case Kind::LEFT_SEMI:
-            type = make_clone(left_type);
+            result_join_columns.reserve(left_variables.size());
+            for (std::size_t i = 0, n = left_variables.size(); i < n; ++i) {
+                auto&& column = left_type->columns()[i];
+                auto&& variable = left_variables[i];
+                result_join_columns.emplace_back(
+                    column.qualifiers(),
+                    variable,
+                    variable, false,
+                    std::shared_ptr<binding::VariableBinding> {}, false);
+            }
             break;
         case Kind::RIGHT_SEMI:
-            type = make_clone(right_type);
+            result_join_columns.reserve(right_variables.size());
+            for (std::size_t i = 0, n = right_variables.size(); i < n; ++i) {
+                auto&& column = right_type->columns()[i];
+                auto&& variable = right_variables[i];
+                result_join_columns.emplace_back(
+                    column.qualifiers(),
+                    variable,
+                    variable, false,
+                    std::shared_ptr<binding::VariableBinding> {}, false);
+            }
             break;
         case Kind::INVALID:
-            abort();
+            std::abort();
     }
-    // FIXME: use original column type instead
-    // FIXME: inherit source vars
-    RelationScope relation_scope { bindings(), &prev.variables(), type.get(), {} };
-    auto profile = relation_scope.profile();
+    if (result_join_columns.empty()) {
+        bless_erroneous_expression(node);
+        bless_undefined<binding::RelationBinding>(node);
+        return;
+    }
+
+    std::vector<std::shared_ptr<binding::VariableBinding>> process_columns;
     if (is_defined(node->condition())) {
-        auto vars = block_scope(relation_scope);
+        process_columns.reserve(left_relation->output().columns().size() + right_relation->output().columns().size());
+        for (auto& column : left_relation->output().columns()) {
+            process_columns.push_back(column);
+        }
+        for (auto& column : right_relation->output().columns()) {
+            process_columns.push_back(column);
+        }
+        RelationScope r { bindings(), &prev.variables(), { left_type, right_type }, process_columns };
+        auto vars = block_scope(r);
         ScopeContext scope { vars, prev.functions() };
         dispatch(node->condition(), scope);
         auto condition_expr = extract_binding(node->condition());
@@ -1135,8 +1205,26 @@ void Engine::visit(model::expression::relation::JoinExpression* node, ScopeConte
             return;
         }
     }
-    bless(node, std::make_shared<binding::RelationBinding>(profile, profile));
-    bless(node, std::move(type));
+    std::vector<common::core::type::Relation::Column> result_columns {};
+    std::vector<std::shared_ptr<binding::VariableBinding>> result_variables {};
+    result_columns.reserve(result_join_columns.size());
+    result_variables.reserve(result_join_columns.size());
+    for (auto&& column : result_join_columns) {
+        assert(column.output()->name().segments().size() == 1);  // NOLINT
+        result_variables.emplace_back(column.output());
+        result_columns.emplace_back(
+            column.qualifiers(),
+            column.output()->name().segments()[0],
+            make_clone(column.output()->type()));
+    }
+    auto result_type = std::make_unique<common::core::type::Relation>(std::move(result_columns));
+    RelationScope relation_scope { bindings(), &prev.variables(), result_type.get(), result_variables };
+    auto relation = std::make_shared<binding::RelationBinding>(
+        binding::RelationBinding::Profile { process_columns },
+        relation_scope.profile());
+    relation->join_columns() = std::move(result_join_columns);
+    bless(node, std::move(relation));
+    bless(node, std::move(result_type));
 }
 
 void Engine::visit(model::statement::dml::EmitStatement* node, ScopeContext& scope) {
