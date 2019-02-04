@@ -33,6 +33,11 @@ public:
         auto value = dynamic_cast<v::Int const*>(literal->value());
         return static_cast<int>(value->get());
     }
+    std::string as_string(Expression const* expr) {
+        auto literal = dynamic_cast<Literal const*>(expr);
+        auto value = dynamic_cast<v::String const*>(literal->value());
+        return value->get();
+    }
 };
 
 TEST_F(ParserExpressionTest, literal_int) {
@@ -81,6 +86,12 @@ TEST_F(ParserExpressionTest, literal_string_escape) {
     auto v = parse_expression<Literal>("'\\'-\\\\-\\\r-\\\n-\\\t'");
     EXPECT_EQ(t::String(NON_NULL), *v->type());
     EXPECT_EQ(v::String("'-\\-\r-\n-\t"), *v->value());
+}
+
+TEST_F(ParserExpressionTest, literal_string_seq) {
+    auto v = parse_expression<BinaryOperator>("'a' + 'b'");
+    EXPECT_EQ("a", as_string(v->left()));
+    EXPECT_EQ("b", as_string(v->right()));
 }
 
 TEST_F(ParserExpressionTest, simple_name) {

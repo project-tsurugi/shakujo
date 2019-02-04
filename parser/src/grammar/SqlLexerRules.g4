@@ -126,6 +126,6 @@ fragment DIGIT
     ;
 
 fragment STRING_CHARACTER
-    : ~[\\"]
+    : ~[']
     | '\\' .
     ;
