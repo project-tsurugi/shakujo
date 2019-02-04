@@ -634,6 +634,11 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         printer.exit_property("arguments");
     }
     {
+        printer.enter_property("quantifier");
+        serialize(printer, value->quantifier());
+        printer.exit_property("quantifier");
+    }
+    {
         printer.enter_property("expression_key");
         serialize(printer, value->expression_key());
         printer.exit_property("expression_key");
@@ -644,6 +649,26 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         printer.exit_property("function_key");
     }
     printer.exit_object("FunctionCall");
+}
+
+void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expression::FunctionCall::Quantifier value) {
+    if (show_enum_kind()) {
+        if (show_qualified_kind()) {
+            printer.enter_object("Quantifier");
+        } else {
+            printer.enter_object("FunctionCall::Quantifier");
+        }
+        printer.enter_property("value");
+        printer.value(impl_->to_string(value));
+        printer.exit_property("value");
+        if (show_qualified_kind()) {
+            printer.exit_object("Quantifier");
+        } else {
+            printer.exit_object("FunctionCall::Quantifier");
+        }
+    } else {
+        printer.value(impl_->to_string(value));
+    }
 }
 
 void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expression::ImplicitCast const* value) {
@@ -1109,6 +1134,11 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         printer.exit_property("columns");
     }
     {
+        printer.enter_property("alias");
+        serialize(printer, value->alias());
+        printer.exit_property("alias");
+    }
+    {
         printer.enter_property("expression_key");
         serialize(printer, value->expression_key());
         printer.exit_property("expression_key");
@@ -1130,30 +1160,24 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         printer.enter_object("AggregationExpression::Column");
     }
     {
-        printer.enter_property("name");
-        serialize(printer, value->name());
-        printer.exit_property("name");
-    }
-    {
-        printer.enter_property("type");
-        serialize(printer, value->type());
-        printer.exit_property("type");
-    }
-    {
         printer.enter_property("function");
         serialize(printer, value->function());
         printer.exit_property("function");
     }
     {
-        printer.enter_property("arguments");
-        auto& list = value->arguments();
-        auto size = list.size();
-        printer.enter_array(size);
-        for (auto element : list) {
-            serialize(printer, element);
-        }
-        printer.exit_array(size);
-        printer.exit_property("arguments");
+        printer.enter_property("quantifier");
+        serialize(printer, value->quantifier());
+        printer.exit_property("quantifier");
+    }
+    {
+        printer.enter_property("operand");
+        serialize(printer, value->operand());
+        printer.exit_property("operand");
+    }
+    {
+        printer.enter_property("alias");
+        serialize(printer, value->alias());
+        printer.exit_property("alias");
     }
     {
         printer.enter_property("function_key");

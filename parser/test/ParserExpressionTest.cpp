@@ -25,17 +25,18 @@ namespace t = shakujo::common::core::type;
 namespace v = shakujo::common::core::value;
 
 using common::util::equals;
+using common::util::dynamic_pointer_cast;
 
 class ParserExpressionTest : public ParserTestBase, public ::testing::Test {
 public:
     int as_int(Expression const* expr) {
-        auto literal = dynamic_cast<Literal const*>(expr);
-        auto value = dynamic_cast<v::Int const*>(literal->value());
+        auto literal = dynamic_pointer_cast<Literal>(expr);
+        auto value = dynamic_pointer_cast<v::Int>(literal->value());
         return static_cast<int>(value->get());
     }
     std::string as_string(Expression const* expr) {
-        auto literal = dynamic_cast<Literal const*>(expr);
-        auto value = dynamic_cast<v::String const*>(literal->value());
+        auto literal = dynamic_pointer_cast<Literal>(expr);
+        auto value = dynamic_pointer_cast<v::String>(literal->value());
         return value->get();
     }
 };
@@ -107,6 +108,7 @@ TEST_F(ParserExpressionTest, qualified_name) {
 TEST_F(ParserExpressionTest, function_call) {
     auto v = parse_expression<FunctionCall>("f(100)");
     EXPECT_TRUE(equals(f.Name("f"), v->name()));
+    EXPECT_EQ(v->quantifier(), FunctionCall::Quantifier::ABSENT);
 
     auto& args = v->arguments();
     ASSERT_EQ(1U, args.size());
@@ -130,6 +132,35 @@ TEST_F(ParserExpressionTest, function_call_many_args) {
     EXPECT_EQ(1, as_int(args[0]));
     EXPECT_EQ(2, as_int(args[1]));
     EXPECT_EQ(3, as_int(args[2]));
+}
+
+TEST_F(ParserExpressionTest, function_call_set_quantifier_all) {
+    auto v = parse_expression<FunctionCall>("f(ALL 1)");
+    EXPECT_TRUE(equals(f.Name("f"), v->name()));
+    EXPECT_EQ(v->quantifier(), FunctionCall::Quantifier::ALL);
+
+    auto& args = v->arguments();
+    ASSERT_EQ(1U, args.size());
+    EXPECT_EQ(1, as_int(args[0]));
+}
+
+TEST_F(ParserExpressionTest, function_call_set_quantifier_distinct) {
+    auto v = parse_expression<FunctionCall>("f(DISTINCT 1)");
+    EXPECT_TRUE(equals(f.Name("f"), v->name()));
+    EXPECT_EQ(v->quantifier(), FunctionCall::Quantifier::DISTINCT);
+
+    auto& args = v->arguments();
+    ASSERT_EQ(1U, args.size());
+    EXPECT_EQ(1, as_int(args[0]));
+}
+
+TEST_F(ParserExpressionTest, function_call_count_asterisk) {
+    auto v = parse_expression<FunctionCall>("COUNT(*)");
+    EXPECT_EQ(v->quantifier(), FunctionCall::Quantifier::ASTERISK);
+    EXPECT_TRUE(equals(f.Name("COUNT"), v->name()));
+
+    auto& args = v->arguments();
+    ASSERT_EQ(0U, args.size());
 }
 
 TEST_F(ParserExpressionTest, placeholder_named) {

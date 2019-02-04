@@ -17,20 +17,26 @@
 
 #include <iostream>
 #include <memory>
+#include <shakujo/common/core/Type.h>
+
 
 #include "shakujo/common/core/type/ConstVisitor.h"
 
 namespace shakujo::common::core {
 
-bool Type::operator==(Type const& other) const {
+bool Type::equals(Type const &other, bool test_nullity) const {
     using namespace ::shakujo::common::core::type;
     class Eq : public type::ConstVisitor<bool, Type const*> {
     private:
+        bool test_nullity_;
+
         inline bool check(Type const* a, Type const* b) {
-            return a->kind() == b->kind() && a->nullity() == b->nullity();
+            return a->kind() == b->kind() && (!test_nullity_ || a->nullity() == b->nullity());
         }
 
     public:
+        explicit Eq(bool test_nullity) noexcept : test_nullity_(test_nullity) {}
+
         bool visit(Int const* node, Type const* other) override {
             if (!check(node, other)) {
                 return false;
@@ -94,7 +100,7 @@ bool Type::operator==(Type const& other) const {
             }
             auto that = dynamic_cast<Array const*>(other);
             return node->size() == that->size()
-                    && dispatch(node->element_type(), that->element_type());
+                && dispatch(node->element_type(), that->element_type());
         }
 
         bool visit(Vector const* node, Type const* other) override {
@@ -119,8 +125,8 @@ bool Type::operator==(Type const& other) const {
                 auto& ae = a[i];
                 auto& be = b[i];
                 if (ae.name() != be.name()
-                        || !dispatch(ae.type(), be.type())
-                        || ae.qualifiers() != be.qualifiers()) {
+                    || !dispatch(ae.type(), be.type())
+                    || ae.qualifiers() != be.qualifiers()) {
                     return false;
                 }
             }
@@ -139,7 +145,7 @@ bool Type::operator==(Type const& other) const {
             return check(node, other);
         }
     };
-    return Eq {}.dispatch(this, &other);
+    return Eq { test_nullity }.dispatch(this, &other);
 }
 
 namespace {

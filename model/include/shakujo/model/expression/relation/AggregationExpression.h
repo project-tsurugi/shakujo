@@ -22,16 +22,16 @@
 
 #include "shakujo/model/expression/Expression.h"
 #include "shakujo/model/expression/ExpressionKind.h"
+#include "shakujo/model/expression/FunctionCall.h"
 #include "shakujo/model/key/ExpressionKey.h"
 #include "shakujo/model/key/FunctionKey.h"
 #include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/key/VariableKey.h"
 #include "shakujo/model/name/Index.h"
 #include "shakujo/model/name/Name.h"
+#include "shakujo/model/name/SimpleName.h"
 #include "shakujo/model/statement/Statement.h"
-#include "shakujo/model/type/Type.h"
 #include "shakujo/model/util/FragmentList.h"
-#include "shakujo/model/util/ManagedNodeList.h"
 #include "shakujo/model/util/NodeList.h"
 
 namespace shakujo::model::expression::relation {
@@ -97,60 +97,6 @@ public:
 
     public:
         /**
-         * @brief Returns column name.
-         * @return column name.
-         */
-        name::Name* name();
-
-        /**
-         * @brief Returns column name.
-         * @return column name.
-         */
-        inline name::Name const* name() const {
-            return const_cast<AggregationExpression::Column*>(this)->name();
-        }
-
-        /**
-         * @brief Sets column name.
-         * @param name column name
-         * @return this
-         */
-        AggregationExpression::Column& name(std::unique_ptr<name::Name> name);
-
-        /**
-         * @brief Releases column name from this node.
-         * @return the released node
-         */
-        std::unique_ptr<name::Name> release_name();
-
-        /**
-         * @brief Returns column type.
-         * @return column type.
-         */
-        type::Type* type();
-
-        /**
-         * @brief Returns column type.
-         * @return column type.
-         */
-        inline type::Type const* type() const {
-            return const_cast<AggregationExpression::Column*>(this)->type();
-        }
-
-        /**
-         * @brief Sets column type.
-         * @param type column type
-         * @return this
-         */
-        AggregationExpression::Column& type(std::unique_ptr<type::Type> type);
-
-        /**
-         * @brief Releases column type from this node.
-         * @return the released node
-         */
-        std::unique_ptr<type::Type> release_type();
-
-        /**
          * @brief Returns aggregation function.
          * @return aggregation function.
          */
@@ -178,18 +124,72 @@ public:
         std::unique_ptr<name::Name> release_function();
 
         /**
-         * @brief Returns function arguments.
-         * @return function arguments.
+         * @brief Returns set quantifier.
+         * @return set quantifier.
          */
-        util::ManagedNodeList<Expression>& arguments();
+        FunctionCall::Quantifier quantifier() const;
 
         /**
-         * @brief Returns function arguments.
-         * @return function arguments.
+         * @brief Sets set quantifier.
+         * @param quantifier set quantifier
+         * @return this
          */
-        inline util::ManagedNodeList<Expression> const& arguments() const {
-            return const_cast<AggregationExpression::Column*>(this)->arguments();
+        AggregationExpression::Column& quantifier(FunctionCall::Quantifier quantifier);
+
+        /**
+         * @brief Returns aggregation operand.
+         * @return aggregation operand.
+         */
+        Expression* operand();
+
+        /**
+         * @brief Returns aggregation operand.
+         * @return aggregation operand.
+         */
+        inline Expression const* operand() const {
+            return const_cast<AggregationExpression::Column*>(this)->operand();
         }
+
+        /**
+         * @brief Sets aggregation operand.
+         * @param operand aggregation operand
+         * @return this
+         */
+        AggregationExpression::Column& operand(std::unique_ptr<Expression> operand);
+
+        /**
+         * @brief Releases aggregation operand from this node.
+         * @return the released node
+         */
+        std::unique_ptr<Expression> release_operand();
+
+        /**
+         * @brief Returns column name.
+         * @return column name.
+         */
+        name::SimpleName* alias();
+
+        /**
+         * @brief Returns column name.
+         * @return column name.
+         */
+        inline name::SimpleName const* alias() const {
+            return const_cast<AggregationExpression::Column*>(this)->alias();
+        }
+
+        /**
+         * @brief Sets column name.
+         * @param alias column name
+         * @return this
+         */
+        AggregationExpression::Column& alias(std::unique_ptr<name::SimpleName> alias);
+
+        /**
+         * @brief Releases column name from this node.
+         * @return the released node
+         */
+        std::unique_ptr<name::SimpleName> release_alias();
+
         /**
          * @brief Returns referring function key.
          * @return referring function key.
@@ -349,6 +349,33 @@ public:
     inline util::FragmentList<AggregationExpression::Column> const& columns() const {
         return const_cast<AggregationExpression*>(this)->columns();
     }
+    /**
+     * @brief Returns alias name.
+     * @return alias name.
+     */
+    name::SimpleName* alias();
+
+    /**
+     * @brief Returns alias name.
+     * @return alias name.
+     */
+    inline name::SimpleName const* alias() const {
+        return const_cast<AggregationExpression*>(this)->alias();
+    }
+
+    /**
+     * @brief Sets alias name.
+     * @param alias alias name
+     * @return this
+     */
+    AggregationExpression& alias(std::unique_ptr<name::SimpleName> alias);
+
+    /**
+     * @brief Releases alias name from this node.
+     * @return the released node
+     */
+    std::unique_ptr<name::SimpleName> release_alias();
+
     /**
      * @brief Returns expression key.
      * @return expression key.

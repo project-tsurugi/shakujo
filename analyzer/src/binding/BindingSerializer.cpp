@@ -153,6 +153,11 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, Functio
         printer.exit_property("type");
     }
     {
+        printer.enter_property("quantifier");
+        serialize(printer, value->type());
+        printer.exit_property("quantifier");
+    }
+    {
         printer.enter_property("parameters");
         auto& list = value->parameters();
         auto size = list.size();
@@ -168,6 +173,26 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, Functio
         printer.exit_property("parameters");
     }
     printer.exit_object("FunctionBinding");
+}
+
+void BindingSerializer::serialize(common::util::DataSerializer& printer, FunctionBinding::Quantifier value) {
+    if (show_enum_kind()) {
+        if (show_qualified_kind()) {
+            printer.enter_object("Quantifier");
+        } else {
+            printer.enter_object("FunctionBinding::Quantifier");
+        }
+        printer.enter_property("value");
+        printer.value(to_string_view(value));
+        printer.exit_property("value");
+        if (show_qualified_kind()) {
+            printer.exit_object("Quantifier");
+        } else {
+            printer.exit_object("FunctionBinding::Quantifier");
+        }
+    } else {
+        printer.value(to_string_view(value));
+    }
 }
 
 void BindingSerializer::serialize(common::util::DataSerializer& printer, RelationBinding const* value) {

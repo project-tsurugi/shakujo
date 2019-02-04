@@ -17,6 +17,7 @@ package com.ashigeru.lang.codegen.spec.sql.expression;
 
 import java.util.List;
 
+import com.ashigeru.lang.codegen.ir.reflect.Default;
 import com.ashigeru.lang.codegen.ir.reflect.Description;
 import com.ashigeru.lang.codegen.ir.reflect.Extends;
 import com.ashigeru.lang.codegen.ir.reflect.MetaClass;
@@ -36,4 +37,25 @@ public class FunctionCall extends MetaClass {
     @Description("function arguments")
     @Opt
     Property<List<Expression>> arguments = property();
+
+    @Description("set quantifier")
+    @Opt
+    Property<Quantifier> quantifier = property();
+
+    @Description("set quantifier")
+    public enum Quantifier {
+
+        @Description("no quantifiers")
+        @Default
+        ABSENT,
+
+        @Description("aggregate on bag")
+        ALL,
+
+        @Description("aggregate on set")
+        DISTINCT,
+        
+        @Description("special case for f(*)")
+        ASTERISK,
+    }
 }

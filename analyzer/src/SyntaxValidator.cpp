@@ -248,12 +248,34 @@ protected:
     //    return ConstNodeWalker::enter(node);
     //}
 
-    //bool enter(model::expression::FunctionCall const* node) override {
-    //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
-    //}
+    bool enter(model::expression::FunctionCall const* node) override {
+        using Quantifier = model::expression::FunctionCall::Quantifier;
+        if (!is_defined(node->name())) {
+            report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "function call must have a valid name");
+        }
+        switch (node->quantifier()) {
+            case Quantifier::ABSENT:
+                break; // don't care
+            case Quantifier::ALL:
+            case Quantifier::DISTINCT:
+                if (node->arguments().size() != 1U) {
+                    report(node, Diagnostic::Code::INVALID_SET_QUANTIFIER,
+                        "function call with set quantifier must have just one argument");
+                }
+                break;
+            case Quantifier::ASTERISK:
+                if (!node->arguments().empty()) {
+                    report(node, Diagnostic::Code::INVALID_SET_QUANTIFIER,
+                        "function call with * (asterisk) argument must not have any other arguments");
+                }
+                break;
+            default:
+                std::abort();
+        }
+        return ConstNodeWalker::enter(node);
+    }
 
-    bool enter(model::expression::ImplicitCast const* ) override {
+    bool enter(model::expression::ImplicitCast const*) override {
         // never appear in syntax
         return true;
     }

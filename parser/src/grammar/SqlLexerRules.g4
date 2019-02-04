@@ -38,6 +38,9 @@ K_NULL: N U L L;
 K_TRUE: T R U E;
 K_FALSE: F A L S E;
 
+K_ALL: A L L;
+K_DISTINCT: D I S T I N C T;
+
 K_ASC: A S C;
 K_DESC: D E S C;
 

@@ -303,6 +303,9 @@ primaryExpression
 
 functionCall
     : name '(' expressionList? ')'
+    | name '(' '*' ')'
+    | name '(' K_ALL expression ')'
+    | name '(' K_DISTINCT expression ')'
     ;
 
 name

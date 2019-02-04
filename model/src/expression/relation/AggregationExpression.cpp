@@ -21,16 +21,16 @@
 
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/expression/Expression.h"
+#include "shakujo/model/expression/FunctionCall.h"
 #include "shakujo/model/key/ExpressionKey.h"
 #include "shakujo/model/key/FunctionKey.h"
 #include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/key/VariableKey.h"
 #include "shakujo/model/name/Index.h"
 #include "shakujo/model/name/Name.h"
+#include "shakujo/model/name/SimpleName.h"
 #include "shakujo/model/statement/Statement.h"
-#include "shakujo/model/type/Type.h"
 #include "shakujo/model/util/FragmentList.h"
-#include "shakujo/model/util/ManagedNodeList.h"
 #include "shakujo/model/util/NodeList.h"
 
 namespace shakujo::model::expression::relation {
@@ -41,6 +41,7 @@ public:
     util::NodeList<name::Index> keys_;
     util::NodeList<statement::Statement> initialize_;
     util::FragmentList<AggregationExpression::Column> columns_;
+    std::unique_ptr<name::SimpleName> alias_;
     std::unique_ptr<key::ExpressionKey> expression_key_;
     std::unique_ptr<key::RelationKey> relation_key_;
 
@@ -72,16 +73,17 @@ public:
                 other->columns_.push_back(common::util::make_clone(e));
             }
         }
+        other->alias_ = common::util::make_clone(alias_);
         return other;
     }
 };
 
 class AggregationExpression::Column::Impl {
 public:
-    std::unique_ptr<name::Name> name_;
-    std::unique_ptr<type::Type> type_;
     std::unique_ptr<name::Name> function_;
-    util::ManagedNodeList<Expression> arguments_;
+    FunctionCall::Quantifier quantifier_ { FunctionCall::Quantifier::ABSENT };
+    common::util::ManagedPtr<Expression> operand_;
+    std::unique_ptr<name::SimpleName> alias_;
     std::unique_ptr<key::FunctionKey> function_key_;
     std::unique_ptr<key::VariableKey> variable_key_;
 
@@ -94,15 +96,10 @@ public:
 
     std::unique_ptr<Impl> clone() const {
         auto other = std::make_unique<Impl>();
-        other->name_ = common::util::make_clone(name_);
-        other->type_ = common::util::make_clone(type_);
         other->function_ = common::util::make_clone(function_);
-        if (!arguments_.empty()) {
-            other->arguments_.reserve(arguments_.size());
-            for (auto e : arguments_) {
-                other->arguments_.push_back(common::util::make_clone(e));
-            }
-        }
+        other->quantifier_ = quantifier_;
+        other->operand_ = common::util::make_clone(operand_);
+        other->alias_ = common::util::make_clone(alias_);
         return other;
     }
 };
@@ -142,6 +139,21 @@ util::FragmentList<AggregationExpression::Column>& AggregationExpression::column
     return impl_->columns_;
 }
 
+name::SimpleName* AggregationExpression::alias() {
+    return impl_->alias_.get();
+}
+
+AggregationExpression& AggregationExpression::alias(std::unique_ptr<name::SimpleName> alias) {
+    impl_->alias_ = std::move(alias);
+    return *this;
+}
+
+std::unique_ptr<name::SimpleName> AggregationExpression::release_alias() {
+    std::unique_ptr<name::SimpleName> ret { std::move(impl_->alias_) };
+    impl_->alias_ = {};
+    return ret;
+}
+
 key::ExpressionKey* AggregationExpression::expression_key() {
     return impl_->expression_key_.get();
 }
@@ -178,36 +190,6 @@ AggregationExpression::Column::Column(AggregationExpression::Column&&) noexcept 
 
 AggregationExpression::Column& AggregationExpression::Column::operator=(AggregationExpression::Column&&) noexcept = default;
 
-name::Name* AggregationExpression::Column::name() {
-    return impl_->name_.get();
-}
-
-AggregationExpression::Column& AggregationExpression::Column::name(std::unique_ptr<name::Name> name) {
-    impl_->name_ = std::move(name);
-    return *this;
-}
-
-std::unique_ptr<name::Name> AggregationExpression::Column::release_name() {
-    std::unique_ptr<name::Name> ret { std::move(impl_->name_) };
-    impl_->name_ = {};
-    return ret;
-}
-
-type::Type* AggregationExpression::Column::type() {
-    return impl_->type_.get();
-}
-
-AggregationExpression::Column& AggregationExpression::Column::type(std::unique_ptr<type::Type> type) {
-    impl_->type_ = std::move(type);
-    return *this;
-}
-
-std::unique_ptr<type::Type> AggregationExpression::Column::release_type() {
-    std::unique_ptr<type::Type> ret { std::move(impl_->type_) };
-    impl_->type_ = {};
-    return ret;
-}
-
 name::Name* AggregationExpression::Column::function() {
     return impl_->function_.get();
 }
@@ -223,8 +205,41 @@ std::unique_ptr<name::Name> AggregationExpression::Column::release_function() {
     return ret;
 }
 
-util::ManagedNodeList<Expression>& AggregationExpression::Column::arguments() {
-    return impl_->arguments_;
+FunctionCall::Quantifier AggregationExpression::Column::quantifier() const {
+    return impl_->quantifier_;
+}
+
+AggregationExpression::Column& AggregationExpression::Column::quantifier(FunctionCall::Quantifier quantifier) {
+    impl_->quantifier_ = quantifier;
+    return *this;
+}
+
+Expression* AggregationExpression::Column::operand() {
+    return impl_->operand_.get();
+}
+
+AggregationExpression::Column& AggregationExpression::Column::operand(std::unique_ptr<Expression> operand) {
+    impl_->operand_ = std::move(operand);
+    return *this;
+}
+
+std::unique_ptr<Expression> AggregationExpression::Column::release_operand() {
+    return impl_->operand_.release();
+}
+
+name::SimpleName* AggregationExpression::Column::alias() {
+    return impl_->alias_.get();
+}
+
+AggregationExpression::Column& AggregationExpression::Column::alias(std::unique_ptr<name::SimpleName> alias) {
+    impl_->alias_ = std::move(alias);
+    return *this;
+}
+
+std::unique_ptr<name::SimpleName> AggregationExpression::Column::release_alias() {
+    std::unique_ptr<name::SimpleName> ret { std::move(impl_->alias_) };
+    impl_->alias_ = {};
+    return ret;
 }
 
 key::FunctionKey* AggregationExpression::Column::function_key() {

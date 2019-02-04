@@ -19,6 +19,9 @@
 
 #include <utility>
 #include <memory>
+#include <string>
+#include <string_view>
+#include <iostream>
 
 #include "shakujo/model/expression/Expression.h"
 #include "shakujo/model/expression/ExpressionKind.h"
@@ -38,6 +41,33 @@ private:
     class Impl;
     std::unique_ptr<Impl> impl_;
     explicit FunctionCall(std::unique_ptr<Impl>) noexcept;
+
+public:
+    /**
+     * @brief Represents set quantifier.
+     */
+    enum class Quantifier {
+        /**
+         * @brief no quantifiers.
+         */
+        ABSENT,
+
+        /**
+         * @brief aggregate on bag.
+         */
+        ALL,
+
+        /**
+         * @brief aggregate on set.
+         */
+        DISTINCT,
+
+        /**
+         * @brief special case for f(*).
+         */
+        ASTERISK,
+
+    };
 
 public:
     /**
@@ -118,6 +148,19 @@ public:
         return const_cast<FunctionCall*>(this)->arguments();
     }
     /**
+     * @brief Returns set quantifier.
+     * @return set quantifier.
+     */
+    FunctionCall::Quantifier quantifier() const;
+
+    /**
+     * @brief Sets set quantifier.
+     * @param quantifier set quantifier
+     * @return this
+     */
+    FunctionCall& quantifier(FunctionCall::Quantifier quantifier);
+
+    /**
      * @brief Returns expression key.
      * @return expression key.
      */
@@ -181,6 +224,33 @@ public:
     }
 
 };
+/**
+ * @brief returns string representation of the given value.
+ * @param value the target enum constant
+ * @return string representation
+ * @see FunctionCall::Quantifier
+ */
+inline constexpr std::string_view to_string_view(FunctionCall::Quantifier value) {
+    switch (value) {
+        case FunctionCall::Quantifier::ABSENT: return "ABSENT";
+        case FunctionCall::Quantifier::ALL: return "ALL";
+        case FunctionCall::Quantifier::DISTINCT: return "DISTINCT";
+        case FunctionCall::Quantifier::ASTERISK: return "ASTERISK";
+    }
+    return "(unknown)";
+}
+
+/**
+ * @brief appends short name into the given output stream.
+ * @param out the target output stream
+ * @param value the target enum constant
+ * @return the output stream
+ * @see FunctionCall::Quantifier
+ */
+inline std::ostream& operator<<(std::ostream& out, FunctionCall::Quantifier value) {
+    return out << to_string_view(value);
+}
+
 }  // namespace shakujo::model::expression
 
 #endif  // SHAKUJO_MODEL_EXPRESSION_FUNCTION_CALL_H_

@@ -320,12 +320,14 @@ public:
      * @brief returns a new expression::FunctionCall.
      * @param name function name
      * @param arguments function arguments
+     * @param quantifier set quantifier
      * @return a created node
      * @see expression::FunctionCall
      */
     std::unique_ptr<expression::FunctionCall> FunctionCall(
             std::unique_ptr<name::Name> name,
-            common::util::MoveInitializerList<std::unique_ptr<expression::Expression>> arguments = {});
+            common::util::MoveInitializerList<std::unique_ptr<expression::Expression>> arguments = {},
+            expression::FunctionCall::Quantifier quantifier = expression::FunctionCall::Quantifier::ABSENT);
 
     /**
      * @brief returns a new empty expression::ImplicitCast.
@@ -594,6 +596,7 @@ public:
      * @param keys group keys
      * @param initialize initialization statements
      * @param columns aggregation columns
+     * @param alias alias name
      * @return a created node
      * @see expression::relation::AggregationExpression
      */
@@ -601,7 +604,8 @@ public:
             std::unique_ptr<expression::Expression> operand,
             common::util::MoveInitializerList<std::unique_ptr<name::Index>> keys,
             common::util::MoveInitializerList<std::unique_ptr<statement::Statement>> initialize,
-            common::util::MoveInitializerList<std::unique_ptr<expression::relation::AggregationExpression::Column>> columns);
+            common::util::MoveInitializerList<std::unique_ptr<expression::relation::AggregationExpression::Column>> columns,
+            std::unique_ptr<name::SimpleName> alias = {});
 
     /**
      * @brief returns a new empty expression::relation::AggregationExpression::Column.
@@ -612,18 +616,18 @@ public:
 
     /**
      * @brief returns a new expression::relation::AggregationExpression::Column.
-     * @param name column name
-     * @param type column type
      * @param function aggregation function
-     * @param arguments function arguments
+     * @param quantifier set quantifier
+     * @param operand aggregation operand
+     * @param alias column name
      * @return a created node
      * @see expression::relation::AggregationExpression::Column
      */
     std::unique_ptr<expression::relation::AggregationExpression::Column> AggregationExpressionColumn(
-            std::unique_ptr<name::Name> name,
-            std::unique_ptr<type::Type> type,
             std::unique_ptr<name::Name> function,
-            common::util::MoveInitializerList<std::unique_ptr<expression::Expression>> arguments);
+            expression::FunctionCall::Quantifier quantifier,
+            std::unique_ptr<expression::Expression> operand,
+            std::unique_ptr<name::SimpleName> alias = {});
 
     /**
      * @brief returns a new empty expression::relation::DistinctExpression.

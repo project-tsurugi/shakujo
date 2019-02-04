@@ -19,8 +19,10 @@
 #include <memory>
 #include <utility>
 #include <string>
+#include <string_view>
 
 #include "Id.h"
+#include "ExpressionBinding.h"
 #include "VariableBinding.h"
 
 #include "shakujo/common/core/Name.h"
@@ -37,8 +39,39 @@ class FunctionBinding final {
 private:
     class Impl;
     std::unique_ptr<Impl> impl_;
+    std::vector<std::shared_ptr<binding::FunctionBinding>> overloads_ {};
 
 public:
+    /**
+     * @brief represents a set quantifier.
+     */
+    enum Quantifier {
+        /**
+         * @brief a ground order function.
+         */
+        GROUND,
+
+        /**
+         * @brief a first order bag function.
+         */
+        ALL,
+
+        /**
+         * @brief a first order set function.
+         */
+        DISTINCT,
+
+        /**
+         * @brief special case for count(*).
+         */
+        ASTERISK,
+
+        /**
+         * @brief function is not yet resolved: it is just an overload stub.
+         */
+        UNRESOLVED,
+    };
+
     /**
      * @brief the key type.
      */
@@ -103,6 +136,17 @@ public:
     {}
 
     /**
+     * @brief constructs a new object as an overload stub.
+     * @param id the function ID
+     * @param name the function name
+     * @param overload_candidates the overload candidates
+     */
+    FunctionBinding(
+            Id<FunctionBinding>&& id,
+            common::core::Name name,
+            std::vector<std::shared_ptr<FunctionBinding>> overload_candidates = {});
+
+    /**
      * @brief Destroys this object.
      */
     ~FunctionBinding() noexcept;
@@ -150,7 +194,8 @@ public:
     /**
      * @brief returns the variable type.
      * It may be an erroneous type if type resolution was failed.
-     * @return the function return type, or undefined type if it does not return anything
+     * @return the function return type
+     * @return null if it does not return anything, or this is an overload stub
      */
     common::core::Type const* type() const;
 
@@ -182,17 +227,141 @@ public:
     /**
      * @brief returns the function parameters.
      * @return the function parameters
+     * @return empty if this is an overload stub
      */
     std::vector<std::shared_ptr<VariableBinding>>& parameters();
 
     /**
      * @brief returns the function parameters.
      * @return the function parameters
+     * @return empty if this is an overload stub
      */
     inline const std::vector<std::shared_ptr<VariableBinding>>& parameters() const {
         return const_cast<FunctionBinding*>(this)->parameters();
     }
+
+    /**
+     * @brief returns the quantifier of the corresponded function.
+     * @return the quantifier
+     */
+    Quantifier quantifier() const;
+
+    /**
+     * @brief sets the quantifier of the corresponded function.
+     * @param quantifier the quantifier
+     * @return this
+     */
+    FunctionBinding& quantifier(Quantifier quantifier);
+
+    /**
+     * @brief returns whether or not this binding represents a set function.
+     * @return true if this represents a set function
+     * @return false otherwise
+     */
+    bool is_set_function() const {
+        return quantifier() == Quantifier::ALL
+            || quantifier() == Quantifier::DISTINCT
+            || quantifier() == Quantifier::ASTERISK;
+    }
+
+    /**
+     * @brief returns whether or not this binding is an overload stub.
+     * @return true if this binding is an overload stub
+     * @return false otherwise
+     */
+    bool is_overload_stub() const {
+        return quantifier() == Quantifier::UNRESOLVED;
+    }
+
+    /**
+     * @brief resolves this overload stub and returns the suitable overload.
+     * @param arguments the arguments
+     * @return the resolved overload if it is available
+     * @return empty if there are no suitable candidates, or this is not a overload stub
+     */
+    std::shared_ptr<FunctionBinding> resolve_overload(std::vector<ExpressionBinding const*> const& arguments);
+
+    /**
+     * @brief resolves this overload stub and returns the suitable overload.
+     * @param quantifier the set quantifier
+     * @param argument the argument, maybe nullptr if quantifier = ASTERISK
+     * @return the resolved overload if it is available
+     * @return empty if there are no suitable candidates, or this is not a overload stub
+     */
+    std::shared_ptr<FunctionBinding> resolve_overload(
+            Quantifier quantifier,
+            ExpressionBinding const* argument = nullptr);
+
+    /**
+     * @brief returns the function overload candidates.
+     * This is only available if this binding is an overload stub.
+     * @return the candidates
+     */
+    std::vector<std::shared_ptr<FunctionBinding>>& overload_candidates();
+
+    /**
+     * @brief returns the function overload candidates.
+     * This is only available if this binding is an overload stub.
+     * @return the candidates
+     */
+    inline std::vector<std::shared_ptr<FunctionBinding>>& overload_candidates() const {
+        return const_cast<FunctionBinding*>(this)->overload_candidates();
+    }
+
+    /**
+     * @brief returns whether or not this function has valid ID.
+     * @return true if this has valid ID
+     * @return false otherwise
+     */
+    bool has_id() const {
+        return static_cast<bool>(id());
+    }
+
+    /**
+     * @brief returns whether or not the corresponded function is valid.
+     * @return true is the variable is valid
+     * @return false otherwise
+     */
+    bool is_valid() const {
+        namespace util = common::util;
+        if (!has_id()) {
+            return false;
+        }
+        if (is_overload_stub()) {
+            return !overload_candidates().empty();
+        }
+        if (!util::is_valid(type())) {
+            return false;
+        }
+        for (auto&& param : parameters()) {
+            if (!util::is_valid(param)) {
+                return false;
+            }
+        }
+        if (is_set_function()) {
+            return parameters().size() <= 1U;
+        }
+        return true;
+    }
 };
+
+/**
+ * @brief returns string representation of the given value.
+ * @param value the target enum constant
+ * @return string representation
+ */
+inline constexpr std::string_view to_string_view(FunctionBinding::Quantifier value) {
+    using Quantifier = FunctionBinding::Quantifier;
+    switch (value) {
+        case Quantifier::GROUND: return "GROUND";
+        case Quantifier::ALL: return "ALL";
+        case Quantifier::DISTINCT: return "DISTINCT";
+        case Quantifier::ASTERISK: return "ASTERISK";
+        case Quantifier::UNRESOLVED: return "UNRESOLVED";
+    }
+    return "(unknown)";
+}
+
 }  // namespace shakujo::analyzer::binding
 
 #endif  // SHAKUJO_ANALYZER_BINDING_FUNCTION_BINDING_H_

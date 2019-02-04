@@ -1023,6 +1023,26 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::PrimaryExp
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::FunctionCallContext *c) {
     if (auto n = c->name(); is_defined(n)) {
         auto name = visit(n);
+        if (is_defined(c->ASTERISK())) {
+            return f.FunctionCall(
+                std::move(name),
+                {},
+                model::expression::FunctionCall::Quantifier::ASTERISK) << region(c);
+        }
+        if (auto e = c->expression(); is_defined(c->K_ALL()) && is_defined(e)) {
+            auto expr = visit(e);
+            return f.FunctionCall(
+                std::move(name),
+                { std::move(expr) },
+                model::expression::FunctionCall::Quantifier::ALL) << region(c);
+        }
+        if (auto e = c->expression(); is_defined(c->K_DISTINCT()) && is_defined(e)) {
+            auto expr = visit(e);
+            return f.FunctionCall(
+                std::move(name),
+                { std::move(expr) },
+                model::expression::FunctionCall::Quantifier::DISTINCT) << region(c);
+        }
         if (auto el = c->expressionList(); is_defined(el)) {
             auto arguments = visit(el);
             return f.FunctionCall(std::move(name), std::move(arguments)) << region(c);

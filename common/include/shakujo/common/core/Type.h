@@ -174,10 +174,21 @@ public:
     /**
      * @brief returns whether or not this type is equivalent to the given one.
      * @param other the target type
+     * @param test_nullity test with their nullity
      * @return true if both are equivalent
      * @return false otherwise
      */
-    bool operator==(const Type& other) const;
+    bool equals(Type const& other, bool test_nullity = true) const;
+
+    /**
+     * @brief returns whether or not this type is equivalent to the given one.
+     * @param other the target type
+     * @return true if both are equivalent
+     * @return false otherwise
+     */
+    bool operator==(Type const& other) const {
+        return equals(other);
+    }
 
     /**
      * @brief returns whether or not this is a valid type.

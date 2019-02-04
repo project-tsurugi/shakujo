@@ -118,6 +118,7 @@ protected:
     void visit(model::expression::VariableReference*, ScopeContext&) override;
     void visit(model::expression::TupleElementLoadExpression*, ScopeContext&) override;
     void visit(model::expression::AssignExpression*, ScopeContext&) override;
+    void visit(model::expression::FunctionCall*, ScopeContext&) override;
 
     // DML
     void visit(model::statement::dml::EmitStatement*, ScopeContext&) override;
@@ -163,6 +164,7 @@ private:
 
     void bless(model::key::ExpressionKey::Provider* node, std::shared_ptr<binding::ExpressionBinding> binding);
     void bless(model::key::VariableKey::Provider* node, std::shared_ptr<binding::VariableBinding> binding);
+    void bless(model::key::FunctionKey::Provider* node, std::shared_ptr<binding::FunctionBinding> binding);
     void bless(model::key::RelationKey::Provider* node, std::shared_ptr<binding::RelationBinding> binding);
 
     template<class Binding>

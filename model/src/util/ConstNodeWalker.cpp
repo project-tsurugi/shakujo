@@ -415,13 +415,11 @@ void ConstNodeWalker::walk(expression::relation::AggregationExpression const* no
         if (child) walk(child);
     }
     for (auto child : node->columns()) {
-        if (child->name()) walk(child->name());
-        if (child->type()) walk(child->type());
         if (child->function()) walk(child->function());
-        for (auto child2 : child->arguments()) {
-            if (child2) walk(child2);
-        }
+        if (child->operand()) walk(child->operand());
+        if (child->alias()) walk(child->alias());
     }
+    if (node->alias()) walk(node->alias());
     exit(node);
 }
 

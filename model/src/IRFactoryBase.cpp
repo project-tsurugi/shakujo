@@ -28,6 +28,7 @@
 #include "shakujo/model/expression/BinaryOperator.h"
 #include "shakujo/model/expression/CaseExpression.h"
 #include "shakujo/model/expression/Expression.h"
+#include "shakujo/model/expression/FunctionCall.h"
 #include "shakujo/model/expression/StringOperator.h"
 #include "shakujo/model/expression/TypeOperator.h"
 #include "shakujo/model/expression/UnaryOperator.h"
@@ -199,10 +200,12 @@ std::unique_ptr<expression::FunctionCall> IRFactoryBase::FunctionCall() {
 
 std::unique_ptr<expression::FunctionCall> IRFactoryBase::FunctionCall(
         std::unique_ptr<name::Name> name,
-        common::util::MoveInitializerList<std::unique_ptr<expression::Expression>> arguments) {
+        common::util::MoveInitializerList<std::unique_ptr<expression::Expression>> arguments,
+        expression::FunctionCall::Quantifier quantifier) {
     auto ret = FunctionCall();
     ret->name(std::move(name));
     ret->arguments() = std::move(arguments).build();
+    ret->quantifier(quantifier);
     return ret;
 }
 
@@ -398,12 +401,14 @@ std::unique_ptr<expression::relation::AggregationExpression> IRFactoryBase::Aggr
         std::unique_ptr<expression::Expression> operand,
         common::util::MoveInitializerList<std::unique_ptr<name::Index>> keys,
         common::util::MoveInitializerList<std::unique_ptr<statement::Statement>> initialize,
-        common::util::MoveInitializerList<std::unique_ptr<expression::relation::AggregationExpression::Column>> columns) {
+        common::util::MoveInitializerList<std::unique_ptr<expression::relation::AggregationExpression::Column>> columns,
+        std::unique_ptr<name::SimpleName> alias) {
     auto ret = AggregationExpression();
     ret->operand(std::move(operand));
     ret->keys() = std::move(keys).build();
     ret->initialize() = std::move(initialize).build();
     ret->columns() = std::move(columns).build();
+    ret->alias(std::move(alias));
     return ret;
 }
 
@@ -412,15 +417,15 @@ std::unique_ptr<expression::relation::AggregationExpression::Column> IRFactoryBa
 }
 
 std::unique_ptr<expression::relation::AggregationExpression::Column> IRFactoryBase::AggregationExpressionColumn(
-        std::unique_ptr<name::Name> name,
-        std::unique_ptr<type::Type> type,
         std::unique_ptr<name::Name> function,
-        common::util::MoveInitializerList<std::unique_ptr<expression::Expression>> arguments) {
+        expression::FunctionCall::Quantifier quantifier,
+        std::unique_ptr<expression::Expression> operand,
+        std::unique_ptr<name::SimpleName> alias) {
     auto ret = AggregationExpressionColumn();
-    ret->name(std::move(name));
-    ret->type(std::move(type));
     ret->function(std::move(function));
-    ret->arguments() = std::move(arguments).build();
+    ret->quantifier(quantifier);
+    ret->operand(std::move(operand));
+    ret->alias(std::move(alias));
     return ret;
 }
 

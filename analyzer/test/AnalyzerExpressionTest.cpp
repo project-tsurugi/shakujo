@@ -962,4 +962,186 @@ TEST_F(AnalyzerExpressionTest, tuple_element_load_propagate) {
     success(); // should no extra errors
     EXPECT_TRUE(is_propagated_error(expr.get()));
 }
+
+TEST_F(AnalyzerExpressionTest, function) {
+    auto&& id = add_function(
+        common::core::Name("f"),
+        std::make_unique<t::Int>(32U, NON_NULL));
+    auto expr = analyze(f.FunctionCall(f.Name("f"), {}));
+    success();
+
+    auto binding = extract_func(expr.get());
+    EXPECT_EQ(id, binding->id());
+}
+
+TEST_F(AnalyzerExpressionTest, function_args) {
+    auto&& id = add_function(
+        common::core::Name("f"),
+        std::make_unique<t::Int>(64U, NON_NULL),
+        std::vector {
+            variable("p", t::Int(64U, NON_NULL)),
+        });
+    auto expr = analyze(f.FunctionCall(
+        f.Name("f"),
+        {
+            f.Literal(t::Int(64U, NON_NULL)),
+        }));
+    success();
+
+    auto binding = extract_func(expr.get());
+    EXPECT_EQ(id, binding->id());
+}
+
+TEST_F(AnalyzerExpressionTest, function_args_conversion) {
+    auto&& id = add_function(
+        common::core::Name("f"),
+        std::make_unique<t::Int>(64U, NON_NULL),
+        std::vector {
+            variable("p", t::Int(64U, NON_NULL)),
+        });
+    auto expr = analyze(f.FunctionCall(
+        f.Name("f"),
+        {
+            f.Literal(t::Int(32U, NON_NULL)),
+        }));
+    success();
+
+    auto binding = extract_func(expr.get());
+    EXPECT_EQ(id, binding->id());
+    EXPECT_EQ(t::Int(64U, NON_NULL), cast_type(expr->arguments()[0]));
+}
+
+TEST_F(AnalyzerExpressionTest, function_overload) {
+    auto next_id = [&] { return env.binding_context().next_function_id(); };
+
+    auto&& id = add_function(
+        std::make_shared<binding::FunctionBinding>(
+            next_id(),
+            common::core::Name("f"),
+            std::vector {
+                std::make_shared<binding::FunctionBinding>(
+                    next_id(),
+                    common::core::Name("f"),
+                    std::make_unique<t::Int>(64U, NULLABLE),
+                    std::vector {
+                        variable("p", t::Int(64U, NULLABLE)),
+                    }),
+                std::make_shared<binding::FunctionBinding>(
+                    next_id(),
+                    common::core::Name("f"),
+                    std::make_unique<t::Float>(64U, NULLABLE),
+                    std::vector {
+                        variable("p", t::Float(64U, NULLABLE)),
+                    }),
+            }));
+    auto expr = analyze(f.FunctionCall(
+        f.Name("f"),
+        {
+            f.Literal(t::Float(64U, NON_NULL)),
+        }));
+    success();
+
+    auto binding = extract_func(expr.get());
+    EXPECT_NE(id, binding->id());
+    EXPECT_EQ(t::Float(64U, NULLABLE), *binding->type());
+}
+
+TEST_F(AnalyzerExpressionTest, function_not_found) {
+    auto expr = analyze(f.FunctionCall(f.Name("f"), {}));
+    success(false);
+    EXPECT_TRUE(contains(Diagnostic::Code::FUNCTION_NOT_FOUND));
+}
+
+TEST_F(AnalyzerExpressionTest, function_not_identical) {
+    add_function(
+        common::core::Name("f"),
+        std::make_unique<t::Int>(32U, NON_NULL));
+    add_function(
+        common::core::Name("f"),
+        std::make_unique<t::Int>(64U, NON_NULL));
+    auto expr = analyze(f.FunctionCall(f.Name("f"), {}));
+    success(false);
+    EXPECT_TRUE(contains(Diagnostic::Code::FUNCTION_NOT_IDENTICAL));
+}
+
+TEST_F(AnalyzerExpressionTest, function_overload_not_found) {
+    auto next_id = [&] { return env.binding_context().next_function_id(); };
+
+    add_function(
+        std::make_shared<binding::FunctionBinding>(
+            next_id(),
+            common::core::Name("f"),
+            std::vector {
+                std::make_shared<binding::FunctionBinding>(
+                    next_id(),
+                    common::core::Name("f"),
+                    std::make_unique<t::Int>(64U, NULLABLE),
+                    std::vector {
+                        variable("p", t::Int(64U, NULLABLE)),
+                    }),
+                std::make_shared<binding::FunctionBinding>(
+                    next_id(),
+                    common::core::Name("f"),
+                    std::make_unique<t::Float>(64U, NULLABLE),
+                    std::vector {
+                        variable("p", t::Float(64U, NULLABLE)),
+                    }),
+            }));
+    auto expr = analyze(f.FunctionCall(
+        f.Name("f"),
+        {
+            f.Literal(t::Char(true, 10U, NON_NULL)),
+        }));
+    success(false);
+    EXPECT_TRUE(contains(Diagnostic::Code::FUNCTION_NOT_FOUND));
+}
+
+TEST_F(AnalyzerExpressionTest, function_incompatible_quantifier) {
+    add_function(
+        common::core::Name("count"),
+        std::make_unique<t::Int>(64U, NON_NULL));
+    auto expr = analyze(f.FunctionCall(
+        f.Name("count"),
+        {},
+        model::expression::FunctionCall::Quantifier::ASTERISK));
+    success(false);
+    EXPECT_TRUE(contains(Diagnostic::Code::INCOMPATIBLE_FUNCTION_QUANTIFIER));
+}
+
+TEST_F(AnalyzerExpressionTest, function_incompatible_argument_count) {
+    add_function(
+        common::core::Name("f"),
+        std::make_unique<t::Int>(32U, NON_NULL),
+        std::vector {
+            variable("a", t::Int(32U, NON_NULL)),
+            variable("b", t::Int(32U, NON_NULL)),
+            variable("c", t::Int(32U, NON_NULL)),
+        });
+    auto expr = analyze(f.FunctionCall(
+        f.Name("f"),
+        {
+            f.Literal(t::Int(32U, NON_NULL)),
+            f.Literal(t::Int(32U, NON_NULL)),
+        }));
+    success(false);
+    EXPECT_TRUE(contains(Diagnostic::Code::INCOMPATIBLE_FUNCTION_ARGUMENT_COUNT));
+}
+
+TEST_F(AnalyzerExpressionTest, function_incompatible_argument_type) {
+    add_function(
+        common::core::Name("f"),
+        std::make_unique<t::Int>(32U, NON_NULL),
+        std::vector {
+            variable("a", t::Int(32U, NON_NULL)),
+        });
+    auto expr = analyze(f.FunctionCall(
+        f.Name("f"),
+        {
+            f.Literal(t::Char(true, 10U, NON_NULL)),
+        }));
+    success(false);
+    EXPECT_TRUE(contains(Diagnostic::Code::INCOMPATIBLE_FUNCTION_ARGUMENT_TYPE));
+}
+
+
 }  // namespace shakujo::analyzer

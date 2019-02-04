@@ -82,7 +82,7 @@ TEST_F(DiagnosticTest, region) {
 TEST_F(DiagnosticTest, code_all) {
     for (Code c = Code::UNKNOWN_INFORMATION;
             c <= Code::NOT_IMPLEMENTED;
-            c = static_cast<Code>(static_cast<typename std::underlying_type<Code>::type>(c) + 1U)) {
+            c = static_cast<Code>(static_cast<std::underlying_type_t<Code>>(c) + 1U)) {
         Diagnostic d { c, "OK" };
         output_test(d);
     }

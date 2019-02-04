@@ -26,6 +26,8 @@
 #include <utility>
 #include <vector>
 
+#include "shakujo/common/util/utility.h"
+
 #include "shakujo/model/IRFactory.h"
 #include "shakujo/common/schema/StorageInfoProvider.h"
 #include "shakujo/common/schema/ConfigurableStorageInfoProvider.h"
@@ -94,6 +96,14 @@ public:
         return ptr;
     }
 
+    std::shared_ptr<binding::FunctionBinding> extract_func(model::key::FunctionKey::Provider* provider, bool force = false) {
+        auto ptr = env.binding_context().get(provider->function_key());
+        if (!ptr || (!force && !ptr->is_valid())) {
+            throw std::runtime_error("yet not resolved");
+        }
+        return ptr;
+    }
+
     std::shared_ptr<binding::RelationBinding> extract_relation(model::key::RelationKey::Provider* provider, bool force = false) {
         auto ptr = env.binding_context().get(provider->relation_key());
         if (!ptr || (!force && !ptr->is_valid())) {
@@ -142,6 +152,27 @@ public:
             std::string_view name,
             common::core::Type const& type) {
         return add_variable(name, &type);
+    }
+
+    binding::Id<binding::FunctionBinding> const& add_function(std::shared_ptr<binding::FunctionBinding> function) {
+        auto name = f.Name(function->name());
+        auto&& id = function->id();
+        env.function_scope().insert(name.get(), std::move(function));
+        return id;
+    }
+
+    template<class... Args>
+    binding::Id<binding::FunctionBinding> const& add_function(Args&&... args) {
+        return add_function(std::make_shared<binding::FunctionBinding>(
+            env.binding_context().next_function_id(),
+            std::forward<Args>(args)...));
+    }
+
+    std::shared_ptr<binding::VariableBinding> variable(std::string_view name, common::core::Type&& type) {
+        return std::make_shared<binding::VariableBinding>(
+            env.binding_context().next_variable_id(),
+            common::core::Name(name),
+            common::util::make_clone(std::move(type)));
     }
 
     std::string diagnostics() {
@@ -269,7 +300,7 @@ public:
         if (!ptr) {
             return false;
         }
-        return !ptr->type();
+        return !common::util::is_defined(ptr->type());
     }
 
     void success(bool ok = true) {

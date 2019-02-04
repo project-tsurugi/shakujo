@@ -102,6 +102,27 @@ equals(S&& s, T&& t) {
 }
 
 /**
+ * @brief apply dynamic_cast to raw pointer.
+ * @tparam T the destination object type
+ * @tparam U the source object type
+ * @param ptr the source pointer
+ * @return the applied pointer
+ * @throws std::bad_alloc if failed to cast
+ */
+template<class T, class U>
+inline std::add_pointer_t<std::conditional_t<std::is_const_v<U>, std::add_const_t<T>, T>>
+dynamic_pointer_cast(U* ptr) {
+    using ret_t = std::add_pointer_t<std::conditional_t<std::is_const_v<U>, std::add_const_t<T>, T>>;
+    if (!is_defined(ptr)) {
+        return {};
+    }
+    if (auto* raw = dynamic_cast<ret_t>(ptr)) {
+        return raw;
+    }
+    throw std::bad_cast();
+}
+
+/**
  * @brief apply dynamic_cast to unique_ptr.
  * @tparam T the destination object type
  * @tparam U the source object type

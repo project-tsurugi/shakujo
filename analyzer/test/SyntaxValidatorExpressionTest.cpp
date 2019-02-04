@@ -112,4 +112,27 @@ TEST_F(SyntaxValidatorExpressionTest, TupleElementStoreExpression) {
     should_error(f.TupleElementStoreExpression(f.VariableReference(f.Name("a")), f.Index(), literal()));
     should_error(f.TupleElementStoreExpression(f.VariableReference(f.Name("a")), f.Index(1U), {}));
 }
+
+TEST_F(SyntaxValidatorExpressionTest, FunctionCall) {
+    using Q = model::expression::FunctionCall::Quantifier;
+
+    validate(f.FunctionCall(f.Name("f")));
+    validate(f.FunctionCall(f.Name("f"), { f.Literal(core::type::Int(32U, NON_NULL), 100) }));
+    validate(f.FunctionCall(f.Name("f"), {}, Q::ASTERISK));
+    validate(f.FunctionCall(f.Name("f"), { f.Literal(core::type::Int(32U, NON_NULL), 100) }, Q::ALL));
+    should_error(f.FunctionCall());
+    should_error(f.FunctionCall(
+        f.Name("f"),
+        {
+            f.Literal(core::type::Int(32U, NON_NULL), 1),
+        },
+        Q::ASTERISK));
+    should_error(f.FunctionCall(
+        f.Name("f"),
+        {
+            f.Literal(core::type::Int(32U, NON_NULL), 1),
+            f.Literal(core::type::Int(32U, NON_NULL), 2),
+        },
+        Q::ALL));
+}
 }  // namespace shakujo::analyzer

@@ -32,6 +32,7 @@ class FunctionCall::Impl {
 public:
     std::unique_ptr<name::Name> name_;
     util::ManagedNodeList<Expression> arguments_;
+    FunctionCall::Quantifier quantifier_ { FunctionCall::Quantifier::ABSENT };
     std::unique_ptr<key::ExpressionKey> expression_key_;
     std::unique_ptr<key::FunctionKey> function_key_;
 
@@ -51,6 +52,7 @@ public:
                 other->arguments_.push_back(common::util::make_clone(e));
             }
         }
+        other->quantifier_ = quantifier_;
         return other;
     }
 };
@@ -82,6 +84,15 @@ std::unique_ptr<name::Name> FunctionCall::release_name() {
 
 util::ManagedNodeList<Expression>& FunctionCall::arguments() {
     return impl_->arguments_;
+}
+
+FunctionCall::Quantifier FunctionCall::quantifier() const {
+    return impl_->quantifier_;
+}
+
+FunctionCall& FunctionCall::quantifier(FunctionCall::Quantifier quantifier) {
+    impl_->quantifier_ = quantifier;
+    return *this;
 }
 
 key::ExpressionKey* FunctionCall::expression_key() {

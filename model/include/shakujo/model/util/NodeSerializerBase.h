@@ -321,6 +321,13 @@ public:
      * @param printer the destination printer
      * @param value the target value
      */
+    virtual void serialize(common::util::DataSerializer& printer, expression::FunctionCall::Quantifier value);  // NOLINT
+
+    /**
+     * @brief serializes the value into given printer.
+     * @param printer the destination printer
+     * @param value the target value
+     */
     virtual void serialize(common::util::DataSerializer& printer, expression::ImplicitCast const* value);  // NOLINT
 
     /**

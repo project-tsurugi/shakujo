@@ -428,6 +428,9 @@ public:
 
     // functionCall
     //     : name '(' expressionList? ')'
+    //     | name '(' '*' ')'
+    //     | name '(' K_ALL expression ')'
+    //     | name '(' K_DISTINCT expression ')'
     //     ;
     std::unique_ptr<model::expression::Expression> visit(Grammar::FunctionCallContext *);
 

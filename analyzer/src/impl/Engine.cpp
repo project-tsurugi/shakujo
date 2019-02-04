@@ -49,6 +49,11 @@ void Engine::bless(model::key::VariableKey::Provider* node, std::shared_ptr<bind
     node->variable_key(std::move(key));
 }
 
+void Engine::bless(model::key::FunctionKey::Provider* node, std::shared_ptr<binding::FunctionBinding> binding) {
+    auto key = bindings().create_key(std::move(binding));
+    node->function_key(std::move(key));
+}
+
 void Engine::bless(model::key::RelationKey::Provider* node, std::shared_ptr<binding::RelationBinding> binding) {
     auto key = bindings().create_key(std::move(binding));
     node->relation_key(std::move(key));
@@ -259,7 +264,7 @@ void Engine::visit(model::expression::Literal* node, ScopeContext&) {
     switch (type->kind()) {
     case common::core::Type::Kind::BOOL:
         if (value->kind() != common::core::Value::Kind::BOOL) {
-            report(node, Diagnostic::Code::LITERAL_INVALID_VALUE, to_string(value));
+            report(node, Diagnostic::Code::INVALID_LITERAL_VALUE, to_string(value));
             bless_erroneous_expression(node);
         } else {
             bless(node, type, value, true);
@@ -267,17 +272,17 @@ void Engine::visit(model::expression::Literal* node, ScopeContext&) {
         break;
     case common::core::Type::Kind::INT:
         if (value->kind() != common::core::Value::Kind::INT) {
-            report(node, Diagnostic::Code::LITERAL_INVALID_VALUE, to_string(value));
+            report(node, Diagnostic::Code::INVALID_LITERAL_VALUE, to_string(value));
             bless_erroneous_expression(node);
         } else {
             auto t = dynamic_cast<common::core::type::Int const*>(type);
             auto v = dynamic_cast<common::core::value::Int const*>(value);
             if (v->get() < t->min_value()) {
-                report(node, Diagnostic::Code::LITERAL_INVALID_VALUE,
+                report(node, Diagnostic::Code::INVALID_LITERAL_VALUE,
                        to_string(value, " is too small for ", t));
                 bless_erroneous_expression(node);
             } else if (v->get() > t->max_value()) {
-                report(node, Diagnostic::Code::LITERAL_INVALID_VALUE,
+                report(node, Diagnostic::Code::INVALID_LITERAL_VALUE,
                        to_string(value, " is too large for ", t));
                 bless_erroneous_expression(node);
             } else {
@@ -287,7 +292,7 @@ void Engine::visit(model::expression::Literal* node, ScopeContext&) {
         break;
     case common::core::Type::Kind::FLOAT:
         if (value->kind() != common::core::Value::Kind::FLOAT) {
-            report(node, Diagnostic::Code::LITERAL_INVALID_VALUE, to_string(value));
+            report(node, Diagnostic::Code::INVALID_LITERAL_VALUE, to_string(value));
             bless_erroneous_expression(node);
         } else {
             bless(node, type, value, true);
@@ -295,13 +300,13 @@ void Engine::visit(model::expression::Literal* node, ScopeContext&) {
         break;
     case common::core::Type::Kind::CHAR:
         if (value->kind() != common::core::Value::Kind::STRING) {
-            report(node, Diagnostic::Code::LITERAL_INVALID_VALUE, to_string(value));
+            report(node, Diagnostic::Code::INVALID_LITERAL_VALUE, to_string(value));
             bless_erroneous_expression(node);
         } else {
             auto t = dynamic_cast<common::core::type::Char const*>(type);
             auto v = dynamic_cast<common::core::value::String const*>(value);
             if (v->get().length() > t->size()) {
-                report(node, Diagnostic::Code::LITERAL_INVALID_VALUE,
+                report(node, Diagnostic::Code::INVALID_LITERAL_VALUE,
                        to_string(value, " is too long for ", t));
                 bless_erroneous_expression(node);
             } else {
@@ -311,7 +316,7 @@ void Engine::visit(model::expression::Literal* node, ScopeContext&) {
         break;
     case common::core::Type::Kind::STRING:
         if (value->kind() != common::core::Value::Kind::STRING) {
-            report(node, Diagnostic::Code::LITERAL_INVALID_VALUE, to_string(value));
+            report(node, Diagnostic::Code::INVALID_LITERAL_VALUE, to_string(value));
             bless_erroneous_expression(node);
         } else {
             bless(node, type, value, true);
@@ -319,7 +324,7 @@ void Engine::visit(model::expression::Literal* node, ScopeContext&) {
         break;
     case common::core::Type::Kind::NULL_:
         if (value->kind() != common::core::Value::Kind::NULL_) {
-            report(node, Diagnostic::Code::LITERAL_INVALID_VALUE, to_string(value));
+            report(node, Diagnostic::Code::INVALID_LITERAL_VALUE, to_string(value));
             bless_erroneous_expression(node);
         } else {
             bless(node, type, value, true);
@@ -395,6 +400,139 @@ void Engine::visit(model::expression::VariableReference* node, ScopeContext& sco
     }
 }
 
+void Engine::visit(model::expression::FunctionCall* node, ScopeContext& scope) {
+    for (auto* argument : node->arguments()) {
+        dispatch(argument, scope);
+    }
+
+    auto r = scope.functions().find(node->name());
+    if (!r || !equals(r.name(), node->name())) {
+        // target function is not found
+        report(node, Diagnostic::Code::FUNCTION_NOT_FOUND, to_string(node->name()));
+        bless_erroneous_expression(node);
+        bless_undefined<binding::FunctionBinding>(node);
+        return;
+    }
+
+    auto func = r.element();
+    assert(is_defined(func));  // NOLINT
+    if (!func->has_id()) {
+        // target variable is ambiguous
+        report(node, Diagnostic::Code::FUNCTION_NOT_IDENTICAL, to_string(node->name()));
+        bless_erroneous_expression(node);
+        bless_undefined<binding::FunctionBinding>(node);
+        return;
+    }
+
+    if (!is_valid(func)) {
+        // target function is identically defined, but it is not valid
+        bless_undefined<binding::ExpressionBinding>(node);
+        bless_undefined<binding::FunctionBinding>(node);
+        return;
+    }
+
+    std::vector<binding::ExpressionBinding const*> arguments;
+    arguments.reserve(node->arguments().size());
+    for (auto* argument : node->arguments()) {
+        auto expr = extract_binding(argument);
+        if (!is_valid(expr)) {
+            bless_undefined<binding::ExpressionBinding>(node);
+            bless_undefined<binding::FunctionBinding>(node);
+            return;
+        }
+        arguments.push_back(expr.get());
+    }
+
+    if (func->is_overload_stub()) {
+        using NQ = model::expression::FunctionCall::Quantifier;
+        using BQ = binding::FunctionBinding::Quantifier;
+        switch (node->quantifier()) {
+            case NQ::ABSENT:
+                func = func->resolve_overload(arguments);
+                break;
+            case NQ::ASTERISK:
+                assert(arguments.size() == 0U);  // NOLINT
+                func = func->resolve_overload(BQ::ASTERISK);
+                break;
+            case NQ::ALL:
+                assert(arguments.size() == 1U);  // NOLINT
+                func = func->resolve_overload(BQ::ALL, arguments[0]);
+                break;
+            case NQ::DISTINCT:
+                assert(arguments.size() == 1U);  // NOLINT
+                func = func->resolve_overload(BQ::DISTINCT, arguments[0]);
+                break;
+            default:
+                std::abort();
+        }
+        if (!is_valid(func) || func->is_overload_stub()) {
+            std::vector<common::core::Type const*> types;
+            types.reserve(arguments.size());
+            for (auto* expr : arguments) {
+                types.push_back(expr->type());
+            }
+            report(node, Diagnostic::Code::FUNCTION_NOT_FOUND,
+                to_string("name=", node->name(), ", parameters=", types));
+            bless_erroneous_expression(node);
+            bless_undefined<binding::FunctionBinding>(node);
+            return;
+        }
+    }
+    {
+        using NQ = model::expression::FunctionCall::Quantifier;
+        using BQ = binding::FunctionBinding::Quantifier;
+        bool ok;
+        switch (node->quantifier()) {
+            case NQ::ABSENT:
+                ok = func->quantifier() == BQ::GROUND || func->quantifier() == BQ::ALL;
+                break;
+            case NQ::ASTERISK:
+                ok = func->quantifier() == BQ::ASTERISK;
+                break;
+            case NQ::ALL:
+                ok = func->quantifier() == BQ::ALL;
+                break;
+            case NQ::DISTINCT:
+                ok = func->quantifier() == BQ::DISTINCT;
+                break;
+            default:
+                std::abort();
+        }
+        if (!ok) {
+            report(node, Diagnostic::Code::INCOMPATIBLE_FUNCTION_QUANTIFIER, to_string(
+                "name=", node->name(), ", ",
+                "required=", node->quantifier(), ", ",
+                "found=", to_string_view(func->quantifier())));
+            bless_erroneous_expression(node);
+            bless_undefined<binding::FunctionBinding>(node);
+            return;
+        }
+    }
+    if (arguments.size() != func->parameters().size()) {
+        report(node, Diagnostic::Code::INCOMPATIBLE_FUNCTION_ARGUMENT_COUNT, to_string(
+            node->name(), " requires ", func->parameters().size(), " parameters(s), ",
+            "but passed ", arguments.size()));
+        bless_erroneous_expression(node);
+        bless_undefined<binding::FunctionBinding>(node);
+        return;
+    }
+
+    for (std::size_t i = 0, n = func->parameters().size(); i < n; ++i) {
+        auto&& param = func->parameters()[i];
+        auto expr = arguments[i];
+        if (!typing::is_assignment_convertible(param->type(), *expr)) {
+            report(node, Diagnostic::Code::INCOMPATIBLE_FUNCTION_ARGUMENT_TYPE, to_string(
+                "function: ", func->name(), ", ",
+                "parameter at: ", i, ", ",
+                "parameter type: ", param->type(), ", ",
+                "expression type: ", expr->type()));
+        }
+        insert_cast(node->arguments()[i], param->type());
+    }
+    bless(node, func->type());
+    bless(node, std::move(func));
+}
+
 void Engine::visit(model::expression::AssignExpression* node, ScopeContext& scope) {
     dispatch(node->value(), scope);
     auto r = scope.variables().find(node->name());
@@ -432,10 +570,9 @@ void Engine::visit(model::expression::AssignExpression* node, ScopeContext& scop
 
     if (equals(r.name(), node->name())) {
         if (!typing::is_assignment_convertible(var->type(), *expr)) {
-            std::string message = to_string(
-                    "variable type: ", var->type(), ", ",
-                    "expression type: ", expr->type());
-            report(node, Diagnostic::Code::INCOMPATIBLE_VARIABLE_TYPE, std::move(message));
+            report(node, Diagnostic::Code::INCOMPATIBLE_VARIABLE_TYPE, to_string(
+                "variable type: ", var->type(), ", ",
+                "expression type: ", expr->type()));
             bless_undefined<binding::VariableBinding>(node);
             bless_erroneous_expression(node);
             return;
