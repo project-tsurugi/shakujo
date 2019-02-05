@@ -1367,8 +1367,7 @@ void Engine::visit(model::expression::relation::JoinExpression* node, ScopeConte
 void Engine::visit(model::statement::dml::EmitStatement* node, ScopeContext& scope) {
     dispatch(node->source(), scope);
     auto expr = extract_binding(node->source());
-    if (is_valid(expr)) {
-        require_relation(node->source());
+    if (!is_valid(expr) || !require_relation(node->source())) {
         bless_undefined<binding::RelationBinding>(node);
         return;
     }
@@ -1509,9 +1508,13 @@ void Engine::visit(model::statement::dml::InsertValuesStatement* node, ScopeCont
         columns.push_back(var);
         bless(column, var);
     }
+
+    binding::RelationBinding::Profile output { std::move(columns) };
+    enrich_relation_profile(node, output, table_info, table_info.primary_index());
+
     bless(node, std::make_shared<binding::RelationBinding>(
         binding::RelationBinding::Profile {},
-        binding::RelationBinding::Profile { std::move(columns) }));
+        std::move(output)));
 }
 
 void Engine::visit(model::statement::ddl::CreateTableStatement* node, ScopeContext& scope) {

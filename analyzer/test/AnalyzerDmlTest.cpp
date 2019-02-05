@@ -46,6 +46,10 @@ TEST_F(AnalyzerDmlTest, emit) {
     auto stmt = analyze(f.EmitStatement(f.ScanExpression(f.Name("testing"))));
     success();
 
+    auto rbinding = extract_relation(stmt.get());
+    EXPECT_EQ(rbinding->output().source_table().name(), "testing");
+    ASSERT_EQ(rbinding->output().columns().size(), 1U);
+
     auto* relation = extract_relation_type(stmt->source());
     auto& cols = relation->columns();
     ASSERT_EQ(1U, cols.size());
@@ -71,6 +75,10 @@ TEST_F(AnalyzerDmlTest, insert_values) {
         }));
     success();
 
+    auto rbinding = extract_relation(stmt.get());
+    EXPECT_EQ(rbinding->output().source_table().name(), "testing");
+    ASSERT_EQ(rbinding->output().columns().size(), 1U);
+
     auto& columns = stmt->columns();
     ASSERT_EQ(1U, columns.size());
     {
@@ -94,6 +102,10 @@ TEST_F(AnalyzerDmlTest, insert_values_wo_colum_names) {
             f.InsertValuesStatementColumn({}, literal(1, 32U)),
         }));
     success();
+
+    auto rbinding = extract_relation(stmt.get());
+    EXPECT_EQ(rbinding->output().source_table().name(), "testing");
+    ASSERT_EQ(rbinding->output().columns().size(), 1U);
 
     auto& columns = stmt->columns();
     ASSERT_EQ(1U, columns.size());
@@ -122,6 +134,10 @@ TEST_F(AnalyzerDmlTest, insert_values_reorder_columns) {
             f.InsertValuesStatementColumn(f.SimpleName("C2"), literal(2, 32U)),
         }));
     success();
+
+    auto rbinding = extract_relation(stmt.get());
+    EXPECT_EQ(rbinding->output().source_table().name(), "testing");
+    ASSERT_EQ(rbinding->output().columns().size(), 3U);
 
     auto& columns = stmt->columns();
     ASSERT_EQ(3U, columns.size());
@@ -166,6 +182,10 @@ TEST_F(AnalyzerDmlTest, insert_values_omit_columns) {
             f.InsertValuesStatementColumn(f.SimpleName("C2"), literal(2, 32U)),
         }));
     success();
+
+    auto rbinding = extract_relation(stmt.get());
+    EXPECT_EQ(rbinding->output().source_table().name(), "testing");
+    ASSERT_EQ(rbinding->output().columns().size(), 3U);
 
     auto& columns = stmt->columns();
     ASSERT_EQ(3U, columns.size());
