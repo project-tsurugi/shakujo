@@ -24,9 +24,60 @@ class CommonUtilityTest : public ::testing::Test {};
 struct C {
     int value;
     C(int v) : value(v) {}
-    C* clone() const& { return new C(value); }
-    C* clone() && { return new C(value + 1); }
+    virtual ~C() = default;
+    virtual C* clone() const& { return new C(value); }
+    virtual C* clone() && { return new C(value + 1); }
 };
+
+struct D : public C {
+    using C::C;
+    D* clone() const& override { return new D(value); }
+    D* clone() && override { return new D(value + 1); }
+};
+
+TEST_F(CommonUtilityTest, equals_raw_ptr) {
+    int a = 1;
+    int b = 1;
+    EXPECT_TRUE(equals(&a, &b));
+}
+
+TEST_F(CommonUtilityTest, equals_unique_ptr) {
+    auto a = std::make_unique<int>(1);
+    auto b = std::make_unique<int>(1);
+    EXPECT_TRUE(equals(a, b));
+}
+
+TEST_F(CommonUtilityTest, equals_mixed) {
+    auto a = std::make_unique<int>(1);
+    auto b = std::make_unique<int>(1);
+    EXPECT_TRUE(equals(a, b.get()));
+}
+
+TEST_F(CommonUtilityTest, dynamic_pointer_cast_raw_ptr) {
+    D object { 1 };
+    C* ptr = &object;
+    auto narrow = dynamic_pointer_cast<D>(ptr);
+    EXPECT_TRUE((std::is_same_v<decltype(narrow), D*>));
+}
+
+TEST_F(CommonUtilityTest, dynamic_pointer_cast_raw_ptr_const) {
+    D object { 1 };
+    C const* ptr = &object;
+    auto narrow = dynamic_pointer_cast<D>(ptr);
+    EXPECT_TRUE((std::is_same_v<decltype(narrow), D const*>));
+}
+
+TEST_F(CommonUtilityTest, dynamic_pointer_cast_unique_ptr) {
+    std::unique_ptr<C> ptr = std::make_unique<D>(1);
+    auto narrow = dynamic_pointer_cast<D>(std::move(ptr));
+    EXPECT_TRUE((std::is_same_v<decltype(narrow), std::unique_ptr<D>>));
+}
+
+TEST_F(CommonUtilityTest, dynamic_pointer_cast_unique_ptr_const) {
+    std::unique_ptr<C const> ptr = std::make_unique<D>(1);
+    auto narrow = dynamic_pointer_cast<D>(std::move(ptr));
+    EXPECT_TRUE((std::is_same_v<decltype(narrow), std::unique_ptr<D const>>));
+}
 
 TEST_F(CommonUtilityTest, make_clone_raw_ptr) {
     auto v = std::make_unique<C>(1);

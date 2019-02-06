@@ -131,12 +131,14 @@ dynamic_pointer_cast(U* ptr) {
  * @throws std::bad_alloc if failed to cast
  */
 template<class T, class U>
-inline std::unique_ptr<T> dynamic_pointer_cast(std::unique_ptr<U> ptr) {
+inline std::unique_ptr<std::conditional_t<std::is_const_v<U>, std::add_const_t<T>, T>>
+dynamic_pointer_cast(std::unique_ptr<U> ptr) {
+    using object_t = std::conditional_t<std::is_const_v<U>, std::add_const_t<T>, T>;
     if (!is_defined(ptr)) {
         return {};
     }
-    if (auto* raw = dynamic_cast<T*>(ptr.get())) {
-        std::unique_ptr<T> result { raw };
+    if (auto* raw = dynamic_cast<object_t*>(ptr.get())) {
+        std::unique_ptr<object_t> result { raw };
         ptr.release();
         return result;
     }
