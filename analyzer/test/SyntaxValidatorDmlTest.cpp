@@ -95,4 +95,62 @@ TEST_F(SyntaxValidatorDmlTest, InsertValuesStatement) {
             f.InsertValuesStatementColumn({}, literal(3)),
         }));
 }
+
+TEST_F(SyntaxValidatorDmlTest, UpdateStatement) {
+    validate(f.UpdateStatement(
+        literal(1),
+        f.Name("T"),
+        {},
+        {
+            f.UpdateStatementColumn(f.Name("a"), literal(2)),
+        }));
+    validate(f.UpdateStatement(
+        literal(1),
+        f.Name("T"),
+        {},
+        {
+            f.UpdateStatementColumn(f.Name("a"), literal(2)),
+            f.UpdateStatementColumn(f.Name("b"), literal(3)),
+            f.UpdateStatementColumn(f.Name("c"), literal(4)),
+        }));
+    should_error(f.UpdateStatement(
+        {},
+        f.Name("T"),
+        {},
+        {
+            f.UpdateStatementColumn(f.Name("a"), literal(2)),
+        }));
+    should_error(f.UpdateStatement(
+        literal(1),
+        {},
+        {},
+        {
+            f.UpdateStatementColumn(f.Name("a"), literal(2)),
+        }));
+    should_error(f.UpdateStatement(
+        literal(1),
+        f.Name("T"),
+        {},
+        {}));
+    should_error(f.UpdateStatement(
+        literal(1),
+        f.Name("T"),
+        {},
+        {
+            f.UpdateStatementColumn({}, literal(2)),
+        }));
+    should_error(f.UpdateStatement(
+        literal(1),
+        f.Name("T"),
+        {},
+        {
+            f.UpdateStatementColumn(f.Name("a"), {}),
+        }));
+}
+
+TEST_F(SyntaxValidatorDmlTest, DeleteStatement) {
+    validate(f.DeleteStatement(literal(1), f.Name("T")));
+    should_error(f.DeleteStatement({}, f.Name("T")));
+    should_error(f.DeleteStatement(literal(1), {}));
+}
 }  // namespace shakujo::analyzer

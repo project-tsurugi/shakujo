@@ -516,10 +516,15 @@ protected:
     //    return ConstNodeWalker::enter(node);
     //}
 
-    //bool enter(model::statement::dml::DeleteStatement const* node) override {
-    //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
-    //}
+    bool enter(model::statement::dml::DeleteStatement const* node) override {
+        if (!is_defined(node->source())) {
+            report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "delete statement must have a valid source");
+        }
+        if (!is_defined(node->table())) {
+            report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "delete statement must have a valid table name");
+        }
+        return true;
+    }
 
     bool enter(model::statement::dml::EmitStatement const* node) override {
         if (!is_defined(node->source())) {
@@ -562,10 +567,26 @@ protected:
         return true;
     }
 
-    //bool enter(model::statement::dml::UpdateStatement const* node) override {
-    //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
-    //}
+    bool enter(model::statement::dml::UpdateStatement const* node) override {
+        if (!is_defined(node->source())) {
+            report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "update statement must have a valid source");
+        }
+        if (!is_defined(node->table())) {
+            report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "update statement must have a valid table name");
+        }
+        if (node->columns().empty()) {
+            report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "update statement must have one or more set clauses");
+        }
+        for (auto* column : node->columns()) {
+            if (!is_defined(column->name())) {
+                report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "update statement must have a valid column name");
+            }
+            if (!is_defined(column->value())) {
+                report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "update statement must have a valid column value");
+            }
+        }
+        return true;
+    }
 
     //bool enter(model::statement::transaction::TransactionBlockStatement const* node) override {
     //    // FIXME: impl
