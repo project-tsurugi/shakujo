@@ -47,6 +47,8 @@
 #include "shakujo/common/core/type/Relation.h"
 #include "shakujo/common/core/type/Error.h"
 
+#include "shakujo/common/util/utility.h"
+
 namespace shakujo::analyzer::impl {
 
 class Engine final  // NOLINT
@@ -128,26 +130,27 @@ protected:
     void visit(model::expression::relation::JoinExpression*, ScopeContext&) override;
 
     void visit(model::statement::dml::InsertValuesStatement*, ScopeContext&) override;
+    void visit(model::statement::dml::UpdateStatement*, ScopeContext&) override;
+    void visit(model::statement::dml::DeleteStatement*, ScopeContext&) override;
 
     // DDL
     void visit(model::statement::ddl::CreateTableStatement*, ScopeContext&) override;
 
 private:
-    std::shared_ptr<binding::ExpressionBinding> extract_binding(model::key::ExpressionKey::Provider const* node) {
-        using common::util::is_defined;
-        auto ptr = bindings().get(node->expression_key());
-        assert(is_defined(ptr));  // NOLINT
+    template<class K>
+    auto extract(K const* key) -> decltype(std::declval<binding::BindingContext>().get(key)) {
+        auto ptr = bindings().get(key);
+        assert(common::util::is_defined(ptr));  // NOLINT
         return ptr;
     }
 
+    std::shared_ptr<binding::ExpressionBinding> extract_binding(model::key::ExpressionKey::Provider const* node) {
+        return extract(node->expression_key());
+    }
+
     std::shared_ptr<binding::RelationBinding> extract_relation(model::expression::Expression const* node) {
-        using common::util::is_defined;
-        if (auto* provider = dynamic_cast<typename model::key::RelationKey::Provider const*>(node); is_defined(provider)) {
-            auto binding = bindings().find(provider->relation_key());
-            assert(is_defined(binding));  // NOLINT
-            return binding;
-        }
-        throw std::domain_error("invalid expression");
+        auto* provider = common::util::dynamic_pointer_cast<model::key::RelationKey::Provider>(node);
+        return extract(provider->relation_key());
     }
 
     void insert_cast(model::expression::Expression*, common::core::Type const*);

@@ -30,6 +30,7 @@ namespace v = shakujo::common::core::value;
 
 using common::util::equals;
 using common::util::is_valid;
+using common::util::dynamic_pointer_cast;
 
 class AnalyzerDmlTest : public AnalyzerTestBase, public ::testing::Test {
 public:
@@ -76,7 +77,7 @@ TEST_F(AnalyzerDmlTest, insert_values) {
     success();
 
     auto rbinding = extract_relation(stmt.get());
-    EXPECT_EQ(rbinding->output().source_table().name(), "testing");
+    EXPECT_EQ(rbinding->destination_table().name(), "testing");
     ASSERT_EQ(rbinding->output().columns().size(), 1U);
 
     auto& columns = stmt->columns();
@@ -104,7 +105,7 @@ TEST_F(AnalyzerDmlTest, insert_values_wo_colum_names) {
     success();
 
     auto rbinding = extract_relation(stmt.get());
-    EXPECT_EQ(rbinding->output().source_table().name(), "testing");
+    EXPECT_EQ(rbinding->destination_table().name(), "testing");
     ASSERT_EQ(rbinding->output().columns().size(), 1U);
 
     auto& columns = stmt->columns();
@@ -136,7 +137,7 @@ TEST_F(AnalyzerDmlTest, insert_values_reorder_columns) {
     success();
 
     auto rbinding = extract_relation(stmt.get());
-    EXPECT_EQ(rbinding->output().source_table().name(), "testing");
+    EXPECT_EQ(rbinding->destination_table().name(), "testing");
     ASSERT_EQ(rbinding->output().columns().size(), 3U);
 
     auto& columns = stmt->columns();
@@ -184,7 +185,7 @@ TEST_F(AnalyzerDmlTest, insert_values_omit_columns) {
     success();
 
     auto rbinding = extract_relation(stmt.get());
-    EXPECT_EQ(rbinding->output().source_table().name(), "testing");
+    EXPECT_EQ(rbinding->destination_table().name(), "testing");
     ASSERT_EQ(rbinding->output().columns().size(), 3U);
 
     auto& columns = stmt->columns();
@@ -293,4 +294,243 @@ TEST_F(AnalyzerDmlTest, insert_values_unknown_column) {
     ASSERT_EQ(1U, columns.size());
     EXPECT_FALSE(is_valid(extract_var(columns[0], true)));
 }
+
+TEST_F(AnalyzerDmlTest, update) {
+    add(schema::TableInfo { "testing", {
+        { "C1", t::Int(32U, NON_NULL), },
+        { "C2", t::Int(32U, NON_NULL), },
+        { "C3", t::Int(32U, NON_NULL), },
+    }});
+    auto stmt = analyze(f.UpdateStatement(
+        f.ScanExpression(f.Name("testing")),
+        f.Name("testing"),
+        {
+            f.UpdateStatementColumn(f.Name("C2"), literal(1, 32U)),
+        }));
+    success();
+
+    auto rbinding = extract_relation(stmt.get());
+    EXPECT_EQ(rbinding->destination_table().name(), "testing");
+    ASSERT_EQ(rbinding->process().columns().size(), 3U);
+    ASSERT_EQ(rbinding->output().columns().size(), 1U);
+
+    {
+        auto&& c = stmt->columns()[0];
+        EXPECT_EQ(get<v::Int>(c->value()), 1);
+
+        auto v = extract_var(c);
+        EXPECT_EQ(v->name(), "C2");
+        EXPECT_EQ(*v->type(), t::Int(32U, NON_NULL));
+    }
+}
+
+TEST_F(AnalyzerDmlTest, update_multiple_columns) {
+    add(schema::TableInfo { "testing", {
+        { "C1", t::Int(32U, NON_NULL), },
+        { "C2", t::Int(32U, NON_NULL), },
+        { "C3", t::Int(32U, NON_NULL), },
+    }});
+    auto stmt = analyze(f.UpdateStatement(
+        f.ScanExpression(f.Name("testing")),
+        f.Name("testing"),
+        {
+            f.UpdateStatementColumn(f.Name("C2"), literal(2, 32U)),
+            f.UpdateStatementColumn(f.Name("C1"), literal(1, 32U)),
+            f.UpdateStatementColumn(f.Name("C3"), literal(3, 32U)),
+        }));
+    success();
+
+    auto rbinding = extract_relation(stmt.get());
+    EXPECT_EQ(rbinding->destination_table().name(), "testing");
+    ASSERT_EQ(rbinding->process().columns().size(), 3U);
+    ASSERT_EQ(rbinding->output().columns().size(), 3U);
+
+    {
+        auto&& c = stmt->columns()[0];
+        auto v = extract_var(c);
+        EXPECT_EQ(v->name(), "C2");
+        EXPECT_EQ(*v->type(), t::Int(32U, NON_NULL));
+        EXPECT_EQ(get<v::Int>(c->value()), 2);
+    }
+    {
+        auto&& c = stmt->columns()[1];
+        auto v = extract_var(c);
+        EXPECT_EQ(v->name(), "C1");
+        EXPECT_EQ(*v->type(), t::Int(32U, NON_NULL));
+        EXPECT_EQ(get<v::Int>(c->value()), 1);
+    }
+    {
+        auto&& c = stmt->columns()[2];
+        auto v = extract_var(c);
+        EXPECT_EQ(v->name(), "C3");
+        EXPECT_EQ(*v->type(), t::Int(32U, NON_NULL));
+        EXPECT_EQ(get<v::Int>(c->value()), 3);
+    }
+}
+
+TEST_F(AnalyzerDmlTest, update_conversion) {
+    add(schema::TableInfo { "testing", {
+        { "C1", t::Int(32U, NON_NULL), },
+        { "C2", t::Int(64U, NON_NULL), },
+        { "C3", t::Int(32U, NON_NULL), },
+    }});
+    auto stmt = analyze(f.UpdateStatement(
+        f.ScanExpression(f.Name("testing")),
+        f.Name("testing"),
+        {
+            f.UpdateStatementColumn(f.Name("C2"), literal(1, 32U)),
+        }));
+    success();
+
+    auto rbinding = extract_relation(stmt.get());
+    EXPECT_EQ(rbinding->destination_table().name(), "testing");
+    ASSERT_EQ(rbinding->process().columns().size(), 3U);
+    ASSERT_EQ(rbinding->output().columns().size(), 1U);
+
+    {
+        auto&& c = stmt->columns()[0];
+        EXPECT_EQ(cast_type(c->value()), t::Int(64U, NON_NULL));
+
+        auto v = extract_var(c);
+        EXPECT_EQ(v->name(), "C2");
+        EXPECT_EQ(*v->type(), t::Int(64U, NON_NULL));
+    }
+}
+
+TEST_F(AnalyzerDmlTest, update_not_a_relation) {
+    add(schema::TableInfo { "testing", {
+        { "C1", t::Int(32U, NON_NULL), },
+        { "C2", t::Int(32U, NON_NULL), },
+        { "C3", t::Int(32U, NON_NULL), },
+    }});
+    auto stmt = analyze(f.UpdateStatement(
+        literal(false),
+        f.Name("testing"),
+        { f.UpdateStatementColumn(f.Name("C2"), literal(1, 32U)), }));
+    success(false);
+    EXPECT_TRUE(contains(Diagnostic::Code::INCOMPATIBLE_EXPRESSION_TYPE));
+}
+
+TEST_F(AnalyzerDmlTest, update_table_not_found) {
+    auto stmt = analyze(f.UpdateStatement(
+        f.ScanExpression(f.Name("testing")),
+        f.Name("testing"),
+        { f.UpdateStatementColumn(f.Name("C2"), literal(1, 32U)), }));
+    success(false);
+    EXPECT_TRUE(contains(Diagnostic::Code::TABLE_NOT_FOUND));
+}
+
+TEST_F(AnalyzerDmlTest, update_not_a_table_expression) {
+    add(schema::TableInfo { "testing", {
+        { "C1", t::Int(32U, NON_NULL), },
+        { "C2", t::Int(32U, NON_NULL), },
+        { "C3", t::Int(32U, NON_NULL), },
+    }});
+    add(schema::TableInfo { "another", {
+        { "C1", t::Int(32U, NON_NULL), },
+        { "C2", t::Int(32U, NON_NULL), },
+        { "C3", t::Int(32U, NON_NULL), },
+    }});
+    auto stmt = analyze(f.UpdateStatement(
+        f.ScanExpression(f.Name("another")),
+        f.Name("testing"),
+        { f.UpdateStatementColumn(f.Name("C2"), literal(1, 32U)), }));
+    success(false);
+    EXPECT_TRUE(contains(Diagnostic::Code::INVALID_TABLE_EXPRESSION));
+}
+
+TEST_F(AnalyzerDmlTest, update_column_not_found) {
+    add(schema::TableInfo { "testing", {
+        { "C1", t::Int(32U, NON_NULL), },
+        { "C2", t::Int(32U, NON_NULL), },
+        { "C3", t::Int(32U, NON_NULL), },
+    }});
+    auto stmt = analyze(f.UpdateStatement(
+        f.ScanExpression(f.Name("testing")),
+        f.Name("testing"),
+        { f.UpdateStatementColumn(f.Name("INVALID"), literal(1, 32U)), }));
+    success(false);
+    EXPECT_TRUE(contains(Diagnostic::Code::COLUMN_NOT_FOUND));
+}
+
+TEST_F(AnalyzerDmlTest, update_duplicate_column) {
+    add(schema::TableInfo { "testing", {
+        { "C1", t::Int(32U, NON_NULL), },
+        { "C2", t::Int(32U, NON_NULL), },
+        { "C3", t::Int(32U, NON_NULL), },
+    }});
+    auto stmt = analyze(f.UpdateStatement(
+        f.ScanExpression(f.Name("testing")),
+        f.Name("testing"),
+        {
+            f.UpdateStatementColumn(f.Name("C2"), literal(1, 32U)),
+            f.UpdateStatementColumn(f.Name("C2"), literal(2, 32U)),
+        }));
+    success(false);
+    EXPECT_TRUE(contains(Diagnostic::Code::DUPLICATE_COLUMN));
+}
+
+TEST_F(AnalyzerDmlTest, update_incompatible_type) {
+    add(schema::TableInfo { "testing", {
+        { "C1", t::Int(32U, NON_NULL), },
+        { "C2", t::Int(32U, NON_NULL), },
+        { "C3", t::Int(32U, NON_NULL), },
+    }});
+    auto stmt = analyze(f.UpdateStatement(
+        f.ScanExpression(f.Name("testing")),
+        f.Name("testing"),
+        {
+            f.UpdateStatementColumn(f.Name("C2"), literal("1")),
+        }));
+    success(false);
+    EXPECT_TRUE(contains(Diagnostic::Code::INCOMPATIBLE_EXPRESSION_TYPE));
+}
+
+TEST_F(AnalyzerDmlTest, delete) {
+    add(schema::TableInfo { "testing", {
+        { "C1", t::Int(32U, NON_NULL), },
+        { "C2", t::Int(32U, NON_NULL), },
+        { "C3", t::Int(32U, NON_NULL), },
+    }});
+    auto stmt = analyze(f.DeleteStatement(f.ScanExpression(f.Name("testing")), f.Name("testing")));
+    success();
+
+    auto rbinding = extract_relation(stmt.get());
+    EXPECT_EQ(rbinding->destination_table().name(), "testing");
+    ASSERT_EQ(rbinding->output().columns().size(), 3U);
+}
+
+TEST_F(AnalyzerDmlTest, delete_not_a_relation) {
+    add(schema::TableInfo { "testing", {
+        { "C1", t::Int(32U, NON_NULL), },
+        { "C2", t::Int(32U, NON_NULL), },
+        { "C3", t::Int(32U, NON_NULL), },
+    }});
+    auto stmt = analyze(f.DeleteStatement(literal(1), f.Name("testing")));
+    success(false);
+    EXPECT_TRUE(contains(Diagnostic::Code::INCOMPATIBLE_EXPRESSION_TYPE));
+}
+
+TEST_F(AnalyzerDmlTest, delete_table_not_found) {
+    auto stmt = analyze(f.DeleteStatement(f.ScanExpression(f.Name("testing")), f.Name("testing")));
+    success(false);
+    EXPECT_TRUE(contains(Diagnostic::Code::TABLE_NOT_FOUND));
+}
+
+TEST_F(AnalyzerDmlTest, delete_not_a_table_expression) {
+    add(schema::TableInfo { "testing", {
+        { "C1", t::Int(32U, NON_NULL), },
+        { "C2", t::Int(32U, NON_NULL), },
+        { "C3", t::Int(32U, NON_NULL), },
+    }});
+    add(schema::TableInfo { "another", {
+        { "C1", t::Int(32U, NON_NULL), },
+        { "C2", t::Int(32U, NON_NULL), },
+        { "C3", t::Int(32U, NON_NULL), },
+    }});
+    auto stmt = analyze(f.DeleteStatement(f.ScanExpression(f.Name("another")), f.Name("testing")));
+    success(false);
+    EXPECT_TRUE(contains(Diagnostic::Code::INVALID_TABLE_EXPRESSION));
+}
+
 }  // namespace shakujo::analyzer

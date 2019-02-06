@@ -135,7 +135,7 @@ public:
         /**
          * @brief returns the source table information.
          * @return the source table information
-         *      only if the corresponded relation only contains the set of rows in the table
+         *      only if the corresponded relation only contains the set of rows/columns in the table
          * @return the invalid TableInfo otherwise
          */
         common::schema::TableInfo const& source_table() const {
@@ -414,6 +414,31 @@ public:
     }
 
     /**
+     * @brief returns the destination table information.
+     * This is only available for insert/update/delete statements.
+     * @return the destination table information
+     * @return the invalid TableInfo otherwise
+     */
+    common::schema::TableInfo const& destination_table() const {
+        using common::util::is_defined;
+        if (is_defined(destination_table_)) {
+            return *destination_table_;
+        }
+        static common::schema::TableInfo const INVALID {};
+        return INVALID;
+    }
+
+    /**
+     * @brief sets the destination table information.
+     * @param info the destination table
+     * @return this
+     */
+    RelationBinding& destination_table(common::schema::TableInfo const& info) {
+        destination_table_ = info.is_valid() ? &info : nullptr;
+        return *this;
+    }
+
+    /**
      * @brief returns the join operation of individual columns.
      * This is only available for JoinExpressions.
      * @return the join operations
@@ -526,6 +551,7 @@ public:
 private:
     Profile process_;
     Profile output_;
+    common::schema::TableInfo const* destination_table_ {};
     std::vector<JoinColumn> join_columns_ {};
     std::map<std::string, std::any> attributes_ {};
 };

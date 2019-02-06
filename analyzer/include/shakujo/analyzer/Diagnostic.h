@@ -197,6 +197,11 @@ public:
         INCOMPATIBLE_TABLE_SCHEMA,
 
         /**
+         * @brief the table expression is not valid.
+         */
+        INVALID_TABLE_EXPRESSION,
+
+        /**
          * @brief target table column is not found.
          */
         COLUMN_NOT_FOUND,
@@ -394,6 +399,8 @@ inline constexpr std::string_view to_string_view(Diagnostic::Code value) {
             return "target table is not found";
         case Code::INCOMPATIBLE_TABLE_SCHEMA:
             return "inconsistent number of columns";
+        case Code::INVALID_TABLE_EXPRESSION:
+            return "target must be a table expression";
         case Code::COLUMN_NOT_FOUND:
             return "target column is not found";
         case Code::MISSING_NATURAL_JOIN_PAIR:

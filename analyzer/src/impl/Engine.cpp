@@ -1043,6 +1043,7 @@ void Engine::visit(model::expression::relation::ProjectionExpression* node, Scop
     if (!source_relation->output().is_valid()) {
         bless_undefined<binding::ExpressionBinding>(node);
         bless_undefined<binding::RelationBinding>(node);
+        bless_undefined_each<binding::VariableBinding>(node->columns());
         return;
     }
 
@@ -1380,7 +1381,7 @@ void Engine::visit(model::statement::dml::EmitStatement* node, ScopeContext& sco
     bless(node, std::make_shared<binding::RelationBinding>(profile, profile));
 }
 
-void Engine::visit(model::statement::dml::InsertValuesStatement* node, ScopeContext& scope) {
+void Engine::visit(model::statement::dml::InsertValuesStatement* node, ScopeContext& prev) {
     auto& storage = env_.storage_info_provider();
     auto& table_info = storage.find_table(*node->table());
     if (!table_info.is_valid()) {
@@ -1470,6 +1471,9 @@ void Engine::visit(model::statement::dml::InsertValuesStatement* node, ScopeCont
         }
     }
     // resolve values
+
+    auto block = block_scope(prev.variables());
+    ScopeContext scope { block, prev.functions() };
     for (auto* s : node->initialize()) {
         dispatch(s, scope);
     }
@@ -1511,12 +1515,144 @@ void Engine::visit(model::statement::dml::InsertValuesStatement* node, ScopeCont
         bless(column, var);
     }
 
-    binding::RelationBinding::Profile output { std::move(columns) };
-    enrich_relation_profile(node, output, table_info, table_info.primary_index());
-
-    bless(node, std::make_shared<binding::RelationBinding>(
+    auto meta = std::make_shared<binding::RelationBinding>(
         binding::RelationBinding::Profile {},
-        std::move(output)));
+        binding::RelationBinding::Profile { std::move(columns) });
+    meta->destination_table(table_info);
+    bless(node, meta);
+}
+
+void Engine::visit(model::statement::dml::UpdateStatement* node, ScopeContext& prev) {
+    dispatch(node->source(), prev);
+    auto source_expr = extract_binding(node->source());
+    if (!is_valid(source_expr)) {
+        bless_undefined<binding::RelationBinding>(node);
+        bless_undefined_each<binding::VariableBinding>(node->columns());
+        return;
+    }
+    if (!require_relation(node->source())) {
+        bless_undefined<binding::RelationBinding>(node);
+        bless_undefined_each<binding::VariableBinding>(node->columns());
+        return;
+    }
+
+    auto& storage = env_.storage_info_provider();
+    auto& table_info = storage.find_table(common::core::Name(node->table()->segments()));
+    if (!table_info.is_valid()) {
+        report(node, Diagnostic::Code::TABLE_NOT_FOUND, to_string(node->table()));
+        bless_undefined<binding::RelationBinding>(node);
+        bless_undefined_each<binding::VariableBinding>(node->columns());
+        return;
+    }
+
+    auto source_relation = extract_relation(node->source());
+    if (!source_relation->output().is_valid()) {
+        bless_undefined<binding::RelationBinding>(node);
+        bless_undefined_each<binding::VariableBinding>(node->columns());
+        return;
+    }
+
+    if (table_info.name() != source_relation->output().source_table().name()) {
+        report(node->source(), Diagnostic::Code::INVALID_TABLE_EXPRESSION, to_string(node->table()));
+        bless_undefined<binding::RelationBinding>(node);
+        bless_undefined_each<binding::VariableBinding>(node->columns());
+        return;
+    }
+
+    auto relation = dynamic_cast<common::core::type::Relation const*>(source_expr->type());
+    RelationScope relation_scope { bindings(), &prev.variables(), relation, source_relation->output().columns() };
+    auto vars = block_scope(relation_scope);
+    ScopeContext scope { vars, prev.functions() };
+    for (auto* s : node->initialize()) {
+        dispatch(s, scope);
+    }
+    for (auto* c : node->columns()) {
+        dispatch(c->value(), scope);
+    }
+
+    std::set<std::string> saw_columns {};
+    for (auto* c : node->columns()) {
+        auto&& name = c->name()->token();
+        if (saw_columns.find(name) != saw_columns.end()) {
+            report(node->source(), Diagnostic::Code::DUPLICATE_COLUMN, to_string(table_info.name(), ".", name));
+            bless_undefined<binding::VariableBinding>(c);
+            continue;
+        }
+        saw_columns.emplace(name);
+
+        auto column_index = table_info.index_of(name);
+        if (!column_index.has_value()) {
+            report(node->source(), Diagnostic::Code::COLUMN_NOT_FOUND, to_string(table_info.name(), ".", name));
+            bless_undefined<binding::VariableBinding>(c);
+            continue;
+        }
+
+        assert(column_index.value() < table_info.columns().size());  // NOLINT
+        auto column_info = table_info.columns()[column_index.value()];
+        auto expr = extract_binding(c->value());
+        if (!typing::is_assignment_convertible(column_info.type(), *expr)) {
+            report(c->value(), Diagnostic::Code::INCOMPATIBLE_EXPRESSION_TYPE, to_string(
+                "default value of column \"", column_info.name(), "\" is incompatible, ",
+                "value type: ", expr->type(), ", ",
+                "column type: ", column_info.type()));
+            bless_undefined<binding::VariableBinding>(c);
+            continue;
+        }
+        insert_cast(c->value(), column_info.type());
+        bless(c, std::make_shared<binding::VariableBinding>(
+            bindings().next_variable_id(),
+            common::core::Name { column_info.name() },
+            make_clone(column_info.type())));
+    }
+
+    std::vector<std::shared_ptr<binding::VariableBinding>> columns {};
+    columns.reserve(node->columns().size());
+    for (auto* c : node->columns()) {
+        columns.emplace_back(extract(c->variable_key()));
+    }
+
+    auto meta = std::make_shared<binding::RelationBinding>(
+        source_relation->output(),
+        binding::RelationBinding::Profile { std::move(columns) });
+    meta->destination_table(table_info);
+    bless(node, meta);
+}
+
+void Engine::visit(model::statement::dml::DeleteStatement* node, ScopeContext& scope) {
+    dispatch(node->source(), scope);
+    auto source_expr = extract_binding(node->source());
+    if (!is_valid(source_expr)) {
+        bless_undefined<binding::RelationBinding>(node);
+        return;
+    }
+    if (!require_relation(node->source())) {
+        bless_undefined<binding::RelationBinding>(node);
+        return;
+    }
+
+    auto& storage = env_.storage_info_provider();
+    auto& table_info = storage.find_table(common::core::Name(node->table()->segments()));
+    if (!table_info.is_valid()) {
+        report(node, Diagnostic::Code::TABLE_NOT_FOUND, to_string(node->table()));
+        bless_undefined<binding::RelationBinding>(node);
+        return;
+    }
+
+    auto source_relation = extract_relation(node->source());
+    if (!source_relation->output().is_valid()) {
+        bless_undefined<binding::RelationBinding>(node);
+        return;
+    }
+
+    if (table_info.name() != source_relation->output().source_table().name()) {
+        report(node->source(), Diagnostic::Code::INVALID_TABLE_EXPRESSION, to_string(node->table()));
+        bless_undefined<binding::RelationBinding>(node);
+        return;
+    }
+
+    auto meta = std::make_shared<binding::RelationBinding>(source_relation->output(), source_relation->output());
+    meta->destination_table(table_info);
+    bless(node, meta);
 }
 
 void Engine::visit(model::statement::ddl::CreateTableStatement* node, ScopeContext& scope) {
