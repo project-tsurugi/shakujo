@@ -25,13 +25,16 @@
 #include "shakujo/model/key/VariableKey.h"
 #include "shakujo/model/name/Name.h"
 #include "shakujo/model/name/SimpleName.h"
+#include "shakujo/model/statement/Statement.h"
 #include "shakujo/model/util/FragmentList.h"
+#include "shakujo/model/util/NodeList.h"
 
 namespace shakujo::model::statement::dml {
 
 class InsertValuesStatement::Impl {
 public:
     std::unique_ptr<name::Name> table_;
+    util::NodeList<Statement> initialize_;
     util::FragmentList<InsertValuesStatement::Column> columns_;
     std::unique_ptr<key::RelationKey> relation_key_;
 
@@ -45,6 +48,12 @@ public:
     std::unique_ptr<Impl> clone() const {
         auto other = std::make_unique<Impl>();
         other->table_ = common::util::make_clone(table_);
+        if (!initialize_.empty()) {
+            other->initialize_.reserve(initialize_.size());
+            for (auto e : initialize_) {
+                other->initialize_.push_back(common::util::make_clone(e));
+            }
+        }
         if (!columns_.empty()) {
             other->columns_.reserve(columns_.size());
             for (auto e : columns_) {
@@ -99,6 +108,10 @@ std::unique_ptr<name::Name> InsertValuesStatement::release_table() {
     std::unique_ptr<name::Name> ret { std::move(impl_->table_) };
     impl_->table_ = {};
     return ret;
+}
+
+util::NodeList<Statement>& InsertValuesStatement::initialize() {
+    return impl_->initialize_;
 }
 
 util::FragmentList<InsertValuesStatement::Column>& InsertValuesStatement::columns() {

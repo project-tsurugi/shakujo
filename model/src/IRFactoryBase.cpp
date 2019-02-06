@@ -927,11 +927,11 @@ std::unique_ptr<statement::dml::DeleteStatement> IRFactoryBase::DeleteStatement(
 }
 
 std::unique_ptr<statement::dml::DeleteStatement> IRFactoryBase::DeleteStatement(
-        std::unique_ptr<name::Name> table,
-        std::unique_ptr<expression::Expression> condition) {
+        std::unique_ptr<expression::Expression> source,
+        std::unique_ptr<name::Name> table) {
     auto ret = DeleteStatement();
+    ret->source(std::move(source));
     ret->table(std::move(table));
-    ret->condition(std::move(condition));
     return ret;
 }
 
@@ -967,9 +967,11 @@ std::unique_ptr<statement::dml::InsertValuesStatement> IRFactoryBase::InsertValu
 
 std::unique_ptr<statement::dml::InsertValuesStatement> IRFactoryBase::InsertValuesStatement(
         std::unique_ptr<name::Name> table,
+        common::util::MoveInitializerList<std::unique_ptr<statement::Statement>> initialize,
         common::util::MoveInitializerList<std::unique_ptr<statement::dml::InsertValuesStatement::Column>> columns) {
     auto ret = InsertValuesStatement();
     ret->table(std::move(table));
+    ret->initialize() = std::move(initialize).build();
     ret->columns() = std::move(columns).build();
     return ret;
 }
@@ -992,13 +994,15 @@ std::unique_ptr<statement::dml::UpdateStatement> IRFactoryBase::UpdateStatement(
 }
 
 std::unique_ptr<statement::dml::UpdateStatement> IRFactoryBase::UpdateStatement(
+        std::unique_ptr<expression::Expression> source,
         std::unique_ptr<name::Name> table,
-        common::util::MoveInitializerList<std::unique_ptr<statement::dml::UpdateStatement::Column>> columns,
-        std::unique_ptr<expression::Expression> condition) {
+        common::util::MoveInitializerList<std::unique_ptr<statement::Statement>> initialize,
+        common::util::MoveInitializerList<std::unique_ptr<statement::dml::UpdateStatement::Column>> columns) {
     auto ret = UpdateStatement();
+    ret->source(std::move(source));
     ret->table(std::move(table));
+    ret->initialize() = std::move(initialize).build();
     ret->columns() = std::move(columns).build();
-    ret->condition(std::move(condition));
     return ret;
 }
 
@@ -1007,7 +1011,7 @@ std::unique_ptr<statement::dml::UpdateStatement::Column> IRFactoryBase::UpdateSt
 }
 
 std::unique_ptr<statement::dml::UpdateStatement::Column> IRFactoryBase::UpdateStatementColumn(
-        std::unique_ptr<name::Name> name,
+        std::unique_ptr<name::SimpleName> name,
         std::unique_ptr<expression::Expression> value) {
     auto ret = UpdateStatementColumn();
     ret->name(std::move(name));

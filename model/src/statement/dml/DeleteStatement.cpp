@@ -28,8 +28,8 @@ namespace shakujo::model::statement::dml {
 
 class DeleteStatement::Impl {
 public:
+    common::util::ManagedPtr<expression::Expression> source_;
     std::unique_ptr<name::Name> table_;
-    common::util::ManagedPtr<expression::Expression> condition_;
     std::unique_ptr<key::RelationKey> relation_key_;
 
     Impl() = default;
@@ -41,8 +41,8 @@ public:
 
     std::unique_ptr<Impl> clone() const {
         auto other = std::make_unique<Impl>();
+        other->source_ = common::util::make_clone(source_);
         other->table_ = common::util::make_clone(table_);
-        other->condition_ = common::util::make_clone(condition_);
         return other;
     }
 };
@@ -57,6 +57,19 @@ DeleteStatement::DeleteStatement(DeleteStatement&&) noexcept = default;
 
 DeleteStatement& DeleteStatement::operator=(DeleteStatement&&) noexcept = default;
 
+expression::Expression* DeleteStatement::source() {
+    return impl_->source_.get();
+}
+
+DeleteStatement& DeleteStatement::source(std::unique_ptr<expression::Expression> source) {
+    impl_->source_ = std::move(source);
+    return *this;
+}
+
+std::unique_ptr<expression::Expression> DeleteStatement::release_source() {
+    return impl_->source_.release();
+}
+
 name::Name* DeleteStatement::table() {
     return impl_->table_.get();
 }
@@ -70,19 +83,6 @@ std::unique_ptr<name::Name> DeleteStatement::release_table() {
     std::unique_ptr<name::Name> ret { std::move(impl_->table_) };
     impl_->table_ = {};
     return ret;
-}
-
-expression::Expression* DeleteStatement::condition() {
-    return impl_->condition_.get();
-}
-
-DeleteStatement& DeleteStatement::condition(std::unique_ptr<expression::Expression> condition) {
-    impl_->condition_ = std::move(condition);
-    return *this;
-}
-
-std::unique_ptr<expression::Expression> DeleteStatement::release_condition() {
-    return impl_->condition_.release();
 }
 
 key::RelationKey* DeleteStatement::relation_key() {

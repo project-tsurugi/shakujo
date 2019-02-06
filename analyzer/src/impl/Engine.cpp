@@ -1470,9 +1470,11 @@ void Engine::visit(model::statement::dml::InsertValuesStatement* node, ScopeCont
         }
     }
     // resolve values
-    std::vector<std::shared_ptr<binding::VariableBinding>> columns;
-    columns.reserve(node->columns().size());
+    for (auto* s : node->initialize()) {
+        dispatch(s, scope);
+    }
 
+    std::vector<std::shared_ptr<binding::VariableBinding>> columns;
     assert(node->columns().size() == table_info.columns().size());  // NOLINT
     for (std::size_t i = 0, n = node->columns().size(); i < n; i++) {
         auto& info = table_info.columns()[i];

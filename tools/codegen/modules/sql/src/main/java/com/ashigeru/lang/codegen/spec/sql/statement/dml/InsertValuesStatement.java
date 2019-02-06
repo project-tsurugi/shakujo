@@ -36,6 +36,9 @@ public class InsertValuesStatement extends MetaClass {
     @Description("table name")
     Property<Name> table = property();
 
+    @Description("initialization statements")
+    Property<List<Statement>> initialize = property();
+
     @Description("destination column specifications")
     Property<List<Column>> columns = property();
 

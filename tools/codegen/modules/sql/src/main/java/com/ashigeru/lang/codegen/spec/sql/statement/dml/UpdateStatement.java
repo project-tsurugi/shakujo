@@ -20,11 +20,11 @@ import java.util.List;
 import com.ashigeru.lang.codegen.ir.reflect.Description;
 import com.ashigeru.lang.codegen.ir.reflect.Extends;
 import com.ashigeru.lang.codegen.ir.reflect.MetaClass;
-import com.ashigeru.lang.codegen.ir.reflect.Opt;
 import com.ashigeru.lang.codegen.spec.sql.expression.Expression;
 import com.ashigeru.lang.codegen.spec.sql.key.RelationKey;
 import com.ashigeru.lang.codegen.spec.sql.key.VariableKey;
 import com.ashigeru.lang.codegen.spec.sql.name.Name;
+import com.ashigeru.lang.codegen.spec.sql.name.SimpleName;
 import com.ashigeru.lang.codegen.spec.sql.statement.Statement;
 
 @Description("update table rows statement")
@@ -33,24 +33,24 @@ import com.ashigeru.lang.codegen.spec.sql.statement.Statement;
 @SuppressWarnings("javadoc")
 public class UpdateStatement extends MetaClass {
 
-    // FIXME: ScanExpression instead
+    @Description("target relation")
+    Property<Expression> source = property();
+
     @Description("table name")
     Property<Name> table = property();
+
+    @Description("initialization statements")
+    Property<List<Statement>> initialize = property();
 
     @Description("destination column specification")
     Property<List<Column>> columns = property();
 
-    @Description("record filter predicate expression")
-    @Opt
-    Property<Expression> condition = property();
-
-    // TODO: init block
     @Description("update column specification")
     @Extends(VariableKey.Provider.class)
     public static class Column extends MetaClass {
 
         @Description("destination column name")
-        Property<Name> name = property();
+        Property<SimpleName> name = property();
 
         @Description("column value")
         Property<Expression> value = property();

@@ -24,9 +24,11 @@
 #include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/key/VariableKey.h"
 #include "shakujo/model/name/Name.h"
+#include "shakujo/model/name/SimpleName.h"
 #include "shakujo/model/statement/Statement.h"
 #include "shakujo/model/statement/StatementKind.h"
 #include "shakujo/model/util/FragmentList.h"
+#include "shakujo/model/util/NodeList.h"
 
 namespace shakujo::model::statement::dml {
 /**
@@ -93,13 +95,13 @@ public:
          * @brief Returns destination column name.
          * @return destination column name.
          */
-        name::Name* name();
+        name::SimpleName* name();
 
         /**
          * @brief Returns destination column name.
          * @return destination column name.
          */
-        inline name::Name const* name() const {
+        inline name::SimpleName const* name() const {
             return const_cast<UpdateStatement::Column*>(this)->name();
         }
 
@@ -108,13 +110,13 @@ public:
          * @param name destination column name
          * @return this
          */
-        UpdateStatement::Column& name(std::unique_ptr<name::Name> name);
+        UpdateStatement::Column& name(std::unique_ptr<name::SimpleName> name);
 
         /**
          * @brief Releases destination column name from this node.
          * @return the released node
          */
-        std::unique_ptr<name::Name> release_name();
+        std::unique_ptr<name::SimpleName> release_name();
 
         /**
          * @brief Returns column value.
@@ -216,6 +218,33 @@ public:
 
 public:
     /**
+     * @brief Returns target relation.
+     * @return target relation.
+     */
+    expression::Expression* source();
+
+    /**
+     * @brief Returns target relation.
+     * @return target relation.
+     */
+    inline expression::Expression const* source() const {
+        return const_cast<UpdateStatement*>(this)->source();
+    }
+
+    /**
+     * @brief Sets target relation.
+     * @param source target relation
+     * @return this
+     */
+    UpdateStatement& source(std::unique_ptr<expression::Expression> source);
+
+    /**
+     * @brief Releases target relation from this node.
+     * @return the released node
+     */
+    std::unique_ptr<expression::Expression> release_source();
+
+    /**
      * @brief Returns table name.
      * @return table name.
      */
@@ -243,6 +272,19 @@ public:
     std::unique_ptr<name::Name> release_table();
 
     /**
+     * @brief Returns initialization statements.
+     * @return initialization statements.
+     */
+    util::NodeList<Statement>& initialize();
+
+    /**
+     * @brief Returns initialization statements.
+     * @return initialization statements.
+     */
+    inline util::NodeList<Statement> const& initialize() const {
+        return const_cast<UpdateStatement*>(this)->initialize();
+    }
+    /**
      * @brief Returns destination column specification.
      * @return destination column specification.
      */
@@ -255,33 +297,6 @@ public:
     inline util::FragmentList<UpdateStatement::Column> const& columns() const {
         return const_cast<UpdateStatement*>(this)->columns();
     }
-    /**
-     * @brief Returns record filter predicate expression.
-     * @return record filter predicate expression.
-     */
-    expression::Expression* condition();
-
-    /**
-     * @brief Returns record filter predicate expression.
-     * @return record filter predicate expression.
-     */
-    inline expression::Expression const* condition() const {
-        return const_cast<UpdateStatement*>(this)->condition();
-    }
-
-    /**
-     * @brief Sets record filter predicate expression.
-     * @param condition record filter predicate expression
-     * @return this
-     */
-    UpdateStatement& condition(std::unique_ptr<expression::Expression> condition);
-
-    /**
-     * @brief Releases record filter predicate expression from this node.
-     * @return the released node
-     */
-    std::unique_ptr<expression::Expression> release_condition();
-
     /**
      * @brief Returns relation key.
      * @return relation key.

@@ -705,8 +705,8 @@ void ConstNodeWalker::walk(statement::ddl::DropTableStatement const* node) {
 
 void ConstNodeWalker::walk(statement::dml::DeleteStatement const* node) {
     if (!enter(node)) return;
+    if (node->source()) walk(node->source());
     if (node->table()) walk(node->table());
-    if (node->condition()) walk(node->condition());
     exit(node);
 }
 
@@ -729,6 +729,9 @@ void ConstNodeWalker::walk(statement::dml::InsertRelationStatement const* node) 
 void ConstNodeWalker::walk(statement::dml::InsertValuesStatement const* node) {
     if (!enter(node)) return;
     if (node->table()) walk(node->table());
+    for (auto child : node->initialize()) {
+        if (child) walk(child);
+    }
     for (auto child : node->columns()) {
         if (child->name()) walk(child->name());
         if (child->value()) walk(child->value());
@@ -738,12 +741,15 @@ void ConstNodeWalker::walk(statement::dml::InsertValuesStatement const* node) {
 
 void ConstNodeWalker::walk(statement::dml::UpdateStatement const* node) {
     if (!enter(node)) return;
+    if (node->source()) walk(node->source());
     if (node->table()) walk(node->table());
+    for (auto child : node->initialize()) {
+        if (child) walk(child);
+    }
     for (auto child : node->columns()) {
         if (child->name()) walk(child->name());
         if (child->value()) walk(child->value());
     }
-    if (node->condition()) walk(node->condition());
     exit(node);
 }
 

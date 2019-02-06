@@ -2588,14 +2588,14 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, statem
     }
     printer.enter_object("DeleteStatement");
     {
+        printer.enter_property("source");
+        serialize(printer, value->source());
+        printer.exit_property("source");
+    }
+    {
         printer.enter_property("table");
         serialize(printer, value->table());
         printer.exit_property("table");
-    }
-    {
-        printer.enter_property("condition");
-        serialize(printer, value->condition());
-        printer.exit_property("condition");
     }
     {
         printer.enter_property("relation_key");
@@ -2671,6 +2671,17 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, statem
         printer.exit_property("table");
     }
     {
+        printer.enter_property("initialize");
+        auto& list = value->initialize();
+        auto size = list.size();
+        printer.enter_array(size);
+        for (auto element : list) {
+            serialize(printer, element);
+        }
+        printer.exit_array(size);
+        printer.exit_property("initialize");
+    }
+    {
         printer.enter_property("columns");
         auto& list = value->columns();
         auto size = list.size();
@@ -2728,9 +2739,25 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, statem
     }
     printer.enter_object("UpdateStatement");
     {
+        printer.enter_property("source");
+        serialize(printer, value->source());
+        printer.exit_property("source");
+    }
+    {
         printer.enter_property("table");
         serialize(printer, value->table());
         printer.exit_property("table");
+    }
+    {
+        printer.enter_property("initialize");
+        auto& list = value->initialize();
+        auto size = list.size();
+        printer.enter_array(size);
+        for (auto element : list) {
+            serialize(printer, element);
+        }
+        printer.exit_array(size);
+        printer.exit_property("initialize");
     }
     {
         printer.enter_property("columns");
@@ -2742,11 +2769,6 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, statem
         }
         printer.exit_array(size);
         printer.exit_property("columns");
-    }
-    {
-        printer.enter_property("condition");
-        serialize(printer, value->condition());
-        printer.exit_property("condition");
     }
     {
         printer.enter_property("relation_key");

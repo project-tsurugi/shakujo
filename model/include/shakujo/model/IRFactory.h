@@ -267,6 +267,39 @@ public:
             std::unique_ptr<type::Type> type) {
         return TupleTypeElement(std::unique_ptr<name::SimpleName>(), std::move(type));
     }
+
+    using IRFactoryBase::InsertValuesStatement;
+
+    /**
+     * @brief returns a new statement::dml::InsertValuesStatement.
+     * @param table table name
+     * @param columns destination column specifications
+     * @return a created node
+     * @see statement::dml::InsertValuesStatement
+     */
+    std::unique_ptr<statement::dml::InsertValuesStatement> InsertValuesStatement(
+            std::unique_ptr<name::Name> table,
+            common::util::MoveInitializerList<std::unique_ptr<statement::dml::InsertValuesStatement::Column>> columns) {
+        // for compatibility
+        return InsertValuesStatement(std::move(table), {}, std::move(columns));
+    }
+
+    using IRFactoryBase::UpdateStatement;
+
+    /**
+     * @brief returns a new statement::dml::UpdateStatement.
+     * @param source target relation
+     * @param table table name
+     * @param columns destination column specification
+     * @return a created node
+     * @see statement::dml::UpdateStatement
+     */
+    std::unique_ptr<statement::dml::UpdateStatement> UpdateStatement(
+            std::unique_ptr<expression::Expression> source,
+            std::unique_ptr<name::Name> table,
+            common::util::MoveInitializerList<std::unique_ptr<statement::dml::UpdateStatement::Column>> columns) {
+        return UpdateStatement(std::move(source), std::move(table), {}, std::move(columns));
+    }
 };
 }  // namespace shakujo::model
 

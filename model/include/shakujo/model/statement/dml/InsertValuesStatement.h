@@ -28,6 +28,7 @@
 #include "shakujo/model/statement/Statement.h"
 #include "shakujo/model/statement/StatementKind.h"
 #include "shakujo/model/util/FragmentList.h"
+#include "shakujo/model/util/NodeList.h"
 
 namespace shakujo::model::statement::dml {
 /**
@@ -243,6 +244,19 @@ public:
      */
     std::unique_ptr<name::Name> release_table();
 
+    /**
+     * @brief Returns initialization statements.
+     * @return initialization statements.
+     */
+    util::NodeList<Statement>& initialize();
+
+    /**
+     * @brief Returns initialization statements.
+     * @return initialization statements.
+     */
+    inline util::NodeList<Statement> const& initialize() const {
+        return const_cast<InsertValuesStatement*>(this)->initialize();
+    }
     /**
      * @brief Returns destination column specifications.
      * @return destination column specifications.

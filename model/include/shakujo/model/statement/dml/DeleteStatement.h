@@ -77,6 +77,33 @@ public:
 
 public:
     /**
+     * @brief Returns target relation.
+     * @return target relation.
+     */
+    expression::Expression* source();
+
+    /**
+     * @brief Returns target relation.
+     * @return target relation.
+     */
+    inline expression::Expression const* source() const {
+        return const_cast<DeleteStatement*>(this)->source();
+    }
+
+    /**
+     * @brief Sets target relation.
+     * @param source target relation
+     * @return this
+     */
+    DeleteStatement& source(std::unique_ptr<expression::Expression> source);
+
+    /**
+     * @brief Releases target relation from this node.
+     * @return the released node
+     */
+    std::unique_ptr<expression::Expression> release_source();
+
+    /**
      * @brief Returns table name.
      * @return table name.
      */
@@ -102,33 +129,6 @@ public:
      * @return the released node
      */
     std::unique_ptr<name::Name> release_table();
-
-    /**
-     * @brief Returns row filter predicate expression.
-     * @return row filter predicate expression.
-     */
-    expression::Expression* condition();
-
-    /**
-     * @brief Returns row filter predicate expression.
-     * @return row filter predicate expression.
-     */
-    inline expression::Expression const* condition() const {
-        return const_cast<DeleteStatement*>(this)->condition();
-    }
-
-    /**
-     * @brief Sets row filter predicate expression.
-     * @param condition row filter predicate expression
-     * @return this
-     */
-    DeleteStatement& condition(std::unique_ptr<expression::Expression> condition);
-
-    /**
-     * @brief Releases row filter predicate expression from this node.
-     * @return the released node
-     */
-    std::unique_ptr<expression::Expression> release_condition();
 
     /**
      * @brief Returns relation key.

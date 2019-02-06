@@ -24,15 +24,19 @@
 #include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/key/VariableKey.h"
 #include "shakujo/model/name/Name.h"
+#include "shakujo/model/name/SimpleName.h"
+#include "shakujo/model/statement/Statement.h"
 #include "shakujo/model/util/FragmentList.h"
+#include "shakujo/model/util/NodeList.h"
 
 namespace shakujo::model::statement::dml {
 
 class UpdateStatement::Impl {
 public:
+    common::util::ManagedPtr<expression::Expression> source_;
     std::unique_ptr<name::Name> table_;
+    util::NodeList<Statement> initialize_;
     util::FragmentList<UpdateStatement::Column> columns_;
-    common::util::ManagedPtr<expression::Expression> condition_;
     std::unique_ptr<key::RelationKey> relation_key_;
 
     Impl() = default;
@@ -44,21 +48,27 @@ public:
 
     std::unique_ptr<Impl> clone() const {
         auto other = std::make_unique<Impl>();
+        other->source_ = common::util::make_clone(source_);
         other->table_ = common::util::make_clone(table_);
+        if (!initialize_.empty()) {
+            other->initialize_.reserve(initialize_.size());
+            for (auto e : initialize_) {
+                other->initialize_.push_back(common::util::make_clone(e));
+            }
+        }
         if (!columns_.empty()) {
             other->columns_.reserve(columns_.size());
             for (auto e : columns_) {
                 other->columns_.push_back(common::util::make_clone(e));
             }
         }
-        other->condition_ = common::util::make_clone(condition_);
         return other;
     }
 };
 
 class UpdateStatement::Column::Impl {
 public:
-    std::unique_ptr<name::Name> name_;
+    std::unique_ptr<name::SimpleName> name_;
     common::util::ManagedPtr<expression::Expression> value_;
     std::unique_ptr<key::VariableKey> variable_key_;
 
@@ -87,6 +97,19 @@ UpdateStatement::UpdateStatement(UpdateStatement&&) noexcept = default;
 
 UpdateStatement& UpdateStatement::operator=(UpdateStatement&&) noexcept = default;
 
+expression::Expression* UpdateStatement::source() {
+    return impl_->source_.get();
+}
+
+UpdateStatement& UpdateStatement::source(std::unique_ptr<expression::Expression> source) {
+    impl_->source_ = std::move(source);
+    return *this;
+}
+
+std::unique_ptr<expression::Expression> UpdateStatement::release_source() {
+    return impl_->source_.release();
+}
+
 name::Name* UpdateStatement::table() {
     return impl_->table_.get();
 }
@@ -102,21 +125,12 @@ std::unique_ptr<name::Name> UpdateStatement::release_table() {
     return ret;
 }
 
+util::NodeList<Statement>& UpdateStatement::initialize() {
+    return impl_->initialize_;
+}
+
 util::FragmentList<UpdateStatement::Column>& UpdateStatement::columns() {
     return impl_->columns_;
-}
-
-expression::Expression* UpdateStatement::condition() {
-    return impl_->condition_.get();
-}
-
-UpdateStatement& UpdateStatement::condition(std::unique_ptr<expression::Expression> condition) {
-    impl_->condition_ = std::move(condition);
-    return *this;
-}
-
-std::unique_ptr<expression::Expression> UpdateStatement::release_condition() {
-    return impl_->condition_.release();
 }
 
 key::RelationKey* UpdateStatement::relation_key() {
@@ -146,17 +160,17 @@ UpdateStatement::Column::Column(UpdateStatement::Column&&) noexcept = default;
 
 UpdateStatement::Column& UpdateStatement::Column::operator=(UpdateStatement::Column&&) noexcept = default;
 
-name::Name* UpdateStatement::Column::name() {
+name::SimpleName* UpdateStatement::Column::name() {
     return impl_->name_.get();
 }
 
-UpdateStatement::Column& UpdateStatement::Column::name(std::unique_ptr<name::Name> name) {
+UpdateStatement::Column& UpdateStatement::Column::name(std::unique_ptr<name::SimpleName> name) {
     impl_->name_ = std::move(name);
     return *this;
 }
 
-std::unique_ptr<name::Name> UpdateStatement::Column::release_name() {
-    std::unique_ptr<name::Name> ret { std::move(impl_->name_) };
+std::unique_ptr<name::SimpleName> UpdateStatement::Column::release_name() {
+    std::unique_ptr<name::SimpleName> ret { std::move(impl_->name_) };
     impl_->name_ = {};
     return ret;
 }

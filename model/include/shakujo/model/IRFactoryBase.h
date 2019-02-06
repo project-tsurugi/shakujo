@@ -1309,14 +1309,14 @@ public:
 
     /**
      * @brief returns a new statement::dml::DeleteStatement.
+     * @param source target relation
      * @param table table name
-     * @param condition row filter predicate expression
      * @return a created node
      * @see statement::dml::DeleteStatement
      */
     std::unique_ptr<statement::dml::DeleteStatement> DeleteStatement(
-            std::unique_ptr<name::Name> table,
-            std::unique_ptr<expression::Expression> condition = {});
+            std::unique_ptr<expression::Expression> source,
+            std::unique_ptr<name::Name> table);
 
     /**
      * @brief returns a new empty statement::dml::EmitStatement.
@@ -1364,12 +1364,14 @@ public:
     /**
      * @brief returns a new statement::dml::InsertValuesStatement.
      * @param table table name
+     * @param initialize initialization statements
      * @param columns destination column specifications
      * @return a created node
      * @see statement::dml::InsertValuesStatement
      */
     std::unique_ptr<statement::dml::InsertValuesStatement> InsertValuesStatement(
             std::unique_ptr<name::Name> table,
+            common::util::MoveInitializerList<std::unique_ptr<statement::Statement>> initialize,
             common::util::MoveInitializerList<std::unique_ptr<statement::dml::InsertValuesStatement::Column>> columns);
 
     /**
@@ -1399,16 +1401,18 @@ public:
 
     /**
      * @brief returns a new statement::dml::UpdateStatement.
+     * @param source target relation
      * @param table table name
+     * @param initialize initialization statements
      * @param columns destination column specification
-     * @param condition record filter predicate expression
      * @return a created node
      * @see statement::dml::UpdateStatement
      */
     std::unique_ptr<statement::dml::UpdateStatement> UpdateStatement(
+            std::unique_ptr<expression::Expression> source,
             std::unique_ptr<name::Name> table,
-            common::util::MoveInitializerList<std::unique_ptr<statement::dml::UpdateStatement::Column>> columns,
-            std::unique_ptr<expression::Expression> condition = {});
+            common::util::MoveInitializerList<std::unique_ptr<statement::Statement>> initialize,
+            common::util::MoveInitializerList<std::unique_ptr<statement::dml::UpdateStatement::Column>> columns);
 
     /**
      * @brief returns a new empty statement::dml::UpdateStatement::Column.
@@ -1425,7 +1429,7 @@ public:
      * @see statement::dml::UpdateStatement::Column
      */
     std::unique_ptr<statement::dml::UpdateStatement::Column> UpdateStatementColumn(
-            std::unique_ptr<name::Name> name,
+            std::unique_ptr<name::SimpleName> name,
             std::unique_ptr<expression::Expression> value);
 
     /**

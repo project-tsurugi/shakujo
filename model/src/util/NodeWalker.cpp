@@ -705,8 +705,8 @@ void NodeWalker::walk(statement::ddl::DropTableStatement* node) {
 
 void NodeWalker::walk(statement::dml::DeleteStatement* node) {
     if (!enter(node)) return;
+    if (node->source()) walk(node->source());
     if (node->table()) walk(node->table());
-    if (node->condition()) walk(node->condition());
     exit(node);
 }
 
@@ -729,6 +729,9 @@ void NodeWalker::walk(statement::dml::InsertRelationStatement* node) {
 void NodeWalker::walk(statement::dml::InsertValuesStatement* node) {
     if (!enter(node)) return;
     if (node->table()) walk(node->table());
+    for (auto child : node->initialize()) {
+        if (child) walk(child);
+    }
     for (auto child : node->columns()) {
         if (child->name()) walk(child->name());
         if (child->value()) walk(child->value());
@@ -738,12 +741,15 @@ void NodeWalker::walk(statement::dml::InsertValuesStatement* node) {
 
 void NodeWalker::walk(statement::dml::UpdateStatement* node) {
     if (!enter(node)) return;
+    if (node->source()) walk(node->source());
     if (node->table()) walk(node->table());
+    for (auto child : node->initialize()) {
+        if (child) walk(child);
+    }
     for (auto child : node->columns()) {
         if (child->name()) walk(child->name());
         if (child->value()) walk(child->value());
     }
-    if (node->condition()) walk(node->condition());
     exit(node);
 }
 
