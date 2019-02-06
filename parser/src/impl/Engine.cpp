@@ -16,6 +16,8 @@
 #include "Engine.h"
 
 #include <algorithm>
+#include <type_traits>
+
 #include <cassert>
 
 #include "shakujo/common/util/utility.h"
@@ -23,7 +25,15 @@
 namespace shakujo::parser::impl {
 
 using common::util::is_defined;
+using common::util::make_clone;
 using common::util::to_string;
+
+
+inline static void check(antlr4::ParserRuleContext *c) {
+    if (is_defined(c) && c->exception) {
+        std::rethrow_exception(c->exception);
+    }
+}
 
 inline static common::core::DocumentRegion::Position position(antlr4::Token* token, bool head) {
     if (is_defined(token) && head) {
@@ -49,6 +59,7 @@ common::core::DocumentRegion Engine::region(antlr4::ParserRuleContext *first, an
 }
 
 std::unique_ptr<model::program::Program> Engine::visit(Grammar::ProgramEntryContext *c) {
+    check(c);
     if (auto s = c->dmlStatement(); is_defined(s)) {
         auto main = visit(s);
         return f.Program({}, std::move(main)) << region(c);
@@ -61,6 +72,7 @@ std::unique_ptr<model::program::Program> Engine::visit(Grammar::ProgramEntryCont
 }
 
 std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::StatementEntryContext *c) {
+    check(c);
     if (auto s = c->statement(); is_defined(s)) {
         return visit(s);
     }
@@ -68,6 +80,7 @@ std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::StatementEnt
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::ExpressionEntryContext *c) {
+    check(c);
     if (auto e = c->expression(); is_defined(e)) {
         return visit(e);
     }
@@ -75,16 +88,24 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::Expression
 }
 
 std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::DmlStatementContext *c) {
+    check(c);
     if (auto s = c->selectStatement(); is_defined(s)) {
         return visit(s);
     }
     if (auto s = c->insertStatement(); is_defined(s)) {
         return visit(s);
     }
+    if (auto s = c->updateStatement(); is_defined(s)) {
+        return visit(s);
+    }
+    if (auto s = c->deleteStatement(); is_defined(s)) {
+        return visit(s);
+    }
     rule_error(c);
 }
 
 std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::DdlStatementContext *c) {
+    check(c);
     if (auto s = c->createTableStatement(); is_defined(s)) {
         return visit(s);
     }
@@ -92,6 +113,7 @@ std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::DdlStatement
 }
 
 std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::InsertStatementContext *c) {
+    check(c);
     auto t = c->insertionTarget();
     auto s = c->insertColumnsAndSources();
     if (is_defined(t) && is_defined(s)) {
@@ -102,6 +124,7 @@ std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::InsertStatem
 }
 
 std::unique_ptr<model::name::Name> Engine::visit(Grammar::InsertionTargetContext *c) {
+    check(c);
     if (auto n = c->name(); is_defined(n)) {
         return visit(n);
     }
@@ -111,6 +134,7 @@ std::unique_ptr<model::name::Name> Engine::visit(Grammar::InsertionTargetContext
 std::unique_ptr<model::statement::Statement> Engine::visit(
         Grammar::InsertColumnsAndSourcesContext *c,
         std::unique_ptr<model::name::Name> target) {
+    check(c);
     if (auto ctor = c->insertValuesConstructor(); is_defined(ctor)) {
         // INSERT INTO ... VALUES ...
         std::vector<std::unique_ptr<model::name::SimpleName>> column_names;
@@ -136,6 +160,7 @@ std::unique_ptr<model::statement::Statement> Engine::visit(
 }
 
 std::vector<std::unique_ptr<model::name::SimpleName>> Engine::visit(Grammar::InsertColumnListContext *c) {
+    check(c);
     std::vector<std::unique_ptr<model::name::SimpleName>> results;
     results.reserve(c->simpleName().size());
     for (auto* element : c->simpleName()) {
@@ -147,6 +172,7 @@ std::vector<std::unique_ptr<model::name::SimpleName>> Engine::visit(Grammar::Ins
 
 std::vector<std::unique_ptr<model::expression::Expression>> Engine::visit(
         Grammar::InsertValuesConstructorContext *c) {
+    check(c);
     if (auto es = c->insertValuesExpressionList(); is_defined(es)) {
         // VALUES ...
         return visit(es);
@@ -156,6 +182,7 @@ std::vector<std::unique_ptr<model::expression::Expression>> Engine::visit(
 
 std::vector<std::unique_ptr<model::expression::Expression>> Engine::visit(
         Grammar::InsertValuesExpressionListContext *c) {
+    check(c);
     if (!c->insertValuesExpression().empty()) {
         std::vector<std::unique_ptr<model::expression::Expression>> results;
         results.reserve(c->insertValuesExpression().size());
@@ -169,13 +196,97 @@ std::vector<std::unique_ptr<model::expression::Expression>> Engine::visit(
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::InsertValuesExpressionContext *c) {
+    check(c);
     if (auto e = c->expression(); is_defined(e)) {
         return visit(e);
     }
     rule_error(c);
 }
 
+std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::UpdateStatementContext *c) {
+    check(c);
+    auto t = c->targetTable();
+    auto cl = c->setClauseList();
+    if (is_defined(t) && is_defined(cl)) {
+        auto table = visit(t);
+        auto columns = visit(cl);
+        std::unique_ptr<model::expression::Expression> source = f.ScanExpression(make_clone(table)) << region(t);
+        if (auto e = c->searchCondition(); is_defined(e)) {
+            auto condition = visit(e);
+            source = f.SelectionExpression(std::move(source), std::move(condition)) << region(e);
+        }
+        return f.UpdateStatement(std::move(source), std::move(table), std::move(columns)) << region(c);
+    }
+    rule_error(c);
+}
+
+std::unique_ptr<model::name::Name> Engine::visit(Grammar::TargetTableContext *c) {
+    check(c);
+    if (auto n = c->name(); is_defined(n)) {
+        return visit(n);
+    }
+    rule_error(c);
+}
+
+std::vector<std::unique_ptr<model::statement::dml::UpdateStatement::Column>> Engine::visit(
+        Grammar::SetClauseListContext *c) {
+    check(c);
+    if (auto&& cs = c->setClause(); !cs.empty()) {
+        std::vector<std::unique_ptr<model::statement::dml::UpdateStatement::Column>> results;
+        results.reserve(c->setClause().size());
+        for (auto&& c : cs) {
+            auto column = visit(c);
+            results.emplace_back(std::move(column));
+        }
+        return results;
+    }
+    rule_error(c);
+}
+
+std::unique_ptr<model::statement::dml::UpdateStatement::Column> Engine::visit(Grammar::SetClauseContext *c) {
+    check(c);
+    auto n = c->updateTarget();
+    auto e = c->updateSource();
+    if (is_defined(n) && is_defined(e)) {
+        auto name = visit(n);
+        auto value = visit(e);
+        return f.UpdateStatementColumn(std::move(name), std::move(value));
+    }
+    rule_error(c);
+}
+
+std::unique_ptr<model::name::SimpleName> Engine::visit(Grammar::UpdateTargetContext *c) {
+    check(c);
+    if (auto n = c->simpleName(); is_defined(n)) {
+        return visit(n);
+    }
+    rule_error(c);
+}
+
+std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::UpdateSourceContext *c) {
+    check(c);
+    if (auto e = c->expression(); is_defined(e)) {
+        return visit(e);
+    }
+    rule_error(c);
+}
+
+std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::DeleteStatementContext *c) {
+    check(c);
+    if (auto t = c->targetTable(); is_defined(t)) {
+        auto table = visit(t);
+        std::unique_ptr<model::expression::Expression> source = f.ScanExpression(make_clone(table)) << region(t);
+        if (auto e = c->searchCondition(); is_defined(e)) {
+            auto condition = visit(e);
+            source = f.SelectionExpression(std::move(source), std::move(condition)) << region(e);
+        }
+        return f.DeleteStatement(std::move(source), std::move(table)) << region(c);
+    }
+    rule_error(c);
+}
+
 std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::SelectStatementContext *c) {
+    check(c);
     if (auto q = c->query(); is_defined(q)) {
         auto query = visit(q);
         return f.EmitStatement(std::move(query)) << region(c);
@@ -183,10 +294,8 @@ std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::SelectStatem
     rule_error(c);
 }
 
-// query
-//     : K_SELECT projectionSpec fromClause whereClause?
-//     ;
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::QueryContext *c) {
+    check(c);
     if (is_defined(c->K_SELECT())) {
         if (auto from = c->fromClause(); is_defined(from)) {
             auto result = visit(from);
@@ -205,6 +314,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::QueryConte
 //     : K_FROM tableReference (',' tableReference)*
 //     ;
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::FromClauseContext *c) {
+    check(c);
     if (is_defined(c->K_FROM()) && !c->tableReference().empty()) {
         std::unique_ptr<model::expression::Expression> result;
         for (auto ref : c->tableReference()) {
@@ -230,6 +340,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::FromClause
 //     | tableReference joinedTableRest
 //     ;
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::TableReferenceContext *c) {
+    check(c);
     if (auto p = c->tablePrimary(); is_defined(p)) {
         return visit(p);
     }
@@ -246,6 +357,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::TableRefer
 //     | '(' joinedTable ')'
 //     ;
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::TablePrimaryContext *c) {
+    check(c);
     if (auto name = c->tableName(); is_defined(name)) {
         return visit(name);
     }
@@ -255,10 +367,8 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::TablePrima
     rule_error(c);
 }
 
-// tableName
-//     : name (K_AS? simpleName)?
-//     ;
 std::unique_ptr<model::expression::relation::ScanExpression> Engine::visit(Grammar::TableNameContext *c) {
+    check(c);
     if (auto q = c->name(); is_defined(q)) {
         auto name = visit(q);
         if (auto n = c->simpleName(); is_defined(n)) {
@@ -270,10 +380,8 @@ std::unique_ptr<model::expression::relation::ScanExpression> Engine::visit(Gramm
     rule_error(c);
 }
 
-// joinedTable
-//     : tableReference joinedTableRest
-//     ;
 std::unique_ptr<model::expression::relation::JoinExpression> Engine::visit(Grammar::JoinedTableContext *c) {
+    check(c);
     auto table = c->tableReference();
     auto join = c->joinedTableRest();
     if (is_defined(table) && is_defined(join)) {
@@ -282,14 +390,9 @@ std::unique_ptr<model::expression::relation::JoinExpression> Engine::visit(Gramm
     rule_error(c);
 }
 
-// joinedTableRest
-//     : joinType? K_JOIN tablePrimary joinSpecification?
-//     | K_CROSS K_JOIN tablePrimary
-//     | K_NATURAL joinType? K_JOIN tablePrimary
-//     | K_UNION K_JOIN  tablePrimary
-//     ;
 std::unique_ptr<model::expression::relation::JoinExpression>
 Engine::visit(Grammar::TableReferenceContext *leading, Grammar::JoinedTableRestContext *c) {
+    check(c);
     assert(leading);  // NOLINT
     if (!is_defined(c->K_JOIN())) {
         rule_error(c);
@@ -340,13 +443,8 @@ Engine::visit(Grammar::TableReferenceContext *leading, Grammar::JoinedTableRestC
         std::move(spec)) << region(leading, c);
 }
 
-// joinType
-//     : K_INNER
-//     | K_LEFT (K_OUTER)?
-//     | K_RIGHT (K_OUTER)?
-//     | K_FULL (K_OUTER)?
-//     ;
 model::expression::relation::JoinExpression::Kind Engine::visit(Grammar::JoinTypeContext *c) {
+    check(c);
     using Kind = model::expression::relation::JoinExpression::Kind;
     if (!is_defined(c)) {
         return Kind::INNER;
@@ -366,10 +464,8 @@ model::expression::relation::JoinExpression::Kind Engine::visit(Grammar::JoinTyp
     rule_error(c);
 }
 
-// joinSpecification
-//     : K_ON searchCondition
-//     ;
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::JoinSpecificationContext *c) {
+    check(c);
     if (auto s = c->searchCondition(); is_defined(c->K_ON()) && is_defined(s)) {
         return visit(s);
     }
@@ -379,6 +475,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::JoinSpecif
 std::unique_ptr<model::expression::Expression> Engine::visit(
         Grammar::ProjectionSpecContext *c,
         std::unique_ptr<model::expression::Expression> source) {
+    check(c);
     if (is_defined(c->any)) {
         return source;
     }
@@ -391,6 +488,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(
 std::unique_ptr<model::expression::relation::ProjectionExpression> Engine::visit(
         Grammar::ProjectionColumnListContext *c,
         std::unique_ptr<model::expression::Expression> source) {
+    check(c);
     std::vector<std::unique_ptr<model::expression::relation::ProjectionExpression::Column>> columns;
     columns.reserve(c->projectionColumn().size());
     for (auto* column : c->projectionColumn()) {
@@ -401,6 +499,7 @@ std::unique_ptr<model::expression::relation::ProjectionExpression> Engine::visit
 
 std::unique_ptr<model::expression::relation::ProjectionExpression::Column> Engine::visit(
         Grammar::ProjectionColumnContext *c) {
+    check(c);
     if (auto e = c->expression(); is_defined(e)) {
         auto expr = visit(e);
         std::unique_ptr<model::name::SimpleName> alias;
@@ -415,6 +514,7 @@ std::unique_ptr<model::expression::relation::ProjectionExpression::Column> Engin
 std::unique_ptr<model::expression::relation::SelectionExpression> Engine::visit(
         Grammar::WhereClauseContext *c,
         std::unique_ptr<model::expression::Expression> source) {
+    check(c);
     if (auto e = c->searchCondition(); is_defined(e)) {
         auto expr = visit(e);
         return f.SelectionExpression(std::move(source), std::move(expr)) << region(c);
@@ -423,6 +523,7 @@ std::unique_ptr<model::expression::relation::SelectionExpression> Engine::visit(
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::SearchConditionContext *c) {
+    check(c);
     if (auto e = c->booleanValueExpression(); is_defined(e)) {
         return visit(e);
     }
@@ -430,6 +531,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::SearchCond
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::BooleanValueExpressionContext *c) {
+    check(c);
     auto operator_token = c->op;
     auto left_context = c->booleanValueExpression();
     auto right_context = c->booleanTerm();
@@ -448,6 +550,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::BooleanVal
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::BooleanTermContext *c) {
+    check(c);
     auto operator_token = c->op;
     auto left_context = c->booleanTerm();
     auto right_context = c->booleanFactor();
@@ -466,6 +569,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::BooleanTer
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::BooleanFactorContext *c) {
+    check(c);
     auto operator_token = c->op;
     auto operand_context = c->booleanTest();
     if (is_defined(operator_token) && is_defined(operand_context)) {
@@ -481,6 +585,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::BooleanFac
 }
 
 static model::expression::UnaryOperator::Kind boolean_test_operator(Grammar::BooleanTestContext *c) {
+    check(c);
     if (is_defined(c->K_TRUE())) {
         if (is_defined(c->K_NOT())) {
             return model::expression::UnaryOperator::Kind::IS_NOT_TRUE;
@@ -497,6 +602,7 @@ static model::expression::UnaryOperator::Kind boolean_test_operator(Grammar::Boo
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::BooleanTestContext *c) {
+    check(c);
     auto operand_context = c->booleanPrimary();
     if (is_defined(operand_context) && is_defined(c->K_IS())) {
         auto kind = boolean_test_operator(c);
@@ -513,6 +619,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::BooleanTes
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::BooleanPrimaryContext *c) {
+    check(c);
     if (auto e = c->parenthesizedBooleanValueExpression(); is_defined(e)) {
         return visit(e);
     }
@@ -523,6 +630,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::BooleanPri
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::ParenthesizedBooleanValueExpressionContext *c) {
+    check(c);
     if (auto expression = c->booleanValueExpression(); is_defined(expression)) {
         return visit(expression);
     }
@@ -530,6 +638,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::Parenthesi
 }
 
 std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::CreateTableStatementContext *c) {
+    check(c);
     if (auto s = c->tableDefinition(); is_defined(s)) {
         return visit(s);
     }
@@ -537,6 +646,7 @@ std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::CreateTableS
 }
 
 std::unique_ptr<model::statement::ddl::CreateTableStatement> Engine::visit(Grammar::TableDefinitionContext *c) {
+    check(c);
     auto n = c->name();
     auto es = c->tableElementList();
     if (is_defined(c->K_CREATE()) && is_defined(c->K_TABLE()) && is_defined(n) && is_defined(es)) {
@@ -553,6 +663,7 @@ std::unique_ptr<model::statement::ddl::CreateTableStatement> Engine::visit(Gramm
 }
 
 void Engine::visit(Grammar::TableDefinitionOptionContext *c, model::statement::ddl::CreateTableStatement *r) {
+    check(c);
     using Attribute = model::statement::ddl::CreateTableStatement::Attribute;
     if (is_defined(c->K_IF()) && is_defined(c->K_NOT()) && is_defined(c->K_EXISTS())) {
         r->attributes().emplace(Attribute::IF_NOT_EXISTS);
@@ -562,6 +673,7 @@ void Engine::visit(Grammar::TableDefinitionOptionContext *c, model::statement::d
 }
 
 void Engine::visit(Grammar::TableElementListContext *c, model::statement::ddl::CreateTableStatement *r) {
+    check(c);
     if (!c->tableElement().empty()) {
         for (auto* element : c->tableElement()) {
             visit(element, r);
@@ -572,6 +684,7 @@ void Engine::visit(Grammar::TableElementListContext *c, model::statement::ddl::C
 }
 
 void Engine::visit(Grammar::TableElementContext *c, model::statement::ddl::CreateTableStatement *r) {
+    check(c);
     if (auto d = c->columnDefinition(); is_defined(d)) {
         visit(d, r);
         return;
@@ -584,6 +697,7 @@ void Engine::visit(Grammar::TableElementContext *c, model::statement::ddl::Creat
 }
 
 void Engine::visit(Grammar::ColumnDefinitionContext *c, model::statement::ddl::CreateTableStatement *r) {
+    check(c);
     auto n = c->columnName();
     auto t = c->dataType();
     if (is_defined(n) && is_defined(t)) {
@@ -604,6 +718,7 @@ void Engine::visit(Grammar::ColumnDefinitionContext *c, model::statement::ddl::C
 
 std::vector<std::unique_ptr<model::statement::ddl::CreateTableStatement::PrimaryKey>> Engine::visit(
         Grammar::ColumnOrderListContext *c) {
+    check(c);
     if (!c->columnOrder().empty()) {
         std::vector<std::unique_ptr<model::statement::ddl::CreateTableStatement::PrimaryKey>> results;
         results.reserve(c->columnOrder().size());
@@ -617,6 +732,7 @@ std::vector<std::unique_ptr<model::statement::ddl::CreateTableStatement::Primary
 
 std::unique_ptr<model::statement::ddl::CreateTableStatement::PrimaryKey> Engine::visit(
         Grammar::ColumnOrderContext *c) {
+    check(c);
     auto n = c->columnName();
     if (is_defined(n)) {
         using Direction = model::statement::ddl::CreateTableStatement::PrimaryKey::Direction;
@@ -633,6 +749,7 @@ std::unique_ptr<model::statement::ddl::CreateTableStatement::PrimaryKey> Engine:
 }
 
 std::unique_ptr<model::name::SimpleName> Engine::visit(Grammar::ColumnNameContext *c) {
+    check(c);
     if (auto n = c->simpleName(); is_defined(n)) {
         return visit(n);
     }
@@ -640,6 +757,7 @@ std::unique_ptr<model::name::SimpleName> Engine::visit(Grammar::ColumnNameContex
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::DefaultClauseContext *c) {
+    check(c);
     if (auto v = c->literal(); is_defined(c->K_DEFAULT()) && is_defined(v)) {
         return visit(v);
     }
@@ -649,6 +767,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::DefaultCla
 void Engine::visit(
         Grammar::ColumnConstraintDefinitionContext *c,
         model::statement::ddl::CreateTableStatement::Column *rc) {
+    check(c);
     using Attribute = model::statement::ddl::CreateTableStatement::Column::Attribute;
     if (is_defined(c->K_NOT()) && is_defined(c->K_NULL())) {
         rc->attributes().emplace(Attribute::NOT_NULL);
@@ -666,6 +785,7 @@ void Engine::visit(
 }
 
 void Engine::visit(Grammar::TableConstraintDefinitionContext *c, model::statement::ddl::CreateTableStatement *r) {
+    check(c);
     if (auto pk = c->primaryKeyDefinition(); is_defined(pk)) {
         visit(pk, r);
         return;
@@ -674,6 +794,7 @@ void Engine::visit(Grammar::TableConstraintDefinitionContext *c, model::statemen
 }
 
 void Engine::visit(Grammar::PrimaryKeyDefinitionContext *c, model::statement::ddl::CreateTableStatement *r) {
+    check(c);
     if (is_defined(c->K_PRIMARY()) && is_defined(c->K_KEY())) {
         // FIXME: only once
         if (auto cs = c->columnOrderList(); is_defined(cs)) {
@@ -688,6 +809,7 @@ void Engine::visit(Grammar::PrimaryKeyDefinitionContext *c, model::statement::dd
 }
 
 std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::StatementContext *c) {
+    check(c);
     if (auto s = c->expressionStatement(); is_defined(s)) {
         return visit(s);
     }
@@ -695,6 +817,7 @@ std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::StatementCon
 }
 
 std::unique_ptr<model::statement::ExpressionStatement> Engine::visit(Grammar::ExpressionStatementContext *c) {
+    check(c);
     if (auto e = c->expression(); is_defined(e)) {
         auto expression = visit(e);
         return f.ExpressionStatement(std::move(expression)) << region(c);
@@ -703,12 +826,13 @@ std::unique_ptr<model::statement::ExpressionStatement> Engine::visit(Grammar::Ex
 }
 
 std::vector<std::unique_ptr<model::expression::Expression>> Engine::visit(Grammar::ExpressionListContext *c) {
+    check(c);
     if (!c->expression().empty()) {
         std::vector<std::unique_ptr<model::expression::Expression>> results;
         results.reserve(c->expression().size());
         for (auto* element : c->expression()) {
             auto e = visit(element);
-            results.push_back(std::move(e));
+            results.emplace_back(std::move(e));
         }
         return results;
     }
@@ -716,6 +840,7 @@ std::vector<std::unique_ptr<model::expression::Expression>> Engine::visit(Gramma
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::ExpressionContext *c) {
+    check(c);
     if (auto e = c->assignExpression(); is_defined(e)) {
         return visit(e);
     }
@@ -723,6 +848,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::Expression
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::AssignExpressionContext *c) {
+    check(c);
     auto operator_token = c->op;
     auto left_context = c->name();
     auto right_context = c->assignExpression();
@@ -741,6 +867,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::AssignExpr
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::SignConditionalOrExpressionContext *c) {
+    check(c);
     auto operator_token = c->op;
     auto left_context = c->signConditionalOrExpression();
     auto right_context = c->signConditionalAndExpression();
@@ -759,6 +886,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::SignCondit
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::SignConditionalAndExpressionContext *c) {
+    check(c);
     auto operator_token = c->op;
     auto left_context = c->signConditionalAndExpression();
     auto right_context = c->inclusiveOrExpression();
@@ -777,6 +905,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::SignCondit
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::InclusiveOrExpressionContext *c) {
+    check(c);
     auto operator_token = c->op;
     auto left_context = c->inclusiveOrExpression();
     auto right_context = c->exclusiveOrExpression();
@@ -795,6 +924,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::InclusiveO
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::ExclusiveOrExpressionContext *c) {
+    check(c);
     auto operator_token = c->op;
     auto left_context = c->exclusiveOrExpression();
     auto right_context = c->andExpression();
@@ -813,6 +943,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::ExclusiveO
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::AndExpressionContext *c) {
+    check(c);
     auto operator_token = c->op;
     auto left_context = c->andExpression();
     auto right_context = c->equalityExpression();
@@ -840,6 +971,7 @@ static model::expression::BinaryOperator::Kind equality_operator(antlr4::Token *
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::EqualityExpressionContext *c) {
+    check(c);
     auto operator_token = c->op;
     auto left_context = c->equalityExpression();
     auto right_context = c->relationalExpression();
@@ -869,6 +1001,7 @@ static model::expression::BinaryOperator::Kind relational_operator(antlr4::Token
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::RelationalExpressionContext *c) {
+    check(c);
     auto operator_token = c->op;
     auto left_context = c->relationalExpression();
     auto right_context = c->shiftExpression();
@@ -897,6 +1030,7 @@ static model::expression::BinaryOperator::Kind shift_operator(antlr4::Token *tok
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::ShiftExpressionContext *c) {
+    check(c);
     auto operator_token = c->op;
     auto left_context = c->shiftExpression();
     auto right_context = c->additiveExpression();
@@ -924,6 +1058,7 @@ static model::expression::BinaryOperator::Kind additive_operator(antlr4::Token *
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::AdditiveExpressionContext *c) {
+    check(c);
     auto operator_token = c->op;
     auto left_context = c->additiveExpression();
     auto right_context = c->multiplicativeExpression();
@@ -952,6 +1087,7 @@ static model::expression::BinaryOperator::Kind multiplicative_operator(antlr4::T
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::MultiplicativeExpressionContext *c) {
+    check(c);
     auto operator_token = c->op;
     auto left_context = c->multiplicativeExpression();
     auto right_context = c->unaryExpression();
@@ -981,6 +1117,7 @@ static model::expression::UnaryOperator::Kind unary_operator(antlr4::Token *toke
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::UnaryExpressionContext *c) {
+    check(c);
     auto operator_token = c->op;
     auto operand_context = c->unaryExpression();
     if (is_defined(operator_token) && is_defined(operand_context)) {
@@ -997,6 +1134,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::UnaryExpre
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::PostfixExpressionContext *c) {
+    check(c);
     if (auto e = c->primaryExpression(); is_defined(e)) {
         return visit(e);
     }
@@ -1004,6 +1142,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::PostfixExp
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::PrimaryExpressionContext *c) {
+    check(c);
     if (auto e = c->functionCall(); is_defined(e)) {
         return visit(e);
     }
@@ -1021,6 +1160,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::PrimaryExp
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::FunctionCallContext *c) {
+    check(c);
     if (auto n = c->name(); is_defined(n)) {
         auto name = visit(n);
         if (is_defined(c->ASTERISK())) {
@@ -1053,6 +1193,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::FunctionCa
 }
 
 std::unique_ptr<model::name::Name> Engine::visit(Grammar::NameContext *c) {
+    check(c);
     auto q = c->name();
     auto n = c->simpleName();
     if (is_defined(q) && is_defined(n)) {
@@ -1067,6 +1208,7 @@ std::unique_ptr<model::name::Name> Engine::visit(Grammar::NameContext *c) {
 }
 
 std::unique_ptr<model::name::SimpleName> Engine::visit(Grammar::SimpleNameContext *c) {
+    check(c);
     if (is_defined(c->IDENTIFIER())) {
         auto token = c->IDENTIFIER()->getSymbol();
         return f.SimpleName(token->getText()) << region(c);
@@ -1111,6 +1253,7 @@ static common::core::value::String::type parse_string(antlr4::Token *token) {
 }
 
 std::unique_ptr<model::expression::Literal> Engine::visit(Grammar::LiteralContext *c) {
+    check(c);
     if (auto n = c->INTEGRAL_NUMBER(); is_defined(n)) {
         try {
             auto value = parse_int(n->getSymbol());
@@ -1158,6 +1301,7 @@ std::unique_ptr<model::expression::Literal> Engine::visit(Grammar::LiteralContex
 }
 
 std::unique_ptr<model::expression::Placeholder> Engine::visit(Grammar::PlaceholderContext *c) {
+    check(c);
     if (auto n = c->NAMED_PLACEHOLDER(); is_defined(n)) {
         auto str = n->getText().substr(1U);
         return f.Placeholder(std::move(str)) << region(c);
@@ -1169,6 +1313,7 @@ std::unique_ptr<model::expression::Placeholder> Engine::visit(Grammar::Placehold
 }
 
 std::unique_ptr<model::type::Type> Engine::visit(Grammar::DataTypeContext *c) {
+    check(c);
     if (is_defined(c->K_INT())) {
         if (auto p = c->dataSize(); is_defined(p)) {
             auto sz = visit(p);
@@ -1220,6 +1365,7 @@ std::unique_ptr<model::type::Type> Engine::visit(Grammar::DataTypeContext *c) {
 }
 
 std::size_t Engine::visit(Grammar::DataSizeContext *c) {
+    check(c);
     if (auto t = c->INTEGRAL_NUMBER(); is_defined(t)) {
         return std::stoull(t->getSymbol()->getText());
     }

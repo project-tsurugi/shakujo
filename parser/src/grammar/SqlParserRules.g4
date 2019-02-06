@@ -4,6 +4,8 @@ parser grammar SqlParserRules;
 dmlStatement
     : selectStatement
     | insertStatement
+    | updateStatement
+    | deleteStatement
     ;
 
 ddlStatement
@@ -38,6 +40,36 @@ insertValuesExpressionList
 insertValuesExpression
     : expression
     // FIXME DEFAULT
+    ;
+
+// -- UPDATE
+updateStatement
+    : K_UPDATE targetTable K_SET setClauseList ( K_WHERE searchCondition )?
+    ;
+
+targetTable
+    : name
+    ;
+
+setClauseList
+    : setClause (',' setClause)*
+    ;
+
+setClause
+    : updateTarget '=' updateSource
+    ;
+
+updateTarget
+    : simpleName
+    ;
+
+updateSource
+    : expression
+    ;
+
+// -- DELETE
+deleteStatement
+    : K_DELETE K_FROM targetTable ( K_WHERE searchCondition )?
     ;
 
 // -- SELECT

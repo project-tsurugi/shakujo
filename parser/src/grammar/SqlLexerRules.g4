@@ -8,6 +8,11 @@ K_WHERE: W H E R E;
 K_INSERT: I N S E R T;
 K_VALUES: V A L U E S;
 
+K_DELETE: D E L E T E;
+
+K_UPDATE: U P D A T E;
+K_SET: S E T;
+
 K_CREATE: C R E A T E;
 K_TABLE: T A B L E;
 

@@ -61,6 +61,8 @@ public:
     // dmlStatement
     //     : selectStatement
     //     | insertStatement
+    //     | updateStatement
+    //     | deleteStatement
     //     ;
     std::unique_ptr<model::statement::Statement> visit(Grammar::DmlStatementContext *);
 
@@ -106,6 +108,43 @@ public:
     //     : expression
     //     ;
     std::unique_ptr<model::expression::Expression> visit(Grammar::InsertValuesExpressionContext *);
+
+    // -- UPDATE
+    // updateStatement
+    //     : K_UPDATE targetTable K_SET setClauseList ( K_WHERE searchCondition )?
+    //     ;
+    std::unique_ptr<model::statement::Statement> visit(Grammar::UpdateStatementContext *);
+
+    // targetTable
+    //     : name
+    //     ;
+    std::unique_ptr<model::name::Name> visit(Grammar::TargetTableContext *);
+
+    // setClauseList
+    //     : setClause (',' setClause)*
+    //     ;
+    std::vector<std::unique_ptr<model::statement::dml::UpdateStatement::Column>> visit(Grammar::SetClauseListContext *);
+
+    // setClause
+    //     : updateTarget '=' updateSource
+    //     ;
+    std::unique_ptr<model::statement::dml::UpdateStatement::Column> visit(Grammar::SetClauseContext *);
+
+    // updateTarget
+    //     : simpleName
+    //     ;
+    std::unique_ptr<model::name::SimpleName> visit(Grammar::UpdateTargetContext *);
+
+    // updateSource
+    //     : expression
+    //     ;
+    std::unique_ptr<model::expression::Expression> visit(Grammar::UpdateSourceContext *);
+
+    // -- DELETE
+    // deleteStatement
+    //     : K_DELETE K_FROM targetTable ( K_WHERE searchCondition )?
+    //     ;
+    std::unique_ptr<model::statement::Statement> visit(Grammar::DeleteStatementContext *);
 
     // -- SELECT
     // selectStatement
