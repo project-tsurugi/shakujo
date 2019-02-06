@@ -19,13 +19,15 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <shakujo/model/name/Name.h>
-
 
 #include "shakujo/common/core/Name.h"
 #include "shakujo/model/name/ConstNameVisitor.h"
 
+#include "shakujo/common/util/utility.h"
+
 namespace shakujo::model::name {
+
+using common::util::dynamic_pointer_cast;
 
 bool Name::operator==(Name const& other) const {
     if (kind() != other.kind()) {
@@ -37,7 +39,7 @@ bool Name::operator==(Name const& other) const {
             if (node->kind() != other->kind()) {
                 return false;
             }
-            auto that = dynamic_cast<SimpleName const*>(other);
+            auto that = dynamic_pointer_cast<SimpleName>(other);
             return node->token() == that->token();
         }
 
@@ -45,7 +47,7 @@ bool Name::operator==(Name const& other) const {
             if (node->kind() != other->kind()) {
                 return false;
             }
-            auto that = dynamic_cast<QualifiedName const*>(other);
+            auto that = dynamic_pointer_cast<QualifiedName>(other);
             return dispatch(node->name(), that->name())
                 && dispatch(node->qualifier(), that->qualifier());
         }
@@ -62,7 +64,7 @@ std::size_t Name::size() const {
             return ret + 1;
         case NameKind::QUALIFIED_NAME:
             ret++;
-            current = dynamic_cast<const QualifiedName*>(current)->qualifier();
+            current = dynamic_pointer_cast<QualifiedName>(current)->qualifier();
             break;
         }
     }

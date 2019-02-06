@@ -42,35 +42,35 @@ TEST_F(ManagedPtrTest, simple) {
 }
 
 TEST_F(ManagedPtrTest, ctor_unique_ptr) {
-    ManagedPtr<TVal> p { std::unique_ptr<TVal>(new TVal("OK")) };
+    ManagedPtr<TVal> p { std::make_unique<TVal>("OK") };
     ASSERT_TRUE(p);
     EXPECT_TRUE(p->is_managed());
     EXPECT_EQ("OK", p->val);
 }
 
 TEST_F(ManagedPtrTest, ctor_raw_ptr) {
-    ManagedPtr<TVal> p { new TVal("OK") };
+    ManagedPtr<TVal> p { std::make_unique<TVal>("OK") };
     ASSERT_TRUE(p);
     EXPECT_TRUE(p->is_managed());
     EXPECT_EQ("OK", p->val);
 }
 
 TEST_F(ManagedPtrTest, ctor_move) {
-    ManagedPtr<TVal> p { new TVal("OK") };
+    ManagedPtr<TVal> p { std::make_unique<TVal>("OK") };
     ManagedPtr<TVal> q { std::move(p) };
 
     ASSERT_TRUE(q);
     EXPECT_TRUE(q->is_managed());
     q->replace([](std::unique_ptr<TVal>) {
-        return std::unique_ptr<TVal>(new TVal("REP"));
+        return std::make_unique<TVal>("REP");
     });
     EXPECT_EQ("REP", q->val);
 }
 
 TEST_F(ManagedPtrTest, assign_move) {
     bool destroyed = false;
-    ManagedPtr<TVal> p { new TVal("OLD", &destroyed) };
-    p = ManagedPtr<TVal> { new TVal("OK") };
+    ManagedPtr<TVal> p { std::make_unique<TVal>("OLD", &destroyed) };
+    p = ManagedPtr<TVal> { std::make_unique<TVal>("OK") };
     EXPECT_TRUE(destroyed);
 
     ASSERT_TRUE(p);
@@ -80,8 +80,8 @@ TEST_F(ManagedPtrTest, assign_move) {
 
 TEST_F(ManagedPtrTest, assign_unique_ptr) {
     bool destroyed = false;
-    ManagedPtr<TVal> p { new TVal("OLD", &destroyed) };
-    p = std::unique_ptr<TVal>(new TVal("OK"));
+    ManagedPtr<TVal> p { std::make_unique<TVal>("OLD", &destroyed) };
+    p = std::make_unique<TVal>("OK");
     EXPECT_TRUE(destroyed);
 
     ASSERT_TRUE(p);
@@ -91,14 +91,14 @@ TEST_F(ManagedPtrTest, assign_unique_ptr) {
 
 TEST_F(ManagedPtrTest, assign_nullptr) {
     bool destroyed = false;
-    ManagedPtr<TVal> p { new TVal("OLD", &destroyed) };
+    ManagedPtr<TVal> p { std::make_unique<TVal>("OLD", &destroyed) };
     p = nullptr;
     EXPECT_TRUE(destroyed);
     ASSERT_FALSE(p);
 }
 
 TEST_F(ManagedPtrTest, release) {
-    ManagedPtr<TVal> p { new TVal("OK") };
+    ManagedPtr<TVal> p { std::make_unique<TVal>("OK") };
 
     TVal& v = *p;
     EXPECT_TRUE(v.is_managed());

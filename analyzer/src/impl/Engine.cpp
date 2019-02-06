@@ -33,6 +33,7 @@
 
 namespace shakujo::analyzer::impl {
 
+using common::util::dynamic_pointer_cast;
 using common::util::make_clone;
 using common::util::equals;
 using common::util::is_defined;
@@ -275,8 +276,8 @@ void Engine::visit(model::expression::Literal* node, ScopeContext&) {
             report(node, Diagnostic::Code::INVALID_LITERAL_VALUE, to_string(value));
             bless_erroneous_expression(node);
         } else {
-            auto t = dynamic_cast<common::core::type::Int const*>(type);
-            auto v = dynamic_cast<common::core::value::Int const*>(value);
+            auto t = dynamic_pointer_cast<common::core::type::Int>(type);
+            auto v = dynamic_pointer_cast<common::core::value::Int>(value);
             if (v->get() < t->min_value()) {
                 report(node, Diagnostic::Code::INVALID_LITERAL_VALUE,
                        to_string(value, " is too small for ", t));
@@ -303,8 +304,8 @@ void Engine::visit(model::expression::Literal* node, ScopeContext&) {
             report(node, Diagnostic::Code::INVALID_LITERAL_VALUE, to_string(value));
             bless_erroneous_expression(node);
         } else {
-            auto t = dynamic_cast<common::core::type::Char const*>(type);
-            auto v = dynamic_cast<common::core::value::String const*>(value);
+            auto t = dynamic_pointer_cast<common::core::type::Char>(type);
+            auto v = dynamic_pointer_cast<common::core::value::String>(value);
             if (v->get().length() > t->size()) {
                 report(node, Diagnostic::Code::INVALID_LITERAL_VALUE,
                        to_string(value, " is too long for ", t));
@@ -394,7 +395,7 @@ void Engine::visit(model::expression::VariableReference* node, ScopeContext& sco
                 }
                 return ir_factory.TupleElementLoadExpression(std::move(p), std::move(index));
             });
-            process_tuple_element(dynamic_cast<model::expression::TupleElementLoadExpression*>(current));
+            process_tuple_element(dynamic_pointer_cast<model::expression::TupleElementLoadExpression>(current));
             ++position_index;
         }
     }
@@ -605,7 +606,7 @@ void Engine::process_tuple_element(model::expression::TupleElementLoadExpression
         bless_erroneous_expression(node);
         return;
     }
-    auto* tuple = dynamic_cast<common::core::type::Tuple const*>(expr->type());
+    auto* tuple = dynamic_pointer_cast<common::core::type::Tuple>(expr->type());
     auto type = resolve_index(node->index(), tuple);
     if (is_valid(type)) {
         bless(node, std::move(type));
@@ -828,7 +829,7 @@ void Engine::visit(model::expression::BinaryOperator* node, ScopeContext& scope)
         if (!require(require_integral(node->left()), require_integral(node->right()))) {
             bless_erroneous_expression(node);
         } else {
-            auto t = dynamic_cast<common::core::type::Int const*>(l_expr->type());
+            auto t = dynamic_pointer_cast<common::core::type::Int>(l_expr->type());
             bless(node, common::core::type::Int(t->size(), t->nullity() | r_expr->type()->nullity()));
         }
         break;
@@ -1004,7 +1005,7 @@ void Engine::visit(model::expression::relation::SelectionExpression* node, Scope
         bless_undefined<binding::RelationBinding>(node);
         return;
     }
-    auto relation = dynamic_cast<common::core::type::Relation const*>(source_expr->type());
+    auto relation = dynamic_pointer_cast<common::core::type::Relation>(source_expr->type());
     RelationScope vars { bindings(), &prev.variables(), relation, source_relation->output().columns() };
 
     bless(node, std::make_shared<binding::RelationBinding>(source_relation->output(), source_relation->output()));
@@ -1047,7 +1048,7 @@ void Engine::visit(model::expression::relation::ProjectionExpression* node, Scop
         return;
     }
 
-    auto relation = dynamic_cast<common::core::type::Relation const*>(source_expr->type());
+    auto relation = dynamic_pointer_cast<common::core::type::Relation>(source_expr->type());
     RelationScope relation_scope { bindings(), &prev.variables(), relation, source_relation->output().columns() };
     auto vars = block_scope(relation_scope);
     ScopeContext scope { vars, prev.functions() };
@@ -1226,8 +1227,8 @@ void Engine::visit(model::expression::relation::JoinExpression* node, ScopeConte
         return;
     }
 
-    auto* left_type = dynamic_cast<common::core::type::Relation const*>(left_expr->type());
-    auto* right_type = dynamic_cast<common::core::type::Relation const*>(right_expr->type());
+    auto* left_type = dynamic_pointer_cast<common::core::type::Relation>(left_expr->type());
+    auto* right_type = dynamic_pointer_cast<common::core::type::Relation>(right_expr->type());
     auto&& left_variables = left_relation->output().columns();
     auto&& right_variables = right_relation->output().columns();
     std::vector<binding::RelationBinding::JoinColumn> result_join_columns {};
@@ -1559,7 +1560,7 @@ void Engine::visit(model::statement::dml::UpdateStatement* node, ScopeContext& p
         return;
     }
 
-    auto relation = dynamic_cast<common::core::type::Relation const*>(source_expr->type());
+    auto relation = dynamic_pointer_cast<common::core::type::Relation>(source_expr->type());
     RelationScope relation_scope { bindings(), &prev.variables(), relation, source_relation->output().columns() };
     auto vars = block_scope(relation_scope);
     ScopeContext scope { vars, prev.functions() };
@@ -1732,7 +1733,7 @@ void Engine::visit(model::statement::ddl::CreateTableStatement* node, ScopeConte
                 if (column->value()->kind() == model::expression::ExpressionKind::LITERAL) {
                     // MEMO: never use common::core::Placeholder in here,
                     //       use special expression and resolve it to the placeholder instead.
-                    auto* literal = dynamic_cast<model::expression::Literal*>(column->value());
+                    auto* literal = dynamic_pointer_cast<model::expression::Literal>(column->value());
                     if (typing::is_assignment_convertible(type.get(), *default_expr)) {
                         // fix literal type instead of casting
                         literal->type(make_clone(type));

@@ -73,7 +73,7 @@ TEST_F(ManagedTest, replace) {
 }
 
 TEST_F(ManagedTest, unmanaged_after_replaced) {
-    ManagedPtr<TVal> p {new TVal("OK")};
+    ManagedPtr<TVal> p {std::make_unique<TVal>("OK")};
     std::unique_ptr<TVal> escaped;
     TVal* r = p->replace([&](auto p) {
         escaped = std::move(p);
@@ -84,14 +84,14 @@ TEST_F(ManagedTest, unmanaged_after_replaced) {
 }
 
 TEST_F(ManagedTest, copy) {
-    ManagedPtr<TVal> p {new TVal("OK")};
+    ManagedPtr<TVal> p {std::make_unique<TVal>("OK")};
     TVal c { *p };
     EXPECT_TRUE(p->is_managed());
     EXPECT_FALSE(c.is_managed());
 }
 
 TEST_F(ManagedTest, copy_assign) {
-    ManagedPtr<TVal> p {new TVal("OK")};
+    ManagedPtr<TVal> p {std::make_unique<TVal>("OK")};
     TVal c { "" };
     c = *p;
     EXPECT_TRUE(p->is_managed());
@@ -99,13 +99,13 @@ TEST_F(ManagedTest, copy_assign) {
 }
 
 TEST_F(ManagedTest, move) {
-    ManagedPtr<TVal> p {new TVal("OK")};
+    ManagedPtr<TVal> p {std::make_unique<TVal>("OK")};
     TVal c { std::move(*p) };
     EXPECT_FALSE(c.is_managed());
 }
 
 TEST_F(ManagedTest, move_assign) {
-    ManagedPtr<TVal> p {new TVal("OK")};
+    ManagedPtr<TVal> p {std::make_unique<TVal>("OK")};
     TVal c { "" };
     c = std::move(*p);
     EXPECT_FALSE(c.is_managed());

@@ -21,119 +21,119 @@
 
 namespace shakujo::model::util {
 
-    class TVal {
-    private:
-        const std::string str_;
-        const int version_;
+class TVal {
+private:
+    const std::string str_;
+    const int version_;
 
-    public:
-        TVal(std::string const& str, int version = 0)
-            : str_(str)
-            , version_(version) {}
+public:
+    TVal(std::string const& str, int version = 0)
+        : str_(str)
+        , version_(version) {}
 
-        TVal* clone() const { return new TVal(str_, version_ + 1); }
-        const std::string& str() const { return str_; }
-        int version() const { return version_; }
-    };
+    TVal* clone() const { return new TVal(str_, version_ + 1); }
+    const std::string& str() const { return str_; }
+    int version() const { return version_; }
+};
 
-    template<typename... Args>
-    static std::unique_ptr<TVal> make(Args&&... args) {
-        return std::unique_ptr<TVal>(new TVal(std::forward<Args>(args)...));
+template<typename... Args>
+static std::unique_ptr<TVal> make(Args&&... args) {
+    return std::unique_ptr<TVal>(new TVal(std::forward<Args>(args)...));
+}
+
+using list_t = NodeListBase<std::unique_ptr<TVal>>;
+using ptr_vector = std::vector<std::unique_ptr<TVal>>;
+
+template<typename... Args>
+static ptr_vector vec(Args&&... args) {
+    ptr_vector ret;
+    using swallow = std::initializer_list<int>;
+    (void)swallow{ (void(ret.push_back(std::move(args))), 0)... };
+    return ret;
+}
+
+TEST(NodeListBaseTest, ctor_empty) {
+    list_t list;
+    ASSERT_EQ(0U, list.size());
+}
+
+TEST(NodeListBaseTest, ctor_vector) {
+    list_t list(vec(make("A"), make("B"), make("C")));
+    ASSERT_EQ(3U, list.size());
+    EXPECT_EQ("A", list[0]->str());
+    EXPECT_EQ("B", list[1]->str());
+    EXPECT_EQ("C", list[2]->str());
+}
+
+TEST(NodeListBaseTest, iterator) {
+    list_t list(vec(make("A"), make("B"), make("C")));
+    std::string s;
+    for (auto v : list) {
+        s += v->str();
     }
+    EXPECT_EQ("ABC", s);
+}
 
-    using list_t = NodeListBase<std::unique_ptr<TVal>>;
-    using ptr_vector = std::vector<std::unique_ptr<TVal>>;
-
-    template<typename... Args>
-    static ptr_vector vec(Args&&... args) {
-        ptr_vector ret;
-        using swallow = std::initializer_list<int>;
-        (void)swallow{ (void(ret.push_back(std::move(args))), 0)... };
-        return ret;
+TEST(NodeListBaseTest, const_iterator) {
+    list_t list(vec(make("A"), make("B"), make("C")));
+    std::string s;
+    for (auto v : list) {
+        s += v->str();
     }
+    EXPECT_EQ("ABC", s);
+}
 
-    TEST(NodeListBaseTest, ctor_empty) {
-        list_t list;
-        ASSERT_EQ(0U, list.size());
-    }
+TEST(NodeListBaseTest, push_back) {
+    list_t list(vec(make("A")));
+    std::unique_ptr<TVal> v {new TVal("X")};
+    list.push_back(std::move(v));
 
-    TEST(NodeListBaseTest, ctor_vector) {
-        list_t list(vec(make("A"), make("B"), make("C")));
-        ASSERT_EQ(3U, list.size());
-        EXPECT_EQ("A", list[0]->str());
-        EXPECT_EQ("B", list[1]->str());
-        EXPECT_EQ("C", list[2]->str());
-    }
+    ASSERT_EQ(2U, list.size());
+    EXPECT_EQ("X", list[1]->str());
+    EXPECT_EQ(0, list[1]->version());
+}
 
-    TEST(NodeListBaseTest, iterator) {
-        list_t list(vec(make("A"), make("B"), make("C")));
-        std::string s;
-        for (auto v : list) {
-            s += v->str();
-        }
-        EXPECT_EQ("ABC", s);
-    }
+TEST(NodeListBaseTest, insert) {
+    list_t list(vec(make("A"), make("B")));
+    list.insert(0, make("0"));
+    list.insert(2, make("2"));
+    list.insert(4, make("4"));
+    ASSERT_EQ(5U, list.size());
+    EXPECT_EQ("0", list[0]->str());
+    EXPECT_EQ("A", list[1]->str());
+    EXPECT_EQ("2", list[2]->str());
+    EXPECT_EQ("B", list[3]->str());
+    EXPECT_EQ("4", list[4]->str());
+}
 
-    TEST(NodeListBaseTest, const_iterator) {
-        list_t list(vec(make("A"), make("B"), make("C")));
-        std::string s;
-        for (auto v : list) {
-            s += v->str();
-        }
-        EXPECT_EQ("ABC", s);
-    }
+TEST(NodeListBaseTest, assign) {
+    list_t list(vec(make("A"), make("B"), make("C")));
+    list.assign(1, make("X", 100));
+    ASSERT_EQ(3U, list.size());
+    EXPECT_EQ("A", list[0]->str());
+    EXPECT_EQ("X", list[1]->str());
+    EXPECT_EQ("C", list[2]->str());
 
-    TEST(NodeListBaseTest, push_back) {
-        list_t list(vec(make("A")));
-        std::unique_ptr<TVal> v {new TVal("X")};
-        list.push_back(std::move(v));
+    EXPECT_EQ(100, list[1]->version());
+}
 
-        ASSERT_EQ(2U, list.size());
-        EXPECT_EQ("X", list[1]->str());
-        EXPECT_EQ(0, list[1]->version());
-    }
+TEST(NodeListBaseTest, remove) {
+    list_t list(vec(make("A"), make("B"), make("C")));
+    list.remove(1);
+    ASSERT_EQ(2U, list.size());
+    EXPECT_EQ("A", list[0]->str());
+    EXPECT_EQ("C", list[1]->str());
+}
 
-    TEST(NodeListBaseTest, insert) {
-        list_t list(vec(make("A"), make("B")));
-        list.insert(0, make("0"));
-        list.insert(2, make("2"));
-        list.insert(4, make("4"));
-        ASSERT_EQ(5U, list.size());
-        EXPECT_EQ("0", list[0]->str());
-        EXPECT_EQ("A", list[1]->str());
-        EXPECT_EQ("2", list[2]->str());
-        EXPECT_EQ("B", list[3]->str());
-        EXPECT_EQ("4", list[4]->str());
-    }
+TEST(NodeListBaseTest, release) {
+    list_t list(vec(make("A"), make("B", 100), make("C")));
+    auto b = list.release(1);
 
-    TEST(NodeListBaseTest, assign) {
-        list_t list(vec(make("A"), make("B"), make("C")));
-        list.assign(1, make("X", 100));
-        ASSERT_EQ(3U, list.size());
-        EXPECT_EQ("A", list[0]->str());
-        EXPECT_EQ("X", list[1]->str());
-        EXPECT_EQ("C", list[2]->str());
+    ASSERT_EQ(2U, list.size());
+    EXPECT_EQ("A", list[0]->str());
+    EXPECT_EQ("C", list[1]->str());
 
-        EXPECT_EQ(100, list[1]->version());
-    }
-
-    TEST(NodeListBaseTest, remove) {
-        list_t list(vec(make("A"), make("B"), make("C")));
-        list.remove(1);
-        ASSERT_EQ(2U, list.size());
-        EXPECT_EQ("A", list[0]->str());
-        EXPECT_EQ("C", list[1]->str());
-    }
-
-    TEST(NodeListBaseTest, release) {
-        list_t list(vec(make("A"), make("B", 100), make("C")));
-        auto b = list.release(1);
-
-        ASSERT_EQ(2U, list.size());
-        EXPECT_EQ("A", list[0]->str());
-        EXPECT_EQ("C", list[1]->str());
-
-        EXPECT_EQ("B", b->str());
-        EXPECT_EQ(100, b->version());
-    }
+    EXPECT_EQ("B", b->str());
+    EXPECT_EQ(100, b->version());
+}
 }  // namespace shakujo::model::util

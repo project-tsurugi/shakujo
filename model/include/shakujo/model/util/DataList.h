@@ -19,12 +19,14 @@
 #include <vector>
 
 namespace shakujo::model::util {
-    /**
-     * @brief A list of immutable data.
-     * @tparam E the data type
-     */
-    template<typename E>
-    using DataList = std::vector<const E>;
+
+/**
+ * @brief A list of immutable data.
+ * @tparam E the data type
+ */
+template<typename E>
+using DataList = std::vector<const E>;
+
 }  // namespace shakujo::model::util
 
 #endif  // SHAKUJO_MODEL_UTIL_DATA_LIST_H_

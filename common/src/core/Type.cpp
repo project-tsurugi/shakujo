@@ -17,12 +17,14 @@
 
 #include <iostream>
 #include <memory>
-#include <shakujo/common/core/Type.h>
-
 
 #include "shakujo/common/core/type/ConstVisitor.h"
 
+#include "shakujo/common/util/utility.h"
+
 namespace shakujo::common::core {
+
+using common::util::dynamic_pointer_cast;
 
 bool Type::equals(Type const &other, bool test_nullity) const {
     using namespace ::shakujo::common::core::type;
@@ -41,7 +43,7 @@ bool Type::equals(Type const &other, bool test_nullity) const {
             if (!check(node, other)) {
                 return false;
             }
-            auto that = dynamic_cast<Int const*>(other);
+            auto that = dynamic_pointer_cast<Int>(other);
             return node->size() == that->size();
         }
 
@@ -49,7 +51,7 @@ bool Type::equals(Type const &other, bool test_nullity) const {
             if (!check(node, other)) {
                 return false;
             }
-            auto that = dynamic_cast<Float const*>(other);
+            auto that = dynamic_pointer_cast<Float>(other);
             return node->size() == that->size();
         }
 
@@ -57,7 +59,7 @@ bool Type::equals(Type const &other, bool test_nullity) const {
             if (!check(node, other)) {
                 return false;
             }
-            auto that = dynamic_cast<Char const*>(other);
+            auto that = dynamic_pointer_cast<Char>(other);
             return node->variant() == that->variant()
                 && node->size() == that->size();
         }
@@ -78,7 +80,7 @@ bool Type::equals(Type const &other, bool test_nullity) const {
             if (!check(node, other)) {
                 return false;
             }
-            auto that = dynamic_cast<Tuple const*>(other);
+            auto that = dynamic_pointer_cast<Tuple>(other);
             auto& a = node->elements();
             auto& b = that->elements();
             if (a.size() != b.size()) {
@@ -98,7 +100,7 @@ bool Type::equals(Type const &other, bool test_nullity) const {
             if (!check(node, other)) {
                 return false;
             }
-            auto that = dynamic_cast<Array const*>(other);
+            auto that = dynamic_pointer_cast<Array>(other);
             return node->size() == that->size()
                 && dispatch(node->element_type(), that->element_type());
         }
@@ -107,7 +109,7 @@ bool Type::equals(Type const &other, bool test_nullity) const {
             if (!check(node, other)) {
                 return false;
             }
-            auto that = dynamic_cast<Vector const*>(other);
+            auto that = dynamic_pointer_cast<Vector>(other);
             return dispatch(node->element_type(), that->element_type());
         }
 
@@ -115,7 +117,7 @@ bool Type::equals(Type const &other, bool test_nullity) const {
             if (!check(node, other)) {
                 return false;
             }
-            auto that = dynamic_cast<Relation const*>(other);
+            auto that = dynamic_pointer_cast<Relation>(other);
             auto& a = node->columns();
             auto& b = that->columns();
             if (a.size() != b.size()) {
@@ -137,7 +139,7 @@ bool Type::equals(Type const &other, bool test_nullity) const {
             if (!check(node, other)) {
                 return false;
             }
-            auto that = dynamic_cast<Cursor const*>(other);
+            auto that = dynamic_pointer_cast<Cursor>(other);
             return dispatch(node->element_type(), that->element_type());
         }
 

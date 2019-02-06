@@ -29,7 +29,11 @@
 #include "shakujo/model/name/SimpleName.h"
 #include "shakujo/model/name/QualifiedName.h"
 
+#include "shakujo/common/util/utility.h"
+
 namespace shakujo::analyzer::scope {
+
+using common::util::dynamic_pointer_cast;
 
 /**
  * @brief represents a symbol table.
@@ -60,9 +64,9 @@ private:
             model::name::Name const* qualifier = current->qualifier();
             switch (qualifier->kind()) {
             case model::name::NameKind::SIMPLE_NAME:
-                return find_simple(dynamic_cast<model::name::SimpleName const*>(qualifier));
+                return find_simple(dynamic_pointer_cast<model::name::SimpleName>(qualifier));
             case model::name::NameKind::QUALIFIED_NAME:
-                current = dynamic_cast<model::name::QualifiedName const*>(qualifier);
+                current = dynamic_pointer_cast<model::name::QualifiedName>(qualifier);
                 break;
             default:
                 return {};
@@ -116,9 +120,9 @@ public:
     Result<T> find(model::name::Name const* name) const {
         switch (name->kind()) {
         case model::name::NameKind::SIMPLE_NAME:
-            return find_simple(dynamic_cast<model::name::SimpleName const*>(name));
+            return find_simple(dynamic_pointer_cast<model::name::SimpleName>(name));
         case model::name::NameKind::QUALIFIED_NAME:
-            return find_qualified(dynamic_cast<model::name::QualifiedName const*>(name));
+            return find_qualified(dynamic_pointer_cast<model::name::QualifiedName>(name));
         default:
             return {};
         }
@@ -133,7 +137,7 @@ public:
     bool contains(model::name::Name const* name) const {
         switch (name->kind()) {
         case model::name::NameKind::SIMPLE_NAME:
-            return contains(dynamic_cast<model::name::SimpleName const*>(name)->token());
+            return contains(dynamic_pointer_cast<model::name::SimpleName>(name)->token());
         case model::name::NameKind::QUALIFIED_NAME:
             return contains(name->segments());
         default:

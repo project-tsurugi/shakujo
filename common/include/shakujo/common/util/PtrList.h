@@ -83,7 +83,7 @@ protected:
      * @brief Copy-constructs a new object.
      * @param other the source object
      */
-    PtrList(PtrList const & other) = default;
+    PtrList(PtrList const& other) = default;
 
     /**
      * @brief Move-constructs a new object.
@@ -96,7 +96,7 @@ protected:
      * @param other the source object
      * @return this
      */
-    PtrList& operator=(PtrList const & other) = default;
+    PtrList& operator=(PtrList const& other) = default;
 
     /**
      * @brief Move-assigns to this object.

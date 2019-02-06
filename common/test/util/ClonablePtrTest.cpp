@@ -40,7 +40,7 @@ public:
 };
 
 TEST_F(ClonablePtrTest, simple) {
-    ClonablePtr<TVal> p { TVal("OK") };
+    ClonablePtr<TVal> p { std::make_unique<TVal>("OK") };
     EXPECT_TRUE(p);
     EXPECT_EQ("OK", p->value);
 }
@@ -60,7 +60,7 @@ TEST_F(ClonablePtrTest, nil) {
 }
 
 TEST_F(ClonablePtrTest, copy_base) {
-    ClonablePtr<TVal> p { TVal("OK") };
+    ClonablePtr<TVal> p { std::make_unique<TVal>("OK") };
     ClonablePtr<TBase> b = p;
     EXPECT_EQ("OK", b->value);
     EXPECT_NE(nullptr, p.get());
@@ -68,7 +68,7 @@ TEST_F(ClonablePtrTest, copy_base) {
 }
 
 TEST_F(ClonablePtrTest, move_base) {
-    ClonablePtr<TVal> p { TVal("OK") };
+    ClonablePtr<TVal> p { std::make_unique<TVal>("OK") };
     ClonablePtr<TBase> b = std::move(p);
     EXPECT_EQ("OK", b->value);
     EXPECT_EQ(nullptr, p.get());
@@ -76,7 +76,7 @@ TEST_F(ClonablePtrTest, move_base) {
 
 TEST_F(ClonablePtrTest, assign_unique) {
     ClonablePtr<TVal> p;
-    std::unique_ptr<TVal> u { new TVal("OK") };
+    auto u = std::make_unique<TVal>("OK");
     p = std::move(u);
     EXPECT_EQ("OK", p->value);
 }

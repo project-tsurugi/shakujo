@@ -20,7 +20,11 @@
 
 #include "shakujo/model/type/ConstTypeVisitor.h"
 
+#include "shakujo/common/util/utility.h"
+
 namespace shakujo::model::type {
+
+using common::util::dynamic_pointer_cast;
 
 bool Type::operator==(Type const& other) const {
     if (kind() != other.kind()) {
@@ -32,7 +36,7 @@ bool Type::operator==(Type const& other) const {
             if (node->kind() != other->kind()) {
                 return false;
             }
-            auto that = dynamic_cast<ArrayType const*>(other);
+            auto that = dynamic_pointer_cast<ArrayType>(other);
             return node->size() == that->size()
                 && dispatch(node->element_type(), that->element_type());
         }
@@ -45,7 +49,7 @@ bool Type::operator==(Type const& other) const {
             if (node->kind() != other->kind()) {
                 return false;
             }
-            auto that = dynamic_cast<CharType const*>(other);
+            auto that = dynamic_pointer_cast<CharType>(other);
             return node->size() == that->size();
         }
 
@@ -73,7 +77,7 @@ bool Type::operator==(Type const& other) const {
             if (node->kind() != other->kind()) {
                 return false;
             }
-            auto that = dynamic_cast<RelationType const*>(other);
+            auto that = dynamic_pointer_cast<RelationType>(other);
             return dispatch(node->element_type(), that->element_type());
         }
 
@@ -85,7 +89,7 @@ bool Type::operator==(Type const& other) const {
             if (node->kind() != other->kind()) {
                 return false;
             }
-            auto that = dynamic_cast<TupleType const*>(other);
+            auto that = dynamic_pointer_cast<TupleType>(other);
             auto &a = node->elements();
             auto &b = that->elements();
             if (a.size() != b.size()) {
@@ -103,7 +107,7 @@ bool Type::operator==(Type const& other) const {
             if (node->kind() != other->kind()) {
                 return false;
             }
-            auto that = dynamic_cast<VarCharType const*>(other);
+            auto that = dynamic_pointer_cast<VarCharType>(other);
             return node->size() == that->size();
         }
 
@@ -111,7 +115,7 @@ bool Type::operator==(Type const& other) const {
             if (node->kind() != other->kind()) {
                 return false;
             }
-            auto that = dynamic_cast<VectorType const*>(other);
+            auto that = dynamic_pointer_cast<VectorType>(other);
             return dispatch(node->element_type(), that->element_type());
         }
     };

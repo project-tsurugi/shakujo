@@ -35,6 +35,7 @@ using Type = common::core::Type;
 using Value = common::core::Value;
 using namespace common::core::type;
 
+using common::util::dynamic_pointer_cast;
 using common::util::make_clone;
 using common::util::equals;
 using common::util::is_defined;
@@ -109,8 +110,8 @@ static inline std::unique_ptr<Type> numeric_binary_promotion(Numeric const* a, N
 
 static inline std::unique_ptr<Type> textual_binary_promotion(Textual const* a, Textual const* b) {
     if (a->kind() == Type::Kind::CHAR && b->kind() == Type::Kind::CHAR) {
-        auto* ac = dynamic_cast<Char const*>(a);
-        auto* bc = dynamic_cast<Char const*>(b);
+        auto* ac = dynamic_pointer_cast<Char>(a);
+        auto* bc = dynamic_pointer_cast<Char>(b);
         if (ac->variant() == bc->variant() && ac->size() == bc->size()) {
             return std::make_unique<Char>(ac->variant(), ac->size(), a->nullity() | b->nullity());
         }
@@ -129,10 +130,10 @@ std::unique_ptr<Type> binary_promotion(Type const* a, Type const* b) {
         return nullity_binary_promotion(a, b);
     }
     if (is_numeric(a) && is_numeric(b)) {
-        return numeric_binary_promotion(dynamic_cast<Numeric const*>(a), dynamic_cast<Numeric const*>(b));
+        return numeric_binary_promotion(dynamic_pointer_cast<Numeric>(a), dynamic_pointer_cast<Numeric>(b));
     }
     if (is_textual(a) && is_textual(b)) {
-        return textual_binary_promotion(dynamic_cast<Textual const*>(a), dynamic_cast<Textual const*>(b));
+        return textual_binary_promotion(dynamic_pointer_cast<Textual>(a), dynamic_pointer_cast<Textual>(b));
     }
     return std::make_unique<Error>();
 }
@@ -204,8 +205,8 @@ bool is_assignment_convertible(Type const* variable, binding::ExpressionBinding 
         if (is_integral(variable)
                 && is_integral(expression.type())
                 && expression.value()->kind() == Value::Kind::INT) {
-            auto type = dynamic_cast<Int const*>(variable);
-            auto value = dynamic_cast<common::core::value::Int const*>(expression.value());
+            auto type = dynamic_pointer_cast<Int>(variable);
+            auto value = dynamic_pointer_cast<common::core::value::Int>(expression.value());
             return type->min_value() <= value->get() && value->get() <= type->max_value();
         }
     }

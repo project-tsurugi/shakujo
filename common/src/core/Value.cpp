@@ -21,7 +21,11 @@
 
 #include "shakujo/common/core/value/ConstVisitor.h"
 
+#include "shakujo/common/util/utility.h"
+
 namespace shakujo::common::core {
+
+using common::util::dynamic_pointer_cast;
 
 bool Value::operator==(Value const& other) const {
     class Eq : public value::ConstVisitor<bool, Value const*> {
@@ -30,21 +34,21 @@ bool Value::operator==(Value const& other) const {
             if (node->kind() != other->kind()) {
                 return false;
             }
-            auto that = dynamic_cast<value::Bool const*>(other);
+            auto that = dynamic_pointer_cast<value::Bool>(other);
             return node->get() == that->get();
         }
         bool visit(value::Int const* node, Value const* other) override {
             if (node->kind() != other->kind()) {
                 return false;
             }
-            auto that = dynamic_cast<value::Int const*>(other);
+            auto that = dynamic_pointer_cast<value::Int>(other);
             return node->get() == that->get();
         }
         bool visit(value::Float const* node, Value const* other) override {
             if (node->kind() != other->kind()) {
                 return false;
             }
-            auto that = dynamic_cast<value::Float const*>(other);
+            auto that = dynamic_pointer_cast<value::Float>(other);
             value::Float::type diff = node->get() - that->get();
             return std::fabs(diff) < std::numeric_limits<value::Float::type>::epsilon();
         }
@@ -52,14 +56,14 @@ bool Value::operator==(Value const& other) const {
             if (node->kind() != other->kind()) {
                 return false;
             }
-            auto that = dynamic_cast<value::String const*>(other);
+            auto that = dynamic_pointer_cast<value::String>(other);
             return node->get() == that->get();
         }
         bool visit(value::Tuple const* node, Value const* other) override {
             if (node->kind() != other->kind()) {
                 return false;
             }
-            auto that = dynamic_cast<value::Tuple const*>(other);
+            auto that = dynamic_pointer_cast<value::Tuple>(other);
             auto& a = node->elements();
             auto& b = that->elements();
             if (a.size() != b.size()) {

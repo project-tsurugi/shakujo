@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "operators.h"
+#include "utility.h"
 
 namespace shakujo::common::util {
 
@@ -53,30 +54,6 @@ public:
     explicit ClonablePtr(std::unique_ptr<E> element) : element_(std::move(element)) {}
 
     /**
-     * @brief Constructs a new object.
-     * @param element the source pointer
-     */
-    ClonablePtr(E* element)  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
-        : element_(element)
-    {}
-
-    /**
-     * @brief Constructs a new object.
-     * @param element the source object
-     */
-    ClonablePtr(E const & element)  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
-        : element_(element.clone())
-    {}
-
-    /**
-     * @brief Constructs a new object.
-     * @param element the source object
-     */
-    ClonablePtr(E&& element)  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
-        : element_(std::move(element).clone())
-    {}
-
-    /**
      * @brief Destroys this object.
      */
     ~ClonablePtr() noexcept = default;
@@ -86,8 +63,8 @@ public:
      * @param other a copy source
      */
     template<typename T>
-    ClonablePtr(ClonablePtr<T> const & other)  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
-        : element_(clone_of(other))
+    ClonablePtr(ClonablePtr<T> const& other)  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
+        : element_(make_clone(other))
     {}
 
     /**
@@ -103,7 +80,7 @@ public:
      * @brief Copy-constructs a new object.
      * @param other a copy source
      */
-    ClonablePtr(ClonablePtr const & other) : element_(clone_of(other)) {}
+    ClonablePtr(ClonablePtr const& other) : element_(make_clone(other)) {}
 
     /**
      * @brief Move-constructs a new object.
@@ -116,8 +93,8 @@ public:
      * @param other the source object
      * @return this
      */
-    ClonablePtr& operator=(ClonablePtr const & other) {
-        element_.reset(clone_of(other));
+    ClonablePtr& operator=(ClonablePtr const& other) {
+        element_ = make_clone(other);
         return *this;
     }
 
@@ -175,7 +152,7 @@ public:
      * @brief returns the element.
      * @return the element
      */
-    E const & operator*() const {
+    E const& operator*() const {
         return *element_;
     }
 
@@ -218,17 +195,8 @@ public:
      * @return true if both are equivalent
      * @return false otherwise
      */
-    bool operator==(ClonablePtr const & other) const {
+    bool operator==(ClonablePtr const& other) const {
         return element_ == other.element_;
-    }
-
-private:
-    template<class T>
-    static T* clone_of(const ClonablePtr<T>& ptr) {
-        if (auto raw = ptr.get()) {
-            return (*raw).clone();
-        }
-        return nullptr;
     }
 };
 }  // namespace shakujo::common::util

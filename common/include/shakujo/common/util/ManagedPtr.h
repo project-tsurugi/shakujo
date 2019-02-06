@@ -57,14 +57,6 @@ public:
     }
 
     /**
-     * @brief Constructs a new object.
-     * @param element the source pointer
-     */
-    explicit ManagedPtr(E* element) : ManagedPtr(std::unique_ptr<E>(element)) {
-        attach();
-    }
-
-    /**
      * @brief Copy-constructs a new object.
      * @param other a copy source
      */
