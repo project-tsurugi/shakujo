@@ -16,10 +16,12 @@
 #ifndef SHAKUJO_ANALYZER_BINDING_ID_H_
 #define SHAKUJO_ANALYZER_BINDING_ID_H_
 
-#include <cstddef>
+#include <atomic>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+
+#include <cstddef>
 
 #include "shakujo/common/util/operators.h"
 
@@ -40,12 +42,12 @@ public:
     /**
      * @brief the invalid value of ID.
      */
-    static constexpr type INVALID_VALUE = 0U;
+    static inline constexpr type INVALID_VALUE = 0U;
 
     /**
      * @brief the minimum value of the ID.
      */
-    static constexpr type MIN_VALUE = INVALID_VALUE + 1;
+    static inline constexpr type MIN_VALUE = INVALID_VALUE + 1;
 
 private:
     type value_;
@@ -146,6 +148,59 @@ public:
         out << "Id(" << value.value_ << ")";
         return out;
     }
+
+    /**
+     * @brief an ID generator.
+     */
+    class Generator {
+    public:
+        /**
+         * @brief constructs a new object.
+         */
+        Generator() noexcept = default;
+
+        /**
+         * @brief destructs this object.
+         */
+        ~Generator() noexcept = default;
+
+        /**
+         * @brief constructs a new object.
+         * @param other the move source
+         */
+        Generator(const Generator& other) = delete;
+
+        /**
+         * @brief constructs a new object.
+         * @param other the move source
+         */
+        Generator(Generator&& other) noexcept = default;
+
+        /**
+         * @brief assigns the given object into this.
+         * @param other the copy source
+         * @return this
+         */
+        Generator& operator=(const Generator& other) = delete;
+
+        /**
+         * @brief assigns the given object into this.
+         * @param other the move source
+         * @return this
+         */
+        Generator& operator=(Generator&& other) noexcept = default;
+
+        /**
+         * @brief returns the next ID of this generator.
+         * @return the next ID
+         */
+        Id next() {
+            return Id { ++counter_ };
+        }
+
+    private:
+        Id::type counter_ { Id::MIN_VALUE };
+    };
 
     /**
      * @brief provides hash code of Id.

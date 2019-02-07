@@ -15,7 +15,6 @@
  */
 #include "shakujo/analyzer/binding/BindingContext.h"
 
-#include <atomic>
 #include <sstream>
 #include <stdexcept>
 
@@ -46,8 +45,8 @@ namespace {
 class BindingContext::Impl {
 private:
     std::shared_ptr<int> identity_ { new int(0) };
-    std::atomic<Id<VariableBinding>::type> variable_ids_ { Id<VariableBinding>::MIN_VALUE };
-    std::atomic<Id<FunctionBinding>::type> function_ids_ { Id<FunctionBinding>::MIN_VALUE };
+    Id<VariableBinding>::Generator variable_ids_ {};
+    Id<FunctionBinding>::Generator function_ids_ {};
 
 public:
     template<typename T>
@@ -79,12 +78,12 @@ public:
         return entity->binding_;
     }
 
-    Id<VariableBinding> next_variable_id() {
-        return Id<VariableBinding>(variable_ids_++);
+    Id<VariableBinding>::Generator& variable_ids() {
+        return variable_ids_;
     }
 
-    Id<FunctionBinding> next_function_id() {
-        return Id<FunctionBinding>(function_ids_++);
+    Id<FunctionBinding>::Generator& function_ids() {
+        return function_ids_;
     }
 };
 
@@ -93,11 +92,11 @@ BindingContext::BindingContext() : impl_(new Impl()) {}
 BindingContext::~BindingContext() noexcept = default;
 
 Id<VariableBinding> BindingContext::next_variable_id() {
-    return impl_->next_variable_id();
+    return impl_->variable_ids().next();
 }
 
 Id<FunctionBinding> BindingContext::next_function_id() {
-    return impl_->next_function_id();
+    return impl_->function_ids().next();
 }
 
 std::unique_ptr<model::key::ExpressionKey> BindingContext::create_key(std::shared_ptr<ExpressionBinding> binding) {
