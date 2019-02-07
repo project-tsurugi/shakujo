@@ -498,7 +498,7 @@ std::unique_ptr<model::expression::relation::ProjectionExpression> Engine::visit
     for (auto* column : c->projectionColumn()) {
         columns.emplace_back(visit(column));
     }
-    return f.ProjectionExpression(std::move(source), {}, std::move(columns)) << region(c);
+    return f.ProjectionExpression(std::move(source), std::move(columns)) << region(c);
 }
 
 std::unique_ptr<model::expression::relation::ProjectionExpression::Column> Engine::visit(

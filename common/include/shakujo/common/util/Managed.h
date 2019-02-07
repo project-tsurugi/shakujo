@@ -99,6 +99,7 @@ public:
      * @brief replaces this object with another one.
      * Note that, this operation may destroy this object if you don't escape
      * the unique_ptr of passed function argument.
+     * @tparam T the replacement type
      * @param replacer the replacer function, must not return empty pointer
      * @return the replaced object
      */
@@ -107,13 +108,26 @@ public:
         if (!common::util::is_defined(container)) {
             throw std::runtime_error("object must be managed");
         }
-        std::unique_ptr<E> self = container->release();
-        std::unique_ptr<E> replacement = replacer(std::move(self));
+        auto self = container->release();
+        auto replacement = replacer(std::move(self));
         if (!common::util::is_defined(replacement)) {
             throw std::logic_error("replacement must not be null");
         }
+        auto raw = replacement.get();
         container->operator=(std::move(replacement));
-        return container->get();
+        return raw;
+    }
+
+    /**
+     * @brief replaces this object with another one.
+     * @tparam T the replacement type
+     * @param replacement the replacement
+     * @return the replaced object
+     */
+    template<class T>
+    std::enable_if_t<std::is_base_of_v<E, T>, T*>
+    replace_with(std::unique_ptr<T> replacement) {
+        return dynamic_pointer_cast<T>(replace([&](auto){ return std::move(replacement); }));
     }
 
 private:

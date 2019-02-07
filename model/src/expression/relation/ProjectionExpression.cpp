@@ -25,16 +25,13 @@
 #include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/key/VariableKey.h"
 #include "shakujo/model/name/SimpleName.h"
-#include "shakujo/model/statement/Statement.h"
 #include "shakujo/model/util/FragmentList.h"
-#include "shakujo/model/util/NodeList.h"
 
 namespace shakujo::model::expression::relation {
 
 class ProjectionExpression::Impl {
 public:
     common::util::ManagedPtr<Expression> operand_;
-    util::NodeList<statement::Statement> initialize_;
     util::FragmentList<ProjectionExpression::Column> columns_;
     std::unique_ptr<name::SimpleName> alias_;
     std::unique_ptr<key::ExpressionKey> expression_key_;
@@ -50,12 +47,6 @@ public:
     std::unique_ptr<Impl> clone() const {
         auto other = std::make_unique<Impl>();
         other->operand_ = common::util::make_clone(operand_);
-        if (!initialize_.empty()) {
-            other->initialize_.reserve(initialize_.size());
-            for (auto e : initialize_) {
-                other->initialize_.push_back(common::util::make_clone(e));
-            }
-        }
         if (!columns_.empty()) {
             other->columns_.reserve(columns_.size());
             for (auto e : columns_) {
@@ -109,10 +100,6 @@ ProjectionExpression& ProjectionExpression::operand(std::unique_ptr<Expression> 
 
 std::unique_ptr<Expression> ProjectionExpression::release_operand() {
     return impl_->operand_.release();
-}
-
-util::NodeList<statement::Statement>& ProjectionExpression::initialize() {
-    return impl_->initialize_;
 }
 
 util::FragmentList<ProjectionExpression::Column>& ProjectionExpression::columns() {

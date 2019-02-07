@@ -29,7 +29,6 @@ import com.ashigeru.lang.codegen.spec.sql.key.VariableKey;
 import com.ashigeru.lang.codegen.spec.sql.name.Index;
 import com.ashigeru.lang.codegen.spec.sql.name.Name;
 import com.ashigeru.lang.codegen.spec.sql.name.SimpleName;
-import com.ashigeru.lang.codegen.spec.sql.statement.Statement;
 
 @Description("aggregating relations")
 @Extends(Expression.class)
@@ -42,9 +41,6 @@ public class AggregationExpression extends MetaClass {
 
     @Description("group keys")
     Property<List<Index>> keys = property();
-
-    @Description("initialization statements")
-    Property<List<Statement>> initialize = property();
 
     @Description("aggregation columns")
     Property<List<Column>> columns = property();

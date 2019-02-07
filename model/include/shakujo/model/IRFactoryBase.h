@@ -594,7 +594,6 @@ public:
      * @brief returns a new expression::relation::AggregationExpression.
      * @param operand source relation
      * @param keys group keys
-     * @param initialize initialization statements
      * @param columns aggregation columns
      * @param alias alias name
      * @return a created node
@@ -603,7 +602,6 @@ public:
     std::unique_ptr<expression::relation::AggregationExpression> AggregationExpression(
             std::unique_ptr<expression::Expression> operand,
             common::util::MoveInitializerList<std::unique_ptr<name::Index>> keys,
-            common::util::MoveInitializerList<std::unique_ptr<statement::Statement>> initialize,
             common::util::MoveInitializerList<std::unique_ptr<expression::relation::AggregationExpression::Column>> columns,
             std::unique_ptr<name::SimpleName> alias = {});
 
@@ -733,7 +731,6 @@ public:
     /**
      * @brief returns a new expression::relation::ProjectionExpression.
      * @param operand source relation
-     * @param initialize initialization statements
      * @param columns projection columns
      * @param alias alias name
      * @return a created node
@@ -741,7 +738,6 @@ public:
      */
     std::unique_ptr<expression::relation::ProjectionExpression> ProjectionExpression(
             std::unique_ptr<expression::Expression> operand,
-            common::util::MoveInitializerList<std::unique_ptr<statement::Statement>> initialize,
             common::util::MoveInitializerList<std::unique_ptr<expression::relation::ProjectionExpression::Column>> columns,
             std::unique_ptr<name::SimpleName> alias = {});
 

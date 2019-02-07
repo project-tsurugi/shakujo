@@ -26,9 +26,7 @@
 #include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/key/VariableKey.h"
 #include "shakujo/model/name/SimpleName.h"
-#include "shakujo/model/statement/Statement.h"
 #include "shakujo/model/util/FragmentList.h"
-#include "shakujo/model/util/NodeList.h"
 
 namespace shakujo::model::expression::relation {
 /**
@@ -244,19 +242,6 @@ public:
      */
     std::unique_ptr<Expression> release_operand();
 
-    /**
-     * @brief Returns initialization statements.
-     * @return initialization statements.
-     */
-    util::NodeList<statement::Statement>& initialize();
-
-    /**
-     * @brief Returns initialization statements.
-     * @return initialization statements.
-     */
-    inline util::NodeList<statement::Statement> const& initialize() const {
-        return const_cast<ProjectionExpression*>(this)->initialize();
-    }
     /**
      * @brief Returns projection columns.
      * @return projection columns.

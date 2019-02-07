@@ -25,6 +25,7 @@
 
 #include "typing.h"
 #include "RelationScope.h"
+#include "AggregationAnalyzer.h"
 
 #include "shakujo/common/util/utility.h"
 
@@ -1050,11 +1051,7 @@ void Engine::visit(model::expression::relation::ProjectionExpression* node, Scop
 
     auto relation = dynamic_pointer_cast<common::core::type::Relation>(source_expr->type());
     RelationScope relation_scope { bindings(), &prev.variables(), relation, source_relation->output().columns() };
-    auto vars = block_scope(relation_scope);
-    ScopeContext scope { vars, prev.functions() };
-    for (auto* s : node->initialize()) {
-        dispatch(s, scope);
-    }
+    ScopeContext scope { relation_scope, prev.functions() };
 
     std::vector<common::core::Name> qualifiers;
     if (is_defined(node->alias())) {
@@ -1062,10 +1059,10 @@ void Engine::visit(model::expression::relation::ProjectionExpression* node, Scop
     }
     std::vector<common::core::type::Relation::Column> columns;
     columns.reserve(node->columns().size());
-    binding::RelationBinding::Profile output;
     columns.reserve(node->columns().size());
+    binding::RelationBinding::Profile output;
     output.columns().reserve(node->columns().size());
-    for (auto c : node->columns()) {
+    for (auto* c : node->columns()) {
         dispatch(c->value(), scope);
         auto column_expr = extract_binding(c->value());
 
@@ -1089,6 +1086,16 @@ void Engine::visit(model::expression::relation::ProjectionExpression* node, Scop
 
         // FIXME: restricts non first order types like relations
     }
+
+    // resolve aggregation
+    AggregationAnalyzer aggregation { env_, node->operand() };
+    for (auto* c : node->columns()) {
+        aggregation.process(c->value());
+    }
+    if (auto aggregator = aggregation.build(); is_defined(aggregator)) {
+        source_relation = extract_relation(aggregator);
+    }
+
     bless(node, std::make_shared<binding::RelationBinding>(source_relation->output(), std::move(output)));
     bless(node, std::make_unique<common::core::type::Relation>(std::move(columns)));
 }

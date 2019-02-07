@@ -400,13 +400,11 @@ std::unique_ptr<expression::relation::AggregationExpression> IRFactoryBase::Aggr
 std::unique_ptr<expression::relation::AggregationExpression> IRFactoryBase::AggregationExpression(
         std::unique_ptr<expression::Expression> operand,
         common::util::MoveInitializerList<std::unique_ptr<name::Index>> keys,
-        common::util::MoveInitializerList<std::unique_ptr<statement::Statement>> initialize,
         common::util::MoveInitializerList<std::unique_ptr<expression::relation::AggregationExpression::Column>> columns,
         std::unique_ptr<name::SimpleName> alias) {
     auto ret = AggregationExpression();
     ret->operand(std::move(operand));
     ret->keys() = std::move(keys).build();
-    ret->initialize() = std::move(initialize).build();
     ret->columns() = std::move(columns).build();
     ret->alias(std::move(alias));
     return ret;
@@ -504,12 +502,10 @@ std::unique_ptr<expression::relation::ProjectionExpression> IRFactoryBase::Proje
 
 std::unique_ptr<expression::relation::ProjectionExpression> IRFactoryBase::ProjectionExpression(
         std::unique_ptr<expression::Expression> operand,
-        common::util::MoveInitializerList<std::unique_ptr<statement::Statement>> initialize,
         common::util::MoveInitializerList<std::unique_ptr<expression::relation::ProjectionExpression::Column>> columns,
         std::unique_ptr<name::SimpleName> alias) {
     auto ret = ProjectionExpression();
     ret->operand(std::move(operand));
-    ret->initialize() = std::move(initialize).build();
     ret->columns() = std::move(columns).build();
     ret->alias(std::move(alias));
     return ret;

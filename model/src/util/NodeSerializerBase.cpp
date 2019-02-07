@@ -1112,17 +1112,6 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         printer.exit_property("keys");
     }
     {
-        printer.enter_property("initialize");
-        auto& list = value->initialize();
-        auto size = list.size();
-        printer.enter_array(size);
-        for (auto element : list) {
-            serialize(printer, element);
-        }
-        printer.exit_array(size);
-        printer.exit_property("initialize");
-    }
-    {
         printer.enter_property("columns");
         auto& list = value->columns();
         auto size = list.size();
@@ -1403,17 +1392,6 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         printer.enter_property("operand");
         serialize(printer, value->operand());
         printer.exit_property("operand");
-    }
-    {
-        printer.enter_property("initialize");
-        auto& list = value->initialize();
-        auto size = list.size();
-        printer.enter_array(size);
-        for (auto element : list) {
-            serialize(printer, element);
-        }
-        printer.exit_array(size);
-        printer.exit_property("initialize");
     }
     {
         printer.enter_property("columns");

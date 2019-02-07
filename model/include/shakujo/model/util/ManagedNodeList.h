@@ -21,12 +21,12 @@
 
 namespace shakujo::model::util {
 
-    /**
-     * @brief A list of IR node.
-     * @tparam E the node type
-     */
-    template<typename E>
-    using ManagedNodeList = NodeListBase<common::util::ManagedPtr<E>>;
+/**
+ * @brief A list of IR node.
+ * @tparam E the node type
+ */
+template<typename E>
+using ManagedNodeList = NodeListBase<common::util::ManagedPtr<E>>;
 
 }  // namespace shakujo::model::util
 

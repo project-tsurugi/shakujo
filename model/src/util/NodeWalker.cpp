@@ -411,9 +411,6 @@ void NodeWalker::walk(expression::relation::AggregationExpression* node) {
     for (auto child : node->keys()) {
         if (child) walk(child);
     }
-    for (auto child : node->initialize()) {
-        if (child) walk(child);
-    }
     for (auto child : node->columns()) {
         if (child->function()) walk(child->function());
         if (child->operand()) walk(child->operand());
@@ -458,9 +455,6 @@ void NodeWalker::walk(expression::relation::OrderExpression* node) {
 void NodeWalker::walk(expression::relation::ProjectionExpression* node) {
     if (!enter(node)) return;
     if (node->operand()) walk(node->operand());
-    for (auto child : node->initialize()) {
-        if (child) walk(child);
-    }
     for (auto child : node->columns()) {
         if (child->value()) walk(child->value());
         if (child->alias()) walk(child->alias());

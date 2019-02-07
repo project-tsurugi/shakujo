@@ -123,7 +123,7 @@ public:
          * @return the column index (0-origin)
          * @return empty if the binding does not indicates any columns in the corresponded relation
          */
-        std::optional<std::size_t> index_of(VariableBinding const& binding) {
+        std::optional<std::size_t> index_of(VariableBinding const& binding) const {
             for (std::size_t i = 0, n = columns_.size(); i < n; ++i) {
                 if (columns_[i]->id() == binding.id()) {
                     return std::make_optional(i);

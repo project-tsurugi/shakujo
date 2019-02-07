@@ -54,50 +54,30 @@ TEST_F(SyntaxValidatorRelationTest, ScanExpression) {
 TEST_F(SyntaxValidatorRelationTest, ProjectionExpression) {
     validate(f.ProjectionExpression(
         literal(),
-        {},
         {
             f.ProjectionExpressionColumn(literal()),
         }
     ));
     validate(f.ProjectionExpression(
         literal(),
-        {},
         {
             f.ProjectionExpressionColumn(literal(1), f.SimpleName("a")),
             f.ProjectionExpressionColumn(literal(2), f.SimpleName("b")),
             f.ProjectionExpressionColumn(literal(3), f.SimpleName("c")),
         }
     ));
-    validate(f.ProjectionExpression(
-        literal(),
-        {f.EmptyStatement()},
-        {
-            f.ProjectionExpressionColumn(literal(), f.SimpleName("c")),
-        },
-        f.SimpleName("p")
-    ));
     should_error(f.ProjectionExpression(
         literal(),
-        {},
         {} // no columns
     ));
     should_error(f.ProjectionExpression(
         {},
-        {},
         {
             f.ProjectionExpressionColumn(literal()),
         }
     ));
     should_error(f.ProjectionExpression(
         literal(),
-        { std::unique_ptr<model::statement::Statement>() },
-        {
-            f.ProjectionExpressionColumn(literal()),
-        }
-    ));
-    should_error(f.ProjectionExpression(
-        literal(),
-        {},
         {
             f.ProjectionExpressionColumn({}),
         }

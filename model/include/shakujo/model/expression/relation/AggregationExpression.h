@@ -30,7 +30,6 @@
 #include "shakujo/model/name/Index.h"
 #include "shakujo/model/name/Name.h"
 #include "shakujo/model/name/SimpleName.h"
-#include "shakujo/model/statement/Statement.h"
 #include "shakujo/model/util/FragmentList.h"
 #include "shakujo/model/util/NodeList.h"
 
@@ -322,19 +321,6 @@ public:
      */
     inline util::NodeList<name::Index> const& keys() const {
         return const_cast<AggregationExpression*>(this)->keys();
-    }
-    /**
-     * @brief Returns initialization statements.
-     * @return initialization statements.
-     */
-    util::NodeList<statement::Statement>& initialize();
-
-    /**
-     * @brief Returns initialization statements.
-     * @return initialization statements.
-     */
-    inline util::NodeList<statement::Statement> const& initialize() const {
-        return const_cast<AggregationExpression*>(this)->initialize();
     }
     /**
      * @brief Returns aggregation columns.

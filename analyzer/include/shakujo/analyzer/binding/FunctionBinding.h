@@ -102,38 +102,25 @@ public:
      * @param id the function ID
      * @param name the function name
      * @param type the function return type, may be undefined if it does not return anything
-     * @param parameters the function parameters
+     * @param quantifier the function quantifier
+     * @param parameter the function parameter
      */
     FunctionBinding(
-            Id<FunctionBinding>&& id,
-            common::core::Name name,
-            common::core::Type const* type,
-            std::vector<std::shared_ptr<VariableBinding>> parameters = {})
+        Id<FunctionBinding>&& id,
+        common::core::Name name,
+        std::unique_ptr<common::core::Type> type,
+        Quantifier quantifier,
+        std::shared_ptr<VariableBinding> parameter = {})
         : FunctionBinding(
-                std::move(id),
-                std::move(name),
-                common::util::make_clone(type),
-                std::move(parameters))
-    {}
-
-    /**
-     * @brief Constructs a new object.
-     * @param id the function ID
-     * @param name the function name
-     * @param type the function return type, may be undefined if it does not return anything
-     * @param parameters the function parameters
-     */
-    FunctionBinding(
-            Id<FunctionBinding>&& id,
-            common::core::Name name,
-            common::core::Type&& type,
-            std::vector<std::shared_ptr<VariableBinding>> parameters = {})
-        : FunctionBinding(
-                std::move(id),
-                std::move(name),
-                common::util::make_clone(std::move(type)),
-                std::move(parameters))
-    {}
+        std::move(id),
+        std::move(name),
+        std::move(type),
+        {
+            std::move(parameter),
+        })
+    {
+        this->quantifier(quantifier);
+    }
 
     /**
      * @brief constructs a new object as an overload stub.

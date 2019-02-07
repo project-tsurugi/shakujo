@@ -61,9 +61,7 @@ private:
     model::IRFactory ir_factory;
 
 public:
-    explicit Engine(AnalyzerContext& env) : env_(env) {
-        (void) env_;
-    }
+    explicit Engine(AnalyzerContext& env) : env_(env) {}
 
     void process(model::program::Program* node, ScopeContext& prev) {
         auto vars = block_scope(prev.variables());

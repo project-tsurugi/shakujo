@@ -25,7 +25,6 @@ import com.ashigeru.lang.codegen.spec.sql.expression.Expression;
 import com.ashigeru.lang.codegen.spec.sql.key.RelationKey;
 import com.ashigeru.lang.codegen.spec.sql.key.VariableKey;
 import com.ashigeru.lang.codegen.spec.sql.name.SimpleName;
-import com.ashigeru.lang.codegen.spec.sql.statement.Statement;
 
 @Description("transform records in relations")
 @Extends(Expression.class)
@@ -35,9 +34,6 @@ public class ProjectionExpression extends MetaClass {
 
     @Description("source relation")
     Property<Expression> operand = property();
-
-    @Description("initialization statements")
-    Property<List<Statement>> initialize = property();
 
     @Description("projection columns")
     Property<List<Column>> columns = property();

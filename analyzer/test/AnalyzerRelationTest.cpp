@@ -46,9 +46,11 @@ using namespace shakujo::common;
 namespace t = shakujo::common::core::type;
 namespace v = shakujo::common::core::value;
 
+using common::util::dynamic_pointer_cast;
 using common::util::equals;
 using common::util::is_defined;
 using common::util::is_valid;
+
 
 class AnalyzerRelationTest : public AnalyzerTestBase, public ::testing::Test {
 public:
@@ -232,7 +234,6 @@ TEST_F(AnalyzerRelationTest, projection) {
     }});
     auto expr = analyze(f.ProjectionExpression(
         f.ScanExpression(f.Name("testing")),
-        {},
         {
             f.ProjectionExpressionColumn(var("C1")),
             f.ProjectionExpressionColumn(var("C3")),
@@ -270,7 +271,6 @@ TEST_F(AnalyzerRelationTest, projection) {
 TEST_F(AnalyzerRelationTest, projection_invalid_relation) {
     auto expr = analyze(f.ProjectionExpression(
         literal(1),
-        {},
         {
             f.ProjectionExpressionColumn(var("C1")),
         }
@@ -287,7 +287,6 @@ TEST_F(AnalyzerRelationTest, projection_invalid_relation) {
 TEST_F(AnalyzerRelationTest, projection_propagate_error) {
     auto expr = analyze(f.ProjectionExpression(
         f.ScanExpression(f.Name("MISSING")),
-        {},
         {
             f.ProjectionExpressionColumn(var("C1")),
         }
@@ -305,7 +304,6 @@ TEST_F(AnalyzerRelationTest, projection_named_relation) {
     }});
     auto expr = analyze(f.ProjectionExpression(
         f.ScanExpression(f.Name("testing")),
-        {},
         {
             f.ProjectionExpressionColumn(var("C1")),
             f.ProjectionExpressionColumn(var("C3")),
@@ -349,7 +347,6 @@ TEST_F(AnalyzerRelationTest, projection_named_columns) {
     }});
     auto expr = analyze(f.ProjectionExpression(
         f.ScanExpression(f.Name("testing")),
-        {},
         {
             f.ProjectionExpressionColumn(var("C1"), f.SimpleName("D1")),
             f.ProjectionExpressionColumn(var("C3"), f.SimpleName("D2")),
@@ -391,7 +388,6 @@ TEST_F(AnalyzerRelationTest, projection_free) {
     }});
     auto expr = analyze(f.ProjectionExpression(
         f.ScanExpression(f.Name("testing")),
-        {},
         {
             f.ProjectionExpressionColumn(var("C1"), f.SimpleName("D1")),
             f.ProjectionExpressionColumn(var("free"), f.SimpleName("D2")),
@@ -730,6 +726,93 @@ TEST_F(AnalyzerRelationTest, join_qualified_column) {
 
     auto* right = as<expression::VariableReference>(cond->right());
     EXPECT_EQ(cols[1], extract_var(right));
+}
+
+
+TEST_F(AnalyzerRelationTest, aggregation) {
+    using Quantifier = binding::FunctionBinding::Quantifier;
+    auto fid = [&] { return env.binding_context().next_function_id(); };
+    auto vid = [&] { return env.binding_context().next_variable_id(); };
+    auto count_asterisk = std::make_shared<binding::FunctionBinding>(
+        fid(),
+        common::core::Name { "count" },
+        std::make_unique<t::Int>(32U, NON_NULL),
+        Quantifier::ASTERISK);
+    auto count_int32 = std::make_shared<binding::FunctionBinding>(
+        fid(),
+        common::core::Name { "count" },
+        std::make_unique<t::Int>(32U, NON_NULL),
+        Quantifier::ALL,
+        std::make_shared<binding::VariableBinding>(
+            vid(),
+            common::core::Name { "count" },
+            std::make_unique<t::Int>(32U, NON_NULL)));
+    auto count_int32n = std::make_shared<binding::FunctionBinding>(
+        fid(),
+        common::core::Name { "count" },
+        std::make_unique<t::Int>(32U, NON_NULL),
+        Quantifier::ALL,
+        std::make_shared<binding::VariableBinding>(
+            vid(),
+            common::core::Name { "count" },
+            std::make_unique<t::Int>(32U, NULLABLE)));
+    env.register_builtin(std::make_shared<binding::FunctionBinding>(
+        fid(),
+        common::core::Name { "count" },
+        std::vector {
+            count_asterisk,
+            count_int32,
+            count_int32n,
+        }));
+    add(schema::TableInfo { "testing", {
+        { "C1", t::Int(32U, NON_NULL), },
+    }});
+    auto expr = analyze(f.ProjectionExpression(
+        f.ScanExpression(f.Name("testing")),
+        {
+            f.ProjectionExpressionColumn(f.FunctionCall(
+                f.Name("COUNT"),
+                {
+                    var("C1")
+                })),
+        }
+    ));
+    success();
+
+    auto agg = dynamic_pointer_cast<expression::relation::AggregationExpression>(expr->operand());
+    auto scan = dynamic_pointer_cast<expression::relation::ScanExpression>(agg->operand());
+
+    auto&& scan_out = extract_relation(scan)->output();
+    auto&& agg_in = extract_relation(agg)->process();
+    auto&& agg_out = extract_relation(agg)->output();
+    auto&& proj_in = extract_relation(expr.get())->process();
+
+    ASSERT_EQ(scan_out.columns().size(), 1U);
+    ASSERT_EQ(agg_in.columns().size(), 1U);
+    ASSERT_EQ(agg_out.columns().size(), 1U);
+    ASSERT_EQ(proj_in.columns().size(), 1U);
+
+    ASSERT_EQ(scan_out.columns()[0], agg_in.columns()[0]);
+    ASSERT_EQ(agg_out.columns()[0], proj_in.columns()[0]);
+
+    ASSERT_EQ(agg->columns().size(), 1U);
+    {
+        auto c = agg->columns()[0];
+        EXPECT_EQ(agg_out.columns()[0], extract_var(c));
+
+        auto f = extract_func(c);
+        EXPECT_EQ(f, count_int32);
+
+        auto v = extract_var(dynamic_pointer_cast<expression::VariableReference>(c->operand()));
+        EXPECT_EQ(v, agg_in.columns()[0]);
+    }
+
+    ASSERT_EQ(expr->columns().size(), 1U);
+    {
+        auto c = expr->columns()[0];
+        auto v = extract_var(dynamic_pointer_cast<expression::VariableReference>(c->value()));
+        EXPECT_EQ(v, proj_in.columns()[0]);
+    }
 }
 
 }  // namespace shakujo::analyzer

@@ -397,11 +397,6 @@ protected:
         if (!is_defined(node->operand())) {
             report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "projection expression must have a valid operand");
         }
-        for (auto s : node->initialize()) {
-            if (!is_defined(s)) {
-                report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "projection expression must not have undefined initialization statement");
-            }
-        }
         if (node->columns().empty()) {
             report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "projection expression must have one or more columns");
         }

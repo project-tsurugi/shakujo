@@ -411,9 +411,6 @@ void ConstNodeWalker::walk(expression::relation::AggregationExpression const* no
     for (auto child : node->keys()) {
         if (child) walk(child);
     }
-    for (auto child : node->initialize()) {
-        if (child) walk(child);
-    }
     for (auto child : node->columns()) {
         if (child->function()) walk(child->function());
         if (child->operand()) walk(child->operand());
@@ -458,9 +455,6 @@ void ConstNodeWalker::walk(expression::relation::OrderExpression const* node) {
 void ConstNodeWalker::walk(expression::relation::ProjectionExpression const* node) {
     if (!enter(node)) return;
     if (node->operand()) walk(node->operand());
-    for (auto child : node->initialize()) {
-        if (child) walk(child);
-    }
     for (auto child : node->columns()) {
         if (child->value()) walk(child->value());
         if (child->alias()) walk(child->alias());
