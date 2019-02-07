@@ -129,6 +129,20 @@ public:
     inline const scope::Scope<binding::FunctionBinding>& function_scope() const {
         return const_cast<AnalyzerContext*>(this)->function_scope();
     }
+
+    /**
+     * @brief registers an built-in variable.
+     * The built-in variables are always case in-sensitive.
+     * @param binding the variable to register
+     */
+    void register_builtin(std::shared_ptr<binding::VariableBinding> binding);
+
+    /**
+     * @brief registers an built-in function.
+     * The built-in functions are always case in-sensitive.
+     * @param binding the function to register
+     */
+    void register_builtin(std::shared_ptr<binding::FunctionBinding> binding);
 };
 }  // namespace shakujo::analyzer
 
