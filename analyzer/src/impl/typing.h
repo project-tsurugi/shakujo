@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <string>
+#include <cassert>
 
 #include "shakujo/common/core/type/ConstVisitor.h"
 #include "shakujo/model/type/ConstTypeVisitor.h"
