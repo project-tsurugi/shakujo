@@ -35,6 +35,7 @@ TEST_F(TableTest, simple) {
 
     table.put("a", std::make_shared<std::string>("A"));
     EXPECT_TRUE(table.contains("a"));
+    EXPECT_FALSE(table.contains("A"));
 
     {
         auto name = f.Name("a");
@@ -42,6 +43,11 @@ TEST_F(TableTest, simple) {
         ASSERT_TRUE(r);
         EXPECT_EQ(name.get(), r.name());
         EXPECT_EQ("A", *r.element());
+    }
+    {
+        auto name = f.Name("A");
+        Result<std::string> r = table.find(name.get());
+        ASSERT_FALSE(r);
     }
     {
         auto name = f.Name("a", "b");
@@ -66,12 +72,20 @@ TEST_F(TableTest, simple_vector) {
     table.put(key, std::make_shared<std::string>("A"));
     EXPECT_TRUE(table.contains(key));
 
+    const std::vector<std::string> capital {"A"};
+    EXPECT_FALSE(table.contains(capital));
+
     {
         auto name = f.Name("a");
         Result<std::string> r = table.find(name.get());
         ASSERT_TRUE(r);
         EXPECT_EQ(name.get(), r.name());
         EXPECT_EQ("A", *r.element());
+    }
+    {
+        auto name = f.Name("A");
+        Result<std::string> r = table.find(name.get());
+        ASSERT_FALSE(r);
     }
 }
 
@@ -84,12 +98,20 @@ TEST_F(TableTest, qualified) {
     table.put(key, std::make_shared<std::string>("A"));
     EXPECT_TRUE(table.contains(key));
 
+    const std::vector<std::string> capital {"A", "B"};
+    EXPECT_FALSE(table.contains(capital));
+
     {
         auto name = f.Name("a", "b");
         Result<std::string> r = table.find(name.get());
         ASSERT_TRUE(r);
         EXPECT_EQ(name.get(), r.name());
         EXPECT_EQ("A", *r.element());
+    }
+    {
+        auto name = f.Name("A", "B");
+        Result<std::string> r = table.find(name.get());
+        ASSERT_FALSE(r);
     }
     {
         auto name = f.Name("a", "b", "c");
@@ -186,6 +208,117 @@ TEST_F(TableTest, put_overwrite_qualified) {
         Result<std::string> r = table.find(name.get());
         ASSERT_TRUE(r);
         EXPECT_EQ("B", *r.element());
+    }
+}
+
+
+TEST_F(TableTest, case_insensitive) {
+    Table<std::string> table { false };
+
+    EXPECT_FALSE(table.contains("a"));
+
+    table.put("a", std::make_shared<std::string>("A"));
+    EXPECT_TRUE(table.contains("a"));
+    EXPECT_TRUE(table.contains("A"));
+
+    {
+        auto name = f.Name("a");
+        Result<std::string> r = table.find(name.get());
+        ASSERT_TRUE(r);
+        EXPECT_EQ(name.get(), r.name());
+        EXPECT_EQ("A", *r.element());
+    }
+    {
+        auto name = f.Name("A");
+        Result<std::string> r = table.find(name.get());
+        ASSERT_TRUE(r);
+        EXPECT_EQ(name.get(), r.name());
+        EXPECT_EQ("A", *r.element());
+    }
+    {
+        auto name = f.Name("A", "B");
+        Result<std::string> r = table.find(name.get());
+        ASSERT_TRUE(r);
+        EXPECT_EQ(name->qualifier(), r.name());
+        EXPECT_EQ("A", *r.element());
+    }
+    {
+        auto name = f.Name("X");
+        Result<std::string> r = table.find(name.get());
+        EXPECT_FALSE(r);
+    }
+}
+
+TEST_F(TableTest, case_insensitive_vector) {
+    Table<std::string> table { false };
+
+    const std::vector<std::string> key {"a"};
+    EXPECT_FALSE(table.contains(key));
+
+    table.put(key, std::make_shared<std::string>("A"));
+    EXPECT_TRUE(table.contains(key));
+
+    const std::vector<std::string> capital {"A"};
+    EXPECT_TRUE(table.contains(capital));
+
+    {
+        auto name = f.Name("a");
+        Result<std::string> r = table.find(name.get());
+        ASSERT_TRUE(r);
+        EXPECT_EQ(name.get(), r.name());
+        EXPECT_EQ("A", *r.element());
+    }
+    {
+        auto name = f.Name("A");
+        Result<std::string> r = table.find(name.get());
+        ASSERT_TRUE(r);
+        EXPECT_EQ(name.get(), r.name());
+        EXPECT_EQ("A", *r.element());
+    }
+}
+
+TEST_F(TableTest, case_insensitive_qualified) {
+    Table<std::string> table { false };
+
+    const std::vector<std::string> key {"a", "b"};
+    EXPECT_FALSE(table.contains(key));
+
+    table.put(key, std::make_shared<std::string>("A"));
+    EXPECT_TRUE(table.contains(key));
+
+    const std::vector<std::string> capital {"A", "B"};
+    EXPECT_TRUE(table.contains(capital));
+
+    {
+        auto name = f.Name("a", "b");
+        Result<std::string> r = table.find(name.get());
+        ASSERT_TRUE(r);
+        EXPECT_EQ(name.get(), r.name());
+        EXPECT_EQ("A", *r.element());
+    }
+    {
+        auto name = f.Name("A", "B");
+        Result<std::string> r = table.find(name.get());
+        ASSERT_TRUE(r);
+        EXPECT_EQ(name.get(), r.name());
+        EXPECT_EQ("A", *r.element());
+    }
+    {
+        auto name = f.Name("A", "B", "C");
+        Result<std::string> r = table.find(name.get());
+        ASSERT_TRUE(r);
+        EXPECT_EQ(name->qualifier(), r.name());
+        EXPECT_EQ("A", *r.element());
+    }
+    {
+        auto name = f.Name("A");
+        Result<std::string> r = table.find(name.get());
+        EXPECT_FALSE(r);
+    }
+    {
+        auto name = f.Name("A", "X");
+        Result<std::string> r = table.find(name.get());
+        EXPECT_FALSE(r);
     }
 }
 }

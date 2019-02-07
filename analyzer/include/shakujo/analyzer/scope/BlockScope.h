@@ -51,12 +51,15 @@ public:
      * @brief constructs a new object.
      * @param reporter sink of diagnostics
      * @param parent the pointer of parent scope
+     * @param case_sensitive compare names with case sensitive
      */
     explicit BlockScope(
             Reporter* reporter,
-            Scope<T> const* parent = nullptr)
+            Scope<T> const* parent = nullptr,
+            bool case_sensitive = true)
         : reporter_(reporter)
         , parent_(parent)
+        , table_(case_sensitive)
     {}
 
     /**

@@ -16,6 +16,7 @@
 #ifndef SHAKUJO_ANALYZER_SCOPE_TABLE_H_
 #define SHAKUJO_ANALYZER_SCOPE_TABLE_H_
 
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <string>
@@ -42,8 +43,59 @@ using common::util::dynamic_pointer_cast;
 template <typename T>
 class Table final {
 private:
-    std::map<std::string, std::shared_ptr<T>> simple_elements_;
-    std::map<std::vector<std::string>, std::shared_ptr<T>> qualified_elements_;
+    class Comparator {
+    public:
+        explicit constexpr Comparator(bool case_sensitive = true) noexcept : case_sensitive_(case_sensitive) {}
+        static constexpr char to_upper(char c) {
+            if ('a' <= c && c <= 'z') {
+                return static_cast<char>(c - 0x20);
+            }
+            return c;
+        }
+        inline bool operator()(std::string const& a, std::string const& b) const {
+            if (case_sensitive_) {
+                return a < b;
+            }
+            for (std::size_t i = 0, n = std::min(a.size(), b.size()); i < n; ++i) {
+                auto ac = to_upper(a[i]);
+                auto bc = to_upper(b[i]);
+                if (ac < bc) {
+                    return true;
+                }
+                if (ac > bc) {
+                    return false;
+                }
+            }
+            return a.size() < b.size();
+        }
+
+    private:
+        bool case_sensitive_;
+    };
+
+    class VectorComparator {
+    public:
+        explicit constexpr VectorComparator(bool case_sensitive = true) noexcept : element_(Comparator(case_sensitive)) {}
+        inline bool operator()(std::vector<std::string> const& a, std::vector<std::string> const& b) const {
+            for (std::size_t i = 0, n = std::min(a.size(), b.size()); i < n; ++i) {
+                auto&& as = a[i];
+                auto&& bs = b[i];
+                if (element_(as, bs)) {
+                    return true;
+                }
+                if (element_(bs, as)) {
+                    return false;
+                }
+            }
+            return a.size() < b.size();
+        }
+
+    private:
+        Comparator element_;
+    };
+
+    std::map<std::string, std::shared_ptr<T>, Comparator> simple_elements_;
+    std::map<std::vector<std::string>, std::shared_ptr<T>, VectorComparator> qualified_elements_;
 
     Result<T> find_simple(model::name::SimpleName const* name) const {
         auto it = simple_elements_.find(name->token());
@@ -63,23 +115,28 @@ private:
             }
             model::name::Name const* qualifier = current->qualifier();
             switch (qualifier->kind()) {
-            case model::name::NameKind::SIMPLE_NAME:
-                return find_simple(dynamic_pointer_cast<model::name::SimpleName>(qualifier));
-            case model::name::NameKind::QUALIFIED_NAME:
-                current = dynamic_pointer_cast<model::name::QualifiedName>(qualifier);
-                break;
-            default:
-                return {};
+                case model::name::NameKind::SIMPLE_NAME:
+                    return find_simple(dynamic_pointer_cast<model::name::SimpleName>(qualifier));
+                case model::name::NameKind::QUALIFIED_NAME:
+                    current = dynamic_pointer_cast<model::name::QualifiedName>(qualifier);
+                    break;
+                default:
+                    return {};
             }
             segments.pop_back();
         }
     }
 
 public:
+
     /**
      * @brief constructs a new object.
+     * @param case_sensitive compare name with case sensitive
      */
-    Table() noexcept = default;
+    explicit Table(bool case_sensitive = true) noexcept
+        : simple_elements_(Comparator(case_sensitive))
+        , qualified_elements_(VectorComparator(case_sensitive))
+    {}
 
     /**
      * @brief destructs this object.
