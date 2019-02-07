@@ -15,12 +15,14 @@
  */
 #include <gtest/gtest.h>
 #include <glog/logging.h>
-#include <gflags/gflags.h>
 
 namespace {
 class Env : public ::testing::Environment {
+private:
+    char* argv0_;
+
 public:
-    Env() noexcept = default;
+    explicit Env(char* argv0) noexcept : argv0_(argv0) {}
     ~Env() override = default;
     Env(Env const&) = default;
     Env(Env&&) noexcept = default;
@@ -32,7 +34,7 @@ public:
         if (FLAGS_log_dir.empty()) {
             FLAGS_logtostderr = true;
         }
-        ::google::InitGoogleLogging(::gflags::GetArgv0());
+        ::google::InitGoogleLogging(argv0_);
         ::google::InstallFailureSignalHandler();
     }
 
@@ -45,11 +47,7 @@ public:
 int main(int argc, char** argv) {
     // first consume command line options for gtest
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::AddGlobalTestEnvironment(new Env());  // NOLINT
-
-    // parse command line arguments using gflags
-    ::gflags::SetArgv(argc, const_cast<char const**>(argv));
-    ::gflags::ParseCommandLineFlags(&argc, &argv, false);
+    ::testing::AddGlobalTestEnvironment(new Env(argv[0]));  // NOLINT
 
     return RUN_ALL_TESTS();
 }
