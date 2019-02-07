@@ -109,6 +109,13 @@ public:
      * @param printer the destination printer
      * @param value the target value
      */
+    virtual void serialize(common::util::DataSerializer& printer, RelationBinding::JoinColumn const* value);  // NOLINT
+
+    /**
+     * @brief serializes the value into given printer.
+     * @param printer the destination printer
+     * @param value the target value
+     */
     virtual void serialize(common::util::DataSerializer& printer, common::schema::TableInfo const* value);  // NOLINT
 
     /**

@@ -211,6 +211,22 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, Relatio
         serialize(printer, &value->output());
         printer.exit_property("output");
     }
+    {
+        printer.enter_property("destination_table");
+        serialize(printer, &value->destination_table());
+        printer.exit_property("destination_table");
+    }
+    {
+        printer.enter_property("join_columns");
+        auto& list = value->join_columns();
+        auto size = list.size();
+        printer.enter_array(size);
+        for (auto& element : list) {
+            serialize(printer, &element);
+        }
+        printer.exit_array(size);
+        printer.exit_property("join_columns");
+    }
     printer.exit_object("RelationBinding");
 }
 
@@ -296,7 +312,60 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, Relatio
     }
 }
 
-void BindingSerializer::serialize(common::util::DataSerializer& printer, common::schema::TableInfo const *value) {
+void BindingSerializer::serialize(common::util::DataSerializer& printer, RelationBinding::JoinColumn const* value) {
+    if (value == nullptr) {
+        printer.value(nullptr);
+        return;
+    }
+    if (show_qualified_kind()) {
+        printer.enter_object("JoinColumn");
+    } else {
+        printer.enter_object("RelationBinding::JoinColumn");
+    }
+    {
+        printer.enter_property("qualifiers");
+        auto& list = value->qualifiers();
+        auto size = list.size();
+        printer.enter_array(size);
+        for (auto& element : list) {
+            serialize(printer, element);
+        }
+        printer.exit_array(size);
+        printer.exit_property("qualifiers");
+    }
+    {
+        printer.enter_property("output");
+        serialize(printer, value->output().get());
+        printer.exit_property("output");
+    }
+    {
+        printer.enter_property("left_source");
+        serialize(printer, value->left_source().get());
+        printer.exit_property("left_source");
+    }
+    {
+        printer.enter_property("right_source");
+        serialize(printer, value->right_source().get());
+        printer.exit_property("right_source");
+    }
+    {
+        printer.enter_property("nullify_left_source");
+        printer.value(value->nullify_left_source());
+        printer.exit_property("nullify_left_source");
+    }
+    {
+        printer.enter_property("nullify_right_source");
+        printer.value(value->nullify_right_source());
+        printer.exit_property("nullify_right_source");
+    }
+    if (show_qualified_kind()) {
+        printer.exit_object("JoinColumn");
+    } else {
+        printer.exit_object("RelationBinding::JoinColumn");
+    }
+}
+
+void BindingSerializer::serialize(common::util::DataSerializer& printer, common::schema::TableInfo const* value) {
     if (!is_valid(value)) {
         printer.value(nullptr);
         return;
@@ -310,7 +379,7 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, common:
     printer.exit_object("TableInfo");
 }
 
-void BindingSerializer::serialize(common::util::DataSerializer& printer, common::schema::IndexInfo const *value) {
+void BindingSerializer::serialize(common::util::DataSerializer& printer, common::schema::IndexInfo const* value) {
     if (!is_valid(value)) {
         printer.value(nullptr);
         return;
