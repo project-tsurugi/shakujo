@@ -16,9 +16,12 @@
 #include "Engine.h"
 
 #include <algorithm>
+#include <exception>
 #include <type_traits>
 
 #include <cassert>
+
+#include <glog/logging.h>
 
 #include "shakujo/common/util/utility.h"
 
@@ -28,9 +31,10 @@ using common::util::is_defined;
 using common::util::make_clone;
 using common::util::to_string;
 
-
-inline static void check(antlr4::ParserRuleContext *c) {
+void Engine::check(antlr4::ParserRuleContext *c) {
     if (is_defined(c) && c->exception) {
+        VLOG(1) << "parse error: " << c->toStringTree(parser_);
+        // FIXME: make it nested custom exception
         std::rethrow_exception(c->exception);
     }
 }
@@ -585,7 +589,6 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::BooleanFac
 }
 
 static model::expression::UnaryOperator::Kind boolean_test_operator(Grammar::BooleanTestContext *c) {
-    check(c);
     if (is_defined(c->K_TRUE())) {
         if (is_defined(c->K_NOT())) {
             return model::expression::UnaryOperator::Kind::IS_NOT_TRUE;

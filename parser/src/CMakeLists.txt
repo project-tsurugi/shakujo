@@ -48,6 +48,7 @@ target_include_directories(parser
 target_link_libraries(parser
     PUBLIC parser-interface
     PUBLIC model
+    PRIVATE glog::glog
 )
 
 if (APPLE)

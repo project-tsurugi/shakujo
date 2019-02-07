@@ -33,6 +33,7 @@ option(ENABLE_COVERAGE "enable coverage on debug build" OFF)
 find_package(Threads REQUIRED)
 find_package(Java REQUIRED COMPONENTS Runtime)
 find_package(Doxygen)
+find_package(glog REQUIRED)
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)

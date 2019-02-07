@@ -34,12 +34,14 @@ using Grammar = shakujo_lang::ShakujoParser;
 
 class Engine {
 private:
+    Grammar* parser_;
     std::shared_ptr<std::string> location_;
     model::IRFactory f;
 
 public:
-    explicit Engine(std::string location)
-        : location_(std::make_shared<std::string>(std::move(location)))
+    Engine(Grammar& parser, std::string location)
+        : parser_(&parser)
+        , location_(std::make_shared<std::string>(std::move(location)))
     {}
 
     // programEntry
@@ -516,6 +518,7 @@ public:
     std::size_t visit(Grammar::DataSizeContext *);
 
 private:
+    void check(antlr4::ParserRuleContext *);
     common::core::DocumentRegion region(antlr4::ParserRuleContext *, antlr4::ParserRuleContext * = nullptr);
 };
 

@@ -49,7 +49,7 @@ public:
 
         auto tree = entry(parser);
         debug(tree, parser);
-        impl::Engine engine { std::move(path) };
+        impl::Engine engine { parser, std::move(path) };
         return engine.visit(tree);
     }
 };
