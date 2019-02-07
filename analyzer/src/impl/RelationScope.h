@@ -16,10 +16,13 @@
 #ifndef SHAKUJO_ANALYZER_IMPL_RELATION_SCOPE_H_
 #define SHAKUJO_ANALYZER_IMPL_RELATION_SCOPE_H_
 
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <utility>
 #include <vector>
+
+#include <cassert>
 
 #include "shakujo/analyzer/scope/Scope.h"
 #include "shakujo/analyzer/scope/Result.h"
@@ -51,7 +54,47 @@ public:
             binding::BindingContext& context,
             scope::Scope<binding::VariableBinding> const* parent,
             std::vector<common::core::type::Relation const*> relations,
-            std::vector<std::shared_ptr<binding::VariableBinding>> const& columns);
+            std::vector<std::shared_ptr<binding::VariableBinding>> const& columns)
+        : parent_(parent)
+    {
+        std::size_t index = 0;
+        for (auto* relation : relations) {
+            for (auto& column : relation->columns()) {
+                std::shared_ptr<binding::VariableBinding> binding;
+                if (!columns.empty()) {
+                    assert(index < columns.size());  // NOLINT
+                    binding = columns[index];
+                } else {
+                    binding = std::make_shared<binding::VariableBinding>(
+                        context.next_variable_id(),
+                        common::core::Name(column.name()),
+                        column.type());
+                }
+                columns_.push_back(binding);
+                if (!table_.contains(column.name())) {
+                    table_.put(column.name(), binding);
+                } else {
+                    table_.put(
+                        column.name(),
+                        std::make_shared<binding::VariableBinding>(), // ambiguous
+                        true);
+                }
+                for (auto& qualifier : column.qualifiers()) {
+                    auto qname = qualifier.segments(); // take a copy
+                    qname.push_back(column.name());
+                    if (!table_.contains(qname)) {
+                        table_.put(std::move(qname), binding);
+                    } else {
+                        table_.put(
+                            std::move(qname),
+                            std::make_shared<binding::VariableBinding>(), // ambiguous
+                            true);
+                    }
+                }
+                ++index;
+            }
+        }
+    }
 
     ~RelationScope() noexcept override = default;
     RelationScope(const RelationScope& other) = delete;
@@ -63,7 +106,15 @@ public:
         return { columns_ };
     }
 
-    scope::Result<binding::VariableBinding> find(model::name::Name const* name) const override;
+    scope::Result<binding::VariableBinding> find(model::name::Name const* name) const override {
+        if (auto result = table_.find(name)) {
+            return result;
+        }
+        if (parent_) {
+            return parent_->find(name);
+        }
+        return {};
+    }
 };
 }  // namespace shakujo::analyzer::impl
 

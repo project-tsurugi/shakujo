@@ -91,8 +91,8 @@ void Engine::visit(model::program::GlobalVariableDeclaration* node, ScopeContext
             if (!typing::is_assignment_convertible(type.get(), *expr)) {
                 report(node, Diagnostic::Code::INVALID_VARIABLE_TYPE, to_string(
                         "type of variable \"", name, "\" is not compatible to its initializer, ",
-                        "variable type: ", typing::to_string(type.get()), ", ",
-                        "initializer type: ", typing::to_string(expr->type())));
+                        "variable type: ", type.get(), ", ",
+                        "initializer type: ", expr->type()));
                 result = std::make_shared<binding::VariableBinding>(
                         bindings().next_variable_id(),
                         name,
@@ -859,7 +859,7 @@ void Engine::visit(model::expression::BinaryOperator* node, ScopeContext& scope)
     case model::expression::BinaryOperator::Kind::LESS_THAN_OR_EQUAL:
     case model::expression::BinaryOperator::Kind::GREATER_THAN_OR_EQUAL:
     {
-        if (!typing::is_equality_comparable(l_expr->type(), r_expr->type())) {
+        if (!typing::is_order_comparable(l_expr->type(), r_expr->type())) {
             report(node->right(), Diagnostic::Code::INCOMPATIBLE_EXPRESSION_TYPE, to_string(
                 "cannot compare order, ",
                 "left: ", l_expr->type(), ", ",
