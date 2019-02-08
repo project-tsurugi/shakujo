@@ -447,7 +447,7 @@ void ConstNodeWalker::walk(expression::relation::OrderExpression const* node) {
     if (!enter(node)) return;
     if (node->operand()) walk(node->operand());
     for (auto child : node->elements()) {
-        if (child->column()) walk(child->column());
+        if (child->key()) walk(child->key());
     }
     exit(node);
 }

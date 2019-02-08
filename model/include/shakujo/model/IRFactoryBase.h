@@ -712,13 +712,13 @@ public:
 
     /**
      * @brief returns a new expression::relation::OrderExpression::Element.
-     * @param column column index
+     * @param key sort key
      * @param direction sort direction
      * @return a created node
      * @see expression::relation::OrderExpression::Element
      */
     std::unique_ptr<expression::relation::OrderExpression::Element> OrderExpressionElement(
-            std::unique_ptr<name::Index> column,
+            std::unique_ptr<expression::Expression> key,
             expression::relation::OrderExpression::Direction direction);
 
     /**

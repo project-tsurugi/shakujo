@@ -1327,6 +1327,11 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         serialize(printer, value->expression_key());
         printer.exit_property("expression_key");
     }
+    {
+        printer.enter_property("relation_key");
+        serialize(printer, value->relation_key());
+        printer.exit_property("relation_key");
+    }
     printer.exit_object("OrderExpression");
 }
 
@@ -1359,19 +1364,14 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         printer.enter_object("OrderExpression::Element");
     }
     {
-        printer.enter_property("column");
-        serialize(printer, value->column());
-        printer.exit_property("column");
+        printer.enter_property("key");
+        serialize(printer, value->key());
+        printer.exit_property("key");
     }
     {
         printer.enter_property("direction");
         serialize(printer, value->direction());
         printer.exit_property("direction");
-    }
-    {
-        printer.enter_property("variable_key");
-        serialize(printer, value->variable_key());
-        printer.exit_property("variable_key");
     }
     if (!show_fragment_kind()) {
         printer.exit_object({});

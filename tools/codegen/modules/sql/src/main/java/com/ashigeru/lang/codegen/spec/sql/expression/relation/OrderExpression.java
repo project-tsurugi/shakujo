@@ -22,11 +22,11 @@ import com.ashigeru.lang.codegen.ir.reflect.Description;
 import com.ashigeru.lang.codegen.ir.reflect.Extends;
 import com.ashigeru.lang.codegen.ir.reflect.MetaClass;
 import com.ashigeru.lang.codegen.spec.sql.expression.Expression;
-import com.ashigeru.lang.codegen.spec.sql.key.VariableKey;
-import com.ashigeru.lang.codegen.spec.sql.name.Index;
+import com.ashigeru.lang.codegen.spec.sql.key.RelationKey;
 
 @Description("sorting records in relations")
 @Extends(Expression.class)
+@Extends(RelationKey.Provider.class)
 @SuppressWarnings("javadoc")
 public class OrderExpression extends MetaClass {
 
@@ -37,11 +37,10 @@ public class OrderExpression extends MetaClass {
     Property<List<Element>> elements = property();
 
     @Description("sort order")
-    @Extends(VariableKey.Provider.class)
     public static class Element extends MetaClass {
 
-        @Description("column index")
-        Property<Index> column = property();
+        @Description("sort key")
+        Property<Expression> key = property();
 
         @Description("sort direction")
         Property<Direction> direction = property();

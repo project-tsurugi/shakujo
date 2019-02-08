@@ -26,8 +26,7 @@
 #include "shakujo/model/expression/Expression.h"
 #include "shakujo/model/expression/ExpressionKind.h"
 #include "shakujo/model/key/ExpressionKey.h"
-#include "shakujo/model/key/VariableKey.h"
-#include "shakujo/model/name/Index.h"
+#include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/util/FragmentList.h"
 
 namespace shakujo::model::expression::relation {
@@ -35,7 +34,8 @@ namespace shakujo::model::expression::relation {
  * @brief Represents sorting records in relations.
  */
 class OrderExpression
-        : public Expression {
+        : public Expression
+        , public key::RelationKey::Provider {
 private:
     class Impl;
     std::unique_ptr<Impl> impl_;
@@ -61,8 +61,7 @@ public:
     /**
      * @brief Represents sort order.
      */
-    class Element final
-            : public key::VariableKey::Provider {
+    class Element final {
     private:
         class Impl;
         std::unique_ptr<Impl> impl_;
@@ -77,7 +76,7 @@ public:
         /**
          * @brief Destroys this object.
          */
-        ~Element() noexcept override;
+        ~Element() noexcept;
 
         /**
          * @brief Copy-constructs a new object.
@@ -107,31 +106,31 @@ public:
 
     public:
         /**
-         * @brief Returns column index.
-         * @return column index.
+         * @brief Returns sort key.
+         * @return sort key.
          */
-        name::Index* column();
+        Expression* key();
 
         /**
-         * @brief Returns column index.
-         * @return column index.
+         * @brief Returns sort key.
+         * @return sort key.
          */
-        inline name::Index const* column() const {
-            return const_cast<OrderExpression::Element*>(this)->column();
+        inline Expression const* key() const {
+            return const_cast<OrderExpression::Element*>(this)->key();
         }
 
         /**
-         * @brief Sets column index.
-         * @param column column index
+         * @brief Sets sort key.
+         * @param key sort key
          * @return this
          */
-        OrderExpression::Element& column(std::unique_ptr<name::Index> column);
+        OrderExpression::Element& key(std::unique_ptr<Expression> key);
 
         /**
-         * @brief Releases column index from this node.
+         * @brief Releases sort key from this node.
          * @return the released node
          */
-        std::unique_ptr<name::Index> release_column();
+        std::unique_ptr<Expression> release_key();
 
         /**
          * @brief Returns sort direction.
@@ -147,37 +146,16 @@ public:
         OrderExpression::Element& direction(OrderExpression::Direction direction);
 
         /**
-         * @brief Returns referring variable key.
-         * @return referring variable key.
+         * @brief Returns a copy of this object.
+         * @return a clone of this
          */
-        key::VariableKey* variable_key() override;
-
-        /**
-         * @brief Returns referring variable key.
-         * @return referring variable key.
-         */
-        inline key::VariableKey const* variable_key() const override {
-            return const_cast<OrderExpression::Element*>(this)->variable_key();
-        }
-
-        /**
-         * @brief Sets referring variable key.
-         * @param variable_key referring variable key
-         * @return this
-         */
-        OrderExpression::Element& variable_key(std::unique_ptr<key::VariableKey> variable_key) override;
+        Element* clone() const &;
 
         /**
          * @brief Returns a copy of this object.
          * @return a clone of this
          */
-        Element* clone() const & override;
-
-        /**
-         * @brief Returns a copy of this object.
-         * @return a clone of this
-         */
-        Element* clone() && override;
+        Element* clone() &&;
 
     };
 public:
@@ -278,6 +256,27 @@ public:
      * @return this
      */
     OrderExpression& expression_key(std::unique_ptr<key::ExpressionKey> expression_key) override;
+
+    /**
+     * @brief Returns relation key.
+     * @return relation key.
+     */
+    key::RelationKey* relation_key() override;
+
+    /**
+     * @brief Returns relation key.
+     * @return relation key.
+     */
+    inline key::RelationKey const* relation_key() const override {
+        return const_cast<OrderExpression*>(this)->relation_key();
+    }
+
+    /**
+     * @brief Sets relation key.
+     * @param relation_key relation key
+     * @return this
+     */
+    OrderExpression& relation_key(std::unique_ptr<key::RelationKey> relation_key) override;
 
     /**
      * @brief Returns a copy of this object.

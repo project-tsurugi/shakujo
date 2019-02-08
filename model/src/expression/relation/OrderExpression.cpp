@@ -22,8 +22,7 @@
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/expression/Expression.h"
 #include "shakujo/model/key/ExpressionKey.h"
-#include "shakujo/model/key/VariableKey.h"
-#include "shakujo/model/name/Index.h"
+#include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/util/FragmentList.h"
 
 namespace shakujo::model::expression::relation {
@@ -33,6 +32,7 @@ public:
     common::util::ManagedPtr<Expression> operand_;
     util::FragmentList<OrderExpression::Element> elements_;
     std::unique_ptr<key::ExpressionKey> expression_key_;
+    std::unique_ptr<key::RelationKey> relation_key_;
 
     Impl() = default;
     ~Impl() noexcept = default;
@@ -56,9 +56,8 @@ public:
 
 class OrderExpression::Element::Impl {
 public:
-    std::unique_ptr<name::Index> column_;
+    common::util::ManagedPtr<Expression> key_;
     OrderExpression::Direction direction_ { OrderExpression::Direction::ASCENDANT };
-    std::unique_ptr<key::VariableKey> variable_key_;
 
     Impl() = default;
     ~Impl() noexcept = default;
@@ -69,7 +68,7 @@ public:
 
     std::unique_ptr<Impl> clone() const {
         auto other = std::make_unique<Impl>();
-        other->column_ = common::util::make_clone(column_);
+        other->key_ = common::util::make_clone(key_);
         other->direction_ = direction_;
         return other;
     }
@@ -111,6 +110,15 @@ OrderExpression& OrderExpression::expression_key(std::unique_ptr<key::Expression
     return *this;
 }
 
+key::RelationKey* OrderExpression::relation_key() {
+    return impl_->relation_key_.get();
+}
+
+OrderExpression& OrderExpression::relation_key(std::unique_ptr<key::RelationKey> relation_key) {
+    impl_->relation_key_ = std::move(relation_key);
+    return *this;
+}
+
 OrderExpression* OrderExpression::clone() const & {
     return new OrderExpression(impl_->clone());  // NOLINT
 }
@@ -129,19 +137,17 @@ OrderExpression::Element::Element(OrderExpression::Element&&) noexcept = default
 
 OrderExpression::Element& OrderExpression::Element::operator=(OrderExpression::Element&&) noexcept = default;
 
-name::Index* OrderExpression::Element::column() {
-    return impl_->column_.get();
+Expression* OrderExpression::Element::key() {
+    return impl_->key_.get();
 }
 
-OrderExpression::Element& OrderExpression::Element::column(std::unique_ptr<name::Index> column) {
-    impl_->column_ = std::move(column);
+OrderExpression::Element& OrderExpression::Element::key(std::unique_ptr<Expression> key) {
+    impl_->key_ = std::move(key);
     return *this;
 }
 
-std::unique_ptr<name::Index> OrderExpression::Element::release_column() {
-    std::unique_ptr<name::Index> ret { std::move(impl_->column_) };
-    impl_->column_ = {};
-    return ret;
+std::unique_ptr<Expression> OrderExpression::Element::release_key() {
+    return impl_->key_.release();
 }
 
 OrderExpression::Direction OrderExpression::Element::direction() const {
@@ -150,15 +156,6 @@ OrderExpression::Direction OrderExpression::Element::direction() const {
 
 OrderExpression::Element& OrderExpression::Element::direction(OrderExpression::Direction direction) {
     impl_->direction_ = direction;
-    return *this;
-}
-
-key::VariableKey* OrderExpression::Element::variable_key() {
-    return impl_->variable_key_.get();
-}
-
-OrderExpression::Element& OrderExpression::Element::variable_key(std::unique_ptr<key::VariableKey> variable_key) {
-    impl_->variable_key_ = std::move(variable_key);
     return *this;
 }
 

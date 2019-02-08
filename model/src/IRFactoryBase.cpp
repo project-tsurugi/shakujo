@@ -488,10 +488,10 @@ std::unique_ptr<expression::relation::OrderExpression::Element> IRFactoryBase::O
 }
 
 std::unique_ptr<expression::relation::OrderExpression::Element> IRFactoryBase::OrderExpressionElement(
-        std::unique_ptr<name::Index> column,
+        std::unique_ptr<expression::Expression> key,
         expression::relation::OrderExpression::Direction direction) {
     auto ret = OrderExpressionElement();
-    ret->column(std::move(column));
+    ret->key(std::move(key));
     ret->direction(direction);
     return ret;
 }

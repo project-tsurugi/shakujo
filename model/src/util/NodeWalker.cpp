@@ -447,7 +447,7 @@ void NodeWalker::walk(expression::relation::OrderExpression* node) {
     if (!enter(node)) return;
     if (node->operand()) walk(node->operand());
     for (auto child : node->elements()) {
-        if (child->column()) walk(child->column());
+        if (child->key()) walk(child->key());
     }
     exit(node);
 }
