@@ -74,24 +74,33 @@ deleteStatement
 
 // -- SELECT
 selectStatement
-    : query
+    : querySpecification
     ;
 
-query
-    : K_SELECT projectionSpec fromClause whereClause?
+querySpecification
+    : K_SELECT setQuantifier? selectList tableExpression
     ;
 
-projectionSpec
-    : any='*'
-    | projectionColumnList
+setQuantifier
+    : K_ALL
+    | K_DISTINCT
     ;
 
-projectionColumnList
-    : projectionColumn (',' projectionColumn)*
+selectList
+    : '*'
+    | selectSublist (',' selectSublist)*
     ;
 
-projectionColumn
-    : expression (K_AS simpleName)?
+selectSublist
+    : derivedColumn
+    ;
+
+derivedColumn
+    : expression (K_AS columnName)?
+    ;
+
+tableExpression
+    : fromClause whereClause? /* TODO: groupByClause */ /* TODO: havingClause */
     ;
 
 fromClause

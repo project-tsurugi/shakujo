@@ -154,30 +154,41 @@ public:
     //     ;
     std::unique_ptr<model::statement::Statement> visit(Grammar::SelectStatementContext *);
 
-    // query
-    //     : K_SELECT projectionSpec fromClause whereClause?
+    // querySpecification
+    //     : K_SELECT setQuantifier? selectList tableExpression
     //     ;
-    std::unique_ptr<model::expression::Expression> visit(Grammar::QueryContext *);
+    std::unique_ptr<model::expression::Expression> visit(Grammar::QuerySpecificationContext *);
 
-    // projectionSpec
-    //     : any='*'
-    //     | projectionColumnList
+    // setQuantifier
+    //     : K_ALL
+    //     | K_DISTINCT
+    //     ;
+    // FIXME: impl
+    void visit(Grammar::SetQuantifierContext *);
+
+    // selectList
+    //     : '*'
+    //     | selectSublist (',' selectSublist)*
     //     ;
     std::unique_ptr<model::expression::Expression> visit(
-            Grammar::ProjectionSpecContext *,
+            Grammar::SelectListContext *,
             std::unique_ptr<model::expression::Expression>);
 
-    // projectionColumnList
-    //     : projectionColumn (',' projectionColumn)*
+    // selectSublist
+    //     : derivedColumn
     //     ;
-    std::unique_ptr<model::expression::relation::ProjectionExpression> visit(
-            Grammar::ProjectionColumnListContext *,
-            std::unique_ptr<model::expression::Expression>);
+    std::vector<std::unique_ptr<model::expression::relation::ProjectionExpression::Column>> visit(
+            Grammar::SelectSublistContext *);
 
-    // projectionColumn
-    //     : expression (K_AS simpleName)?
+    // derivedColumn
+    //     : expression (K_AS columnName)
     //     ;
-    std::unique_ptr<model::expression::relation::ProjectionExpression::Column> visit(Grammar::ProjectionColumnContext *);
+    std::unique_ptr<model::expression::relation::ProjectionExpression::Column> visit(Grammar::DerivedColumnContext *);
+
+    // tableExpression
+    //     : fromClause whereClause? TODO: groupByClause TODO: havingClause
+    //     ;
+    std::unique_ptr<model::expression::Expression> visit(Grammar::TableExpressionContext *);
 
     // fromClause
     //     : K_FROM tableReference (',' tableReference)*

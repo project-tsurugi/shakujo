@@ -291,32 +291,95 @@ std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::DeleteStatem
 
 std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::SelectStatementContext *c) {
     check(c);
-    if (auto q = c->query(); is_defined(q)) {
+    if (auto q = c->querySpecification(); is_defined(q)) {
         auto query = visit(q);
         return f.EmitStatement(std::move(query)) << region(c);
     }
     rule_error(c);
 }
 
-std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::QueryContext *c) {
+std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::QuerySpecificationContext *c) {
     check(c);
-    if (is_defined(c->K_SELECT())) {
-        if (auto from = c->fromClause(); is_defined(from)) {
-            auto result = visit(from);
-            if (auto cond = c->whereClause(); is_defined(cond)) {
-                result = visit(cond, std::move(result));
-            }
-            if (auto proj = c->projectionSpec(); is_defined(proj)) {
-                return visit(proj, std::move(result));
-            }
+    if (auto table = c->tableExpression(); is_defined(table)) {
+        auto result = visit(table);
+        if (auto select = c->selectList(); is_defined(select)) {
+            result = visit(select, std::move(result));
         }
+        if (auto q = c->setQuantifier()) {
+            // FIXME: impl
+            visit(q);
+        }
+        return result;
     }
     rule_error(c);
 }
 
-// fromClause
-//     : K_FROM tableReference (',' tableReference)*
-//     ;
+void Engine::visit(Grammar::SetQuantifierContext *c) {
+    check(c);
+    // FIXME impl
+    return;
+}
+
+std::unique_ptr<model::expression::Expression> Engine::visit(
+        Grammar::SelectListContext *c,
+        std::unique_ptr<model::expression::Expression> source) {
+    check(c);
+    if (is_defined(c->ASTERISK())) {
+        return source;
+    }
+    if (auto list = c->selectSublist(); !list.empty()) {
+        std::vector<std::unique_ptr<model::expression::relation::ProjectionExpression::Column>> columns;
+        columns.reserve(list.size());
+        for (auto* e : list) {
+            auto sublist = visit(e);
+            for (auto&& v : sublist) {
+                columns.emplace_back(std::move(v));
+            }
+        }
+        return f.ProjectionExpression(std::move(source), std::move(columns)) << region(c);
+    }
+    rule_error(c);
+}
+
+std::vector<std::unique_ptr<model::expression::relation::ProjectionExpression::Column>> Engine::visit(
+        Grammar::SelectSublistContext *c) {
+    check(c);
+    if (auto e = c->derivedColumn(); is_defined(e)) {
+        auto column = visit(e);
+        std::vector<std::unique_ptr<model::expression::relation::ProjectionExpression::Column>> result;
+        result.reserve(1);
+        result.emplace_back(std::move(column));
+        return result;
+    }
+    rule_error(c);
+}
+
+std::unique_ptr<model::expression::relation::ProjectionExpression::Column> Engine::visit(
+        Grammar::DerivedColumnContext *c) {
+    check(c);
+    if (auto e = c->expression(); is_defined(e)) {
+        auto value = visit(e);
+        std::unique_ptr<model::name::SimpleName> name;
+        if (auto n = c->columnName(); is_defined(n)) {
+            name = visit(n);
+        }
+        return f.ProjectionExpressionColumn(std::move(value), std::move(name));
+    }
+    rule_error(c);
+}
+
+std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::TableExpressionContext *c) {
+    check(c);
+    if (auto from = c->fromClause(); is_defined(from)) {
+        auto result = visit(from);
+        if (auto where = c->whereClause(); is_defined(where)) {
+            result = visit(where, std::move(result));
+        }
+        return result;
+    }
+    rule_error(c);
+}
+
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::FromClauseContext *c) {
     check(c);
     if (is_defined(c->K_FROM()) && !c->tableReference().empty()) {
@@ -472,45 +535,6 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::JoinSpecif
     check(c);
     if (auto s = c->searchCondition(); is_defined(c->K_ON()) && is_defined(s)) {
         return visit(s);
-    }
-    rule_error(c);
-}
-
-std::unique_ptr<model::expression::Expression> Engine::visit(
-        Grammar::ProjectionSpecContext *c,
-        std::unique_ptr<model::expression::Expression> source) {
-    check(c);
-    if (is_defined(c->any)) {
-        return source;
-    }
-    if (auto l = c->projectionColumnList(); is_defined(l)) {
-        return visit(l, std::move(source));
-    }
-    rule_error(c);
-}
-
-std::unique_ptr<model::expression::relation::ProjectionExpression> Engine::visit(
-        Grammar::ProjectionColumnListContext *c,
-        std::unique_ptr<model::expression::Expression> source) {
-    check(c);
-    std::vector<std::unique_ptr<model::expression::relation::ProjectionExpression::Column>> columns;
-    columns.reserve(c->projectionColumn().size());
-    for (auto* column : c->projectionColumn()) {
-        columns.emplace_back(visit(column));
-    }
-    return f.ProjectionExpression(std::move(source), std::move(columns)) << region(c);
-}
-
-std::unique_ptr<model::expression::relation::ProjectionExpression::Column> Engine::visit(
-        Grammar::ProjectionColumnContext *c) {
-    check(c);
-    if (auto e = c->expression(); is_defined(e)) {
-        auto expr = visit(e);
-        std::unique_ptr<model::name::SimpleName> alias;
-        if (auto a = c->simpleName(); is_defined(a)) {
-            alias = visit(a);
-        }
-        return f.ProjectionExpressionColumn(std::move(expr), std::move(alias));
     }
     rule_error(c);
 }
