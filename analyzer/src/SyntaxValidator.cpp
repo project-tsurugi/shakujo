@@ -463,10 +463,29 @@ protected:
     //    return true;
     //}
 
-    //bool enter(model::expression::relation::AggregationExpression const* node) override {
-    //    // FIXME: impl
-    //    return true;
-    //}
+    bool enter(model::expression::relation::AggregationExpression const* node) override {
+        if (!is_defined(node->operand())) {
+            report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "aggregation expression must have a valid operand");
+        }
+        for (auto* key : node->keys()) {
+            if (!is_valid(key)) {
+                report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "aggregation expression must have a valid grouping key");
+            }
+        }
+        if (node->columns().empty()) {
+            report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "aggregation expression must have one or more columns");
+        }
+        for (auto* column : node->columns()) {
+            // FIXME: for group key
+            if (!is_defined(column->function())) {
+                report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "aggregation expression must have a valid set operator name");
+            }
+            if (!is_defined(column->operand())) {
+                report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "aggregation expression must have a valid set operator target");
+            }
+        }
+        return true;
+    }
 
     bool enter(model::expression::relation::OrderExpression const* node) override {
         if (!is_defined(node->operand())) {

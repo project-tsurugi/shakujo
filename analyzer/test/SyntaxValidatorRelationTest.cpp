@@ -123,6 +123,85 @@ TEST_F(SyntaxValidatorRelationTest, SelectionExpression) {
     should_error(f.SelectionExpression(literal(), {}));
 }
 
+TEST_F(SyntaxValidatorRelationTest, AggregationExpression) {
+    using Quantifier = model::expression::FunctionCall::Quantifier;
+    validate(f.AggregationExpression(
+        literal(),
+        {},
+        {
+            f.AggregationExpressionColumn(f.Name("f"), Quantifier::ABSENT, literal()),
+        }));
+    validate(f.AggregationExpression(
+        literal(),
+        {
+            f.Index(f.Name("c")),
+        },
+        {
+            f.AggregationExpressionColumn(f.Name("f"), Quantifier::ABSENT, literal()),
+        }));
+    validate(f.AggregationExpression(
+        literal(),
+        {
+            f.Index(f.Name("c1")),
+            f.Index(f.Name("c2")),
+            f.Index(f.Name("c3")),
+        },
+        {
+            f.AggregationExpressionColumn(f.Name("f"), Quantifier::ABSENT, literal()),
+        }));
+    validate(f.AggregationExpression(
+        literal(),
+        {},
+        {
+            f.AggregationExpressionColumn(f.Name("f1"), Quantifier::ABSENT, literal(1)),
+            f.AggregationExpressionColumn(f.Name("f2"), Quantifier::ABSENT, literal(2)),
+            f.AggregationExpressionColumn(f.Name("f3"), Quantifier::ABSENT, literal(3)),
+        }));
+    validate(f.AggregationExpression(
+        literal(),
+        {},
+        {
+            f.AggregationExpressionColumn(f.Name("f"), Quantifier::ABSENT, literal(), f.Name("a")),
+        }));
+    validate(f.AggregationExpression(
+        literal(),
+        {},
+        {
+            f.AggregationExpressionColumn(f.Name("f"), Quantifier::ABSENT, literal()),
+        },
+        f.Name("a")));
+    should_error(f.AggregationExpression(
+        {},
+        {},
+        {
+            f.AggregationExpressionColumn(f.Name("f"), Quantifier::ABSENT, literal()),
+        }));
+    should_error(f.AggregationExpression(
+        literal(),
+        {
+            f.Index(),
+        },
+        {
+            f.AggregationExpressionColumn(f.Name("f"), Quantifier::ABSENT, literal()),
+        }));
+    should_error(f.AggregationExpression(
+        literal(),
+        {},
+        {}));
+    should_error(f.AggregationExpression(
+        literal(),
+        {},
+        {
+            f.AggregationExpressionColumn({}, Quantifier::ABSENT, literal()),
+        }));
+    should_error(f.AggregationExpression(
+        literal(),
+        {},
+        {
+            f.AggregationExpressionColumn(f.Name("f"), Quantifier::ABSENT, {}),
+        }));
+}
+
 TEST_F(SyntaxValidatorRelationTest, OrderExpression) {
     using Direction = model::expression::relation::OrderExpression::Direction;
     validate(f.OrderExpression(
