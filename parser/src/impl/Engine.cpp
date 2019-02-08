@@ -305,7 +305,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::QuerySpeci
         if (auto select = c->selectList(); is_defined(select)) {
             result = visit(select, std::move(result));
         }
-        if (auto q = c->setQuantifier()) {
+        if (auto q = c->setQuantifier(); is_defined(q)) {
             // FIXME: impl
             visit(q);
         }
@@ -316,8 +316,8 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::QuerySpeci
 
 void Engine::visit(Grammar::SetQuantifierContext *c) {
     check(c);
-    // FIXME impl
-    return;
+    // FIXME: impl
+    rule_error(c);
 }
 
 std::unique_ptr<model::expression::Expression> Engine::visit(
