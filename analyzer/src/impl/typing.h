@@ -49,8 +49,12 @@ inline bool is_integral(Type const* type) {
     return is_valid(type) && type->kind() == Type::Kind::INT;
 }
 
+inline bool is_floating_point(Type const* type) {
+    return is_valid(type) && type->kind() == Type::Kind::FLOAT;
+}
+
 inline bool is_numeric(Type const* type) {
-    return is_integral(type) || (is_valid(type) && type->kind() == Type::Kind::FLOAT);
+    return is_integral(type) || is_floating_point(type);
 }
 
 inline bool is_textual(Type const* type) {
@@ -80,7 +84,10 @@ inline bool is_order_comparable(common::core::Type const* a, common::core::Type 
     return is_equality_comparable(a, b);
 }
 
-inline bool is_assignment_convertible(Type const* variable, binding::ExpressionBinding const& expression) {
+inline bool is_assignment_convertible(
+        Type const* variable,
+        binding::ExpressionBinding const& expression,
+        bool force = false) {
     if (!expression.is_valid()) {
         return false;
     }
@@ -96,15 +103,20 @@ inline bool is_assignment_convertible(Type const* variable, binding::ExpressionB
             return true;
         }
         if (is_integral(variable)
-            && is_integral(expression.type())
-            && expression.value()->kind() == Value::Kind::INT) {
+                && is_integral(expression.type())
+                && expression.value()->kind() == Value::Kind::INT) {
             auto type = dynamic_pointer_cast<Int>(variable);
             auto value = dynamic_pointer_cast<common::core::value::Int>(expression.value());
             return type->min_value() <= value->get() && value->get() <= type->max_value();
         }
+        if (is_floating_point(variable) && is_floating_point(expression.type())) {
+            // FIXME: check exp bound
+            return true;
+        }
     }
     auto result = binary_promotion(variable, expression.type());
-    return is_valid(result) && equals(result, variable);
+    // FIXME: check conversion rule
+    return is_valid(result) && (force || equals(result, variable));
 }
 
 static inline std::unique_ptr<Type> nullity_binary_promotion(Type const* a, Type const* b) {

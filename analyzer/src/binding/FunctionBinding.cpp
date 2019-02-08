@@ -110,7 +110,8 @@ static bool eq_nullable(VariableBinding const& parameter, ExpressionBinding cons
 }
 
 static bool eq_assignable(VariableBinding const& parameter, ExpressionBinding const& argument) {
-    return impl::typing::is_assignment_convertible(parameter.type(), argument);
+    // FIXME: check conversion rule
+    return impl::typing::is_assignment_convertible(parameter.type(), argument, false);
 }
 
 std::shared_ptr<FunctionBinding>

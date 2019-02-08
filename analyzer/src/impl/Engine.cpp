@@ -89,7 +89,8 @@ void Engine::visit(model::program::GlobalVariableDeclaration* node, ScopeContext
     } else {
         auto type = typing::convert(node->type());
         if (is_valid(expr)) {
-            if (!typing::is_assignment_convertible(type.get(), *expr)) {
+            // FIXME: check conversion rule
+            if (!typing::is_assignment_convertible(type.get(), *expr, false)) {
                 report(node, Diagnostic::Code::INVALID_VARIABLE_TYPE, to_string(
                         "type of variable \"", name, "\" is not compatible to its initializer, ",
                         "variable type: ", type.get(), ", ",
@@ -152,7 +153,8 @@ void Engine::visit(model::statement::LocalVariableDeclaration* node, ScopeContex
     } else {
         auto type = typing::convert(node->type());
         if (is_valid(expr)) {
-            if (!typing::is_assignment_convertible(type.get(), *expr)) {
+            // FIXME: check conversion rule
+            if (!typing::is_assignment_convertible(type.get(), *expr, false)) {
                 report(node, Diagnostic::Code::INVALID_VARIABLE_TYPE, to_string(
                         "type of variable \"", name, "\" is not compatible to its initializer, ",
                         "variable type: ", *type, ", ",
@@ -522,7 +524,8 @@ void Engine::visit(model::expression::FunctionCall* node, ScopeContext& scope) {
     for (std::size_t i = 0, n = func->parameters().size(); i < n; ++i) {
         auto&& param = func->parameters()[i];
         auto expr = arguments[i];
-        if (!typing::is_assignment_convertible(param->type(), *expr)) {
+        // FIXME: check conversion rule
+        if (!typing::is_assignment_convertible(param->type(), *expr, false)) {
             report(node, Diagnostic::Code::INCOMPATIBLE_FUNCTION_ARGUMENT_TYPE, to_string(
                 "function: ", func->name(), ", ",
                 "parameter at: ", i, ", ",
@@ -571,7 +574,8 @@ void Engine::visit(model::expression::AssignExpression* node, ScopeContext& scop
     }
 
     if (equals(r.name(), node->name())) {
-        if (!typing::is_assignment_convertible(var->type(), *expr)) {
+        // FIXME: check conversion rule
+        if (!typing::is_assignment_convertible(var->type(), *expr, false)) {
             report(node, Diagnostic::Code::INCOMPATIBLE_VARIABLE_TYPE, to_string(
                 "variable type: ", var->type(), ", ",
                 "expression type: ", expr->type()));
@@ -1498,7 +1502,8 @@ void Engine::visit(model::statement::dml::InsertValuesStatement* node, ScopeCont
         auto expr = extract_binding(column->value());
         std::shared_ptr<binding::VariableBinding> var;
         if (is_valid(expr)) {
-            if (!typing::is_assignment_convertible(info.type(), *expr)) {
+            // FIXME: check conversion rule
+            if (!typing::is_assignment_convertible(info.type(), *expr, true)) {
                 if (!is_defined(column->value()) && !is_defined(info.default_value())) {
                     report(node, Diagnostic::Code::MISSING_MANDATORY_COLUMN, to_string(
                         "mandatory column \"", column->name()->token(), "\" in table \"", table_info.name(), "\"",
@@ -1598,7 +1603,7 @@ void Engine::visit(model::statement::dml::UpdateStatement* node, ScopeContext& p
         assert(column_index.value() < table_info.columns().size());  // NOLINT
         auto column_info = table_info.columns()[column_index.value()];
         auto expr = extract_binding(c->value());
-        if (!typing::is_assignment_convertible(column_info.type(), *expr)) {
+        if (!typing::is_assignment_convertible(column_info.type(), *expr, true)) {
             report(c->value(), Diagnostic::Code::INCOMPATIBLE_EXPRESSION_TYPE, to_string(
                 "default value of column \"", column_info.name(), "\" is incompatible, ",
                 "value type: ", expr->type(), ", ",
@@ -1741,7 +1746,8 @@ void Engine::visit(model::statement::ddl::CreateTableStatement* node, ScopeConte
                     // MEMO: never use common::core::Placeholder in here,
                     //       use special expression and resolve it to the placeholder instead.
                     auto* literal = dynamic_pointer_cast<model::expression::Literal>(column->value());
-                    if (typing::is_assignment_convertible(type.get(), *default_expr)) {
+                    // FIXME: check conversion rule - currently we only recognize constant expressions
+                    if (typing::is_assignment_convertible(type.get(), *default_expr, false)) {
                         // fix literal type instead of casting
                         literal->type(make_clone(type));
                         default_expr->type(std::move(type));

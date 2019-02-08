@@ -245,6 +245,35 @@ TEST_F(AnalyzerDmlTest, insert_values_promote) {
     }
 }
 
+TEST_F(AnalyzerDmlTest, insert_values_promote_force) {
+    add(schema::TableInfo { "testing", {
+        { "C1", t::Int(32U, NON_NULL), },
+    }});
+    auto stmt = analyze(f.InsertValuesStatement(
+        f.Name("testing"),
+        {
+            f.InsertValuesStatementColumn(
+                f.SimpleName("C1"),
+                f.BinaryOperator(
+                    expression::BinaryOperator::Kind::ADD,
+                    literal(1, 32U),
+                    literal(2, 64U))),
+        }));
+    success();
+
+    auto& columns = stmt->columns();
+    ASSERT_EQ(1U, columns.size());
+    {
+        auto* c = columns[0];
+        EXPECT_TRUE(equals(f.SimpleName("C1"), c->name()));
+        EXPECT_EQ(t::Int(32U, NON_NULL), cast_type(c->value()));
+
+        auto var = extract_var(c);
+        EXPECT_EQ(var->name(), "C1");
+        EXPECT_EQ(*var->type(), t::Int(32U, NON_NULL));
+    }
+}
+
 TEST_F(AnalyzerDmlTest, insert_values_promote_fail) {
     add(schema::TableInfo { "testing", {
         { "C1", t::Int(64U, NON_NULL), },
