@@ -78,7 +78,7 @@ selectStatement
     ;
 
 querySpecification
-    : K_SELECT setQuantifier? selectList tableExpression
+    : K_SELECT setQuantifier? selectList tableExpression orderByClause?
     ;
 
 setQuantifier
@@ -180,6 +180,23 @@ booleanPrimary
 
 parenthesizedBooleanValueExpression
     : '(' booleanValueExpression ')'
+    ;
+
+orderByClause
+    : K_ORDER K_BY sortSpecificationList
+    ;
+
+sortSpecificationList
+    : sortSpecification (',' sortSpecification)*
+    ;
+
+sortSpecification
+    : expression orderingSpecification?
+    ;
+
+orderingSpecification
+    : K_ASC
+    | K_DESC
     ;
 
 // create table

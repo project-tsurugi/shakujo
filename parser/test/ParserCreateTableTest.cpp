@@ -33,14 +33,12 @@ using common::util::equals;
 class ParserCreateTableTest : public ParserTestBase, public ::testing::Test {
 public:
     std::unique_ptr<CreateTableStatement> parse(const std::string& text) {
-        return parse_program_main<CreateTableStatement>(text, "must be a select statement");
+        return parse_program_main<CreateTableStatement>(text);
     }
 
     template<typename T>
     typename T::type get(Expression const* expr) {
-        auto literal = dynamic_cast<Literal const*>(expr);
-        auto value = dynamic_cast<T const*>(literal->value());
-        return value->get();
+        return value_of<T>(expr);
     }
 };
 

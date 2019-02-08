@@ -141,13 +141,13 @@ std::unique_ptr<model::statement::Statement> Engine::visit(
     check(c);
     if (auto ctor = c->insertValuesConstructor(); is_defined(ctor)) {
         // INSERT INTO ... VALUES ...
-        std::vector<std::unique_ptr<model::name::SimpleName>> column_names;
+        ptr_vector<model::name::SimpleName> column_names;
         if (auto cs = c->insertColumnList(); is_defined(cs)) {
             column_names = visit(cs);
         }
         auto values = visit(ctor);
 
-        std::vector<std::unique_ptr<model::statement::dml::InsertValuesStatement::Column>> columns;
+        ptr_vector<model::statement::dml::InsertValuesStatement::Column> columns;
         columns.reserve(std::max(column_names.size(), values.size()));
         for (std::size_t i = 0, n = std::max(column_names.size(), values.size()); i < n; i++) {
             columns.emplace_back(f.InsertValuesStatementColumn());
@@ -163,9 +163,9 @@ std::unique_ptr<model::statement::Statement> Engine::visit(
     rule_error(c);
 }
 
-std::vector<std::unique_ptr<model::name::SimpleName>> Engine::visit(Grammar::InsertColumnListContext *c) {
+ptr_vector<model::name::SimpleName> Engine::visit(Grammar::InsertColumnListContext *c) {
     check(c);
-    std::vector<std::unique_ptr<model::name::SimpleName>> results;
+    ptr_vector<model::name::SimpleName> results;
     results.reserve(c->simpleName().size());
     for (auto* element : c->simpleName()) {
         auto e = visit(element);
@@ -174,7 +174,7 @@ std::vector<std::unique_ptr<model::name::SimpleName>> Engine::visit(Grammar::Ins
     return results;
 }
 
-std::vector<std::unique_ptr<model::expression::Expression>> Engine::visit(
+ptr_vector<model::expression::Expression> Engine::visit(
         Grammar::InsertValuesConstructorContext *c) {
     check(c);
     if (auto es = c->insertValuesExpressionList(); is_defined(es)) {
@@ -184,11 +184,11 @@ std::vector<std::unique_ptr<model::expression::Expression>> Engine::visit(
     rule_error(c);
 }
 
-std::vector<std::unique_ptr<model::expression::Expression>> Engine::visit(
+ptr_vector<model::expression::Expression> Engine::visit(
         Grammar::InsertValuesExpressionListContext *c) {
     check(c);
     if (!c->insertValuesExpression().empty()) {
-        std::vector<std::unique_ptr<model::expression::Expression>> results;
+        ptr_vector<model::expression::Expression> results;
         results.reserve(c->insertValuesExpression().size());
         for (auto* element : c->insertValuesExpression()) {
             auto e = visit(element);
@@ -232,11 +232,11 @@ std::unique_ptr<model::name::Name> Engine::visit(Grammar::TargetTableContext *c)
     rule_error(c);
 }
 
-std::vector<std::unique_ptr<model::statement::dml::UpdateStatement::Column>> Engine::visit(
+ptr_vector<model::statement::dml::UpdateStatement::Column> Engine::visit(
         Grammar::SetClauseListContext *c) {
     check(c);
     if (auto&& cs = c->setClause(); !cs.empty()) {
-        std::vector<std::unique_ptr<model::statement::dml::UpdateStatement::Column>> results;
+        ptr_vector<model::statement::dml::UpdateStatement::Column> results;
         results.reserve(c->setClause().size());
         for (auto&& c : cs) {
             auto column = visit(c);
@@ -302,6 +302,10 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::QuerySpeci
     check(c);
     if (auto table = c->tableExpression(); is_defined(table)) {
         auto result = visit(table);
+        // FIXME: check lexical scope of order-by clause
+        if (auto o = c->orderByClause(); is_defined(o)) {
+            result = visit(o, std::move(result));
+        }
         if (auto select = c->selectList(); is_defined(select)) {
             result = visit(select, std::move(result));
         }
@@ -328,7 +332,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(
         return source;
     }
     if (auto list = c->selectSublist(); !list.empty()) {
-        std::vector<std::unique_ptr<model::expression::relation::ProjectionExpression::Column>> columns;
+        ptr_vector<model::expression::relation::ProjectionExpression::Column> columns;
         columns.reserve(list.size());
         for (auto* e : list) {
             auto sublist = visit(e);
@@ -341,12 +345,12 @@ std::unique_ptr<model::expression::Expression> Engine::visit(
     rule_error(c);
 }
 
-std::vector<std::unique_ptr<model::expression::relation::ProjectionExpression::Column>> Engine::visit(
+ptr_vector<model::expression::relation::ProjectionExpression::Column> Engine::visit(
         Grammar::SelectSublistContext *c) {
     check(c);
     if (auto e = c->derivedColumn(); is_defined(e)) {
         auto column = visit(e);
-        std::vector<std::unique_ptr<model::expression::relation::ProjectionExpression::Column>> result;
+        ptr_vector<model::expression::relation::ProjectionExpression::Column> result;
         result.reserve(1);
         result.emplace_back(std::move(column));
         return result;
@@ -375,6 +379,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::TableExpre
         if (auto where = c->whereClause(); is_defined(where)) {
             result = visit(where, std::move(result));
         }
+
         return result;
     }
     rule_error(c);
@@ -664,6 +669,59 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::Parenthesi
     rule_error(c);
 }
 
+std::unique_ptr<model::expression::Expression> Engine::visit(
+        Grammar::OrderByClauseContext *c,
+        std::unique_ptr<model::expression::Expression> source) {
+    check(c);
+    if (auto l = c->sortSpecificationList(); is_defined(l)) {
+        auto elements = visit(l);
+        return f.OrderExpression(std::move(source), std::move(elements)) << region(c);
+    }
+    rule_error(c);
+}
+
+ptr_vector<shakujo::model::expression::relation::OrderExpression::Element> Engine::visit(
+        Grammar::SortSpecificationListContext *c) {
+    check(c);
+    if (auto&& list = c->sortSpecification(); !list.empty()) {
+        ptr_vector<shakujo::model::expression::relation::OrderExpression::Element> results;
+        results.reserve(list.size());
+        for (auto* s : list) {
+            auto element = visit(s);
+            results.emplace_back(std::move(element));
+        }
+        return results;
+    }
+    rule_error(c);
+}
+
+std::unique_ptr<model::expression::relation::OrderExpression::Element> Engine::visit(
+        Grammar::SortSpecificationContext *c) {
+    using Direction = model::expression::relation::OrderExpression::Direction;
+    check(c);
+    if (auto e = c->expression(); is_defined(e)) {
+        auto key = visit(e);
+        Direction direction = Direction::ASCENDANT;
+        if (auto o = c->orderingSpecification(); is_defined(o)) {
+            direction = visit(o);
+        }
+        return f.OrderExpressionElement(std::move(key), direction);
+    }
+    rule_error(c);
+}
+
+model::expression::relation::OrderExpression::Direction Engine::visit(Grammar::OrderingSpecificationContext *c) {
+    using Direction = model::expression::relation::OrderExpression::Direction;
+    check(c);
+    if (is_defined(c->K_ASC())) {
+        return Direction::ASCENDANT;
+    }
+    if (is_defined(c->K_DESC())) {
+        return Direction::DESCENDANT;
+    }
+    rule_error(c);
+}
+
 std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::CreateTableStatementContext *c) {
     check(c);
     if (auto s = c->tableDefinition(); is_defined(s)) {
@@ -743,11 +801,10 @@ void Engine::visit(Grammar::ColumnDefinitionContext *c, model::statement::ddl::C
     rule_error(c);
 }
 
-std::vector<std::unique_ptr<model::statement::ddl::CreateTableStatement::PrimaryKey>> Engine::visit(
-        Grammar::ColumnOrderListContext *c) {
+ptr_vector<model::statement::ddl::CreateTableStatement::PrimaryKey> Engine::visit(Grammar::ColumnOrderListContext *c) {
     check(c);
     if (!c->columnOrder().empty()) {
-        std::vector<std::unique_ptr<model::statement::ddl::CreateTableStatement::PrimaryKey>> results;
+        ptr_vector<model::statement::ddl::CreateTableStatement::PrimaryKey> results;
         results.reserve(c->columnOrder().size());
         for (auto* e : c->columnOrder()) {
             results.emplace_back(visit(e));
@@ -852,10 +909,10 @@ std::unique_ptr<model::statement::ExpressionStatement> Engine::visit(Grammar::Ex
     rule_error(c);
 }
 
-std::vector<std::unique_ptr<model::expression::Expression>> Engine::visit(Grammar::ExpressionListContext *c) {
+ptr_vector<model::expression::Expression> Engine::visit(Grammar::ExpressionListContext *c) {
     check(c);
     if (!c->expression().empty()) {
-        std::vector<std::unique_ptr<model::expression::Expression>> results;
+        ptr_vector<model::expression::Expression> results;
         results.reserve(c->expression().size());
         for (auto* element : c->expression()) {
             auto e = visit(element);

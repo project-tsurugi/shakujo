@@ -32,6 +32,9 @@ namespace shakujo::parser::impl {
 
 using Grammar = shakujo_lang::ShakujoParser;
 
+template<class E>
+using ptr_vector = std::vector<std::unique_ptr<E>>;
+
 class Engine {
 private:
     Grammar* parser_;
@@ -94,17 +97,17 @@ public:
     // insertColumnList
     //     : simpleName (',' simpleName)*
     //     ;
-    std::vector<std::unique_ptr<model::name::SimpleName>> visit(Grammar::InsertColumnListContext *);
+    ptr_vector<model::name::SimpleName> visit(Grammar::InsertColumnListContext *);
 
     // insertValuesConstructor
     //     : K_VALUES '(' insertValuesExpressionList ')'
     //     ;
-    std::vector<std::unique_ptr<model::expression::Expression>> visit(Grammar::InsertValuesConstructorContext *);
+    ptr_vector<model::expression::Expression> visit(Grammar::InsertValuesConstructorContext *);
 
     // insertValuesExpressionList
     //     : insertValuesExpression (',' insertValuesExpression)*
     //     ;
-    std::vector<std::unique_ptr<model::expression::Expression>> visit(Grammar::InsertValuesExpressionListContext *);
+    ptr_vector<model::expression::Expression> visit(Grammar::InsertValuesExpressionListContext *);
 
     // insertValuesExpression
     //     : expression
@@ -125,7 +128,7 @@ public:
     // setClauseList
     //     : setClause (',' setClause)*
     //     ;
-    std::vector<std::unique_ptr<model::statement::dml::UpdateStatement::Column>> visit(Grammar::SetClauseListContext *);
+    ptr_vector<model::statement::dml::UpdateStatement::Column> visit(Grammar::SetClauseListContext *);
 
     // setClause
     //     : updateTarget '=' updateSource
@@ -155,7 +158,7 @@ public:
     std::unique_ptr<model::statement::Statement> visit(Grammar::SelectStatementContext *);
 
     // querySpecification
-    //     : K_SELECT setQuantifier? selectList tableExpression
+    //     : K_SELECT setQuantifier? selectList tableExpression orderByClause?
     //     ;
     std::unique_ptr<model::expression::Expression> visit(Grammar::QuerySpecificationContext *);
 
@@ -177,7 +180,7 @@ public:
     // selectSublist
     //     : derivedColumn
     //     ;
-    std::vector<std::unique_ptr<model::expression::relation::ProjectionExpression::Column>> visit(
+    ptr_vector<model::expression::relation::ProjectionExpression::Column> visit(
             Grammar::SelectSublistContext *);
 
     // derivedColumn
@@ -186,7 +189,7 @@ public:
     std::unique_ptr<model::expression::relation::ProjectionExpression::Column> visit(Grammar::DerivedColumnContext *);
 
     // tableExpression
-    //     : fromClause whereClause? TODO: groupByClause TODO: havingClause
+    //     : fromClause whereClause? (TODO: groupByClause) (TODO: havingClause)
     //     ;
     std::unique_ptr<model::expression::Expression> visit(Grammar::TableExpressionContext *);
 
@@ -287,6 +290,29 @@ public:
     //     ;
     std::unique_ptr<model::expression::Expression> visit(Grammar::ParenthesizedBooleanValueExpressionContext *);
 
+    // orderByClause
+    //     : K_ORDER K_BY sortSpecificationList
+    //     ;
+    std::unique_ptr<model::expression::Expression> visit(
+            Grammar::OrderByClauseContext *,
+            std::unique_ptr<model::expression::Expression>);
+
+    // sortSpecificationList
+    //     : sortSpecification (',' sortSpecification)*
+    //     ;
+    ptr_vector<model::expression::relation::OrderExpression::Element> visit(Grammar::SortSpecificationListContext *);
+
+    // sortSpecification
+    //     : expression orderingSpecification?
+    //     ;
+    std::unique_ptr<model::expression::relation::OrderExpression::Element> visit(Grammar::SortSpecificationContext *);
+
+    // orderingSpecification
+    //     : K_ASC
+    //     | K_DESC
+    //     ;
+    model::expression::relation::OrderExpression::Direction visit(Grammar::OrderingSpecificationContext *);
+
     // -- CREATE TABLE
     // createTableStatement
     //     : tableDefinition
@@ -349,7 +375,7 @@ public:
     // columnOrderList
     //     : columnOrder ( ',' columnOrder )*
     //     ;
-    std::vector<std::unique_ptr<model::statement::ddl::CreateTableStatement::PrimaryKey>> visit(
+    ptr_vector<model::statement::ddl::CreateTableStatement::PrimaryKey> visit(
             Grammar::ColumnOrderListContext *);
 
     // columnOrder
@@ -374,7 +400,7 @@ public:
     // expressionList
     //     : expression (',' expression)* ','?
     //     ;
-    std::vector<std::unique_ptr<model::expression::Expression>> visit(Grammar::ExpressionListContext *);
+    ptr_vector<model::expression::Expression> visit(Grammar::ExpressionListContext *);
 
     // expression
     //     : assignExpression

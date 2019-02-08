@@ -36,14 +36,7 @@ class ParserUpdateTest : public ParserTestBase, public ::testing::Test {
 public:
     std::unique_ptr<UpdateStatement> parse(std::string_view text) {
         std::string s { text };
-        return parse_program_main<UpdateStatement>(s, "must be a select statement");
-    }
-
-    template<class T>
-    typename T::type value_of(Expression const* node) {
-        auto* literal = dynamic_pointer_cast<Literal>(node);
-        auto* value = dynamic_pointer_cast<T>(literal->value());
-        return value->get();
+        return parse_program_main<UpdateStatement>(s);
     }
 };
 
@@ -60,7 +53,7 @@ TEST_F(ParserUpdateTest, simple) {
         EXPECT_EQ(value_of<v::Int>(c->value()), 1);
     }
 
-    auto* source = cast_node(stmt->source()).to<ScanExpression>();
+    auto* source = dynamic_pointer_cast<ScanExpression>(stmt->source());
     EXPECT_TRUE(equals(stmt->table(), source->table()));
 }
 
@@ -87,7 +80,7 @@ TEST_F(ParserUpdateTest, multiple_set) {
         EXPECT_EQ(value_of<v::Int>(c->value()), 3);
     }
 
-    auto* source = cast_node(stmt->source()).to<ScanExpression>();
+    auto* source = dynamic_pointer_cast<ScanExpression>(stmt->source());
     EXPECT_TRUE(equals(stmt->table(), source->table()));
 }
 
@@ -104,11 +97,11 @@ TEST_F(ParserUpdateTest, conditional) {
         EXPECT_EQ(value_of<v::Int>(c->value()), 1);
     }
 
-    auto* source = cast_node(stmt->source()).to<SelectionExpression>();
-    auto* condition = cast_node(source->condition()).to<Literal>();
+    auto* source = dynamic_pointer_cast<SelectionExpression>(stmt->source());
+    auto* condition = dynamic_pointer_cast<Literal>(source->condition());
     EXPECT_EQ(v::Int(1), *condition->value());
 
-    auto* scan = cast_node(source->operand()).to<ScanExpression>();
+    auto* scan = dynamic_pointer_cast<ScanExpression>(source->operand());
     EXPECT_TRUE(equals(stmt->table(), scan->table()));
 }
 }  // namespace shakujo::parser

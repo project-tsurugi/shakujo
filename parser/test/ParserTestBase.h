@@ -32,80 +32,40 @@ namespace shakujo::parser {
 
 auto NON_NULL = shakujo::common::core::Type::Nullity::NEVER_NULL;
 
+using common::util::dynamic_pointer_cast;
+
 class ParserTestBase {
 public:
     parser::Parser parser;
     model::IRFactory f;
 
     template<typename T>
-    std::unique_ptr<T> parse_program_main(std::string const& text, std::string_view message = "invalid main statement") {
+    std::unique_ptr<T> parse_program_main(std::string const& text) {
         auto program = parser.parse_program("<testing>", text);
-        auto result = cast_ptr(program->release_main(), message).to<T>();
+        auto result = dynamic_pointer_cast<T>(program->release_main());
         return result;
     }
 
     template<typename T>
-    std::unique_ptr<T> parse_expression(std::string const& text, std::string_view message = "invalid expression type") {
+    std::unique_ptr<T> parse_expression(std::string const& text) {
         auto node = parser.parse_expression("<testing>", text);
-        auto result = cast_ptr(std::move(node), message).to<T>();
+        auto result = dynamic_pointer_cast<T>(std::move(node));
         return result;
     }
 
-    template<typename T>
-    struct RawCaster {
-        T* v;
-        std::function<void(T*)> thrower;
+    template<class T>
+    typename T::type value_of(model::expression::Expression const* node) const {
+        using common::util::dynamic_pointer_cast;
+        auto literal = dynamic_pointer_cast<model::expression::Literal>(node);
+        auto value = dynamic_pointer_cast<T>(literal->value());
+        return value->get();
+    }
 
-        template<typename U>
-        U* to() {
-            if (auto u = dynamic_cast<U*>(v)) {
-                return u;
-            }
-            thrower(v);
-            throw std::bad_cast();
-        }
-    };
-
-    template<typename T>
-    struct PtrCaster {
-        std::unique_ptr<T> ptr;
-        std::function<void(std::unique_ptr<T>)> thrower;
-
-        template<typename U>
-        std::unique_ptr<U> to() {
-            auto raw = dynamic_cast<U*>(ptr.get());
-            if (!raw) {
-                thrower(std::move(ptr));
-                throw std::bad_cast();
-            }
-            std::unique_ptr<U> result { raw };
-            ptr.release();
-            return result;
-        }
-    };
-
-    template<typename T>
-    RawCaster<T> cast_node(T* node, std::string_view message = "cast failure") {
-        std::string msg { message };
-        return RawCaster<T> { node, [=](auto node) { raise(msg, *node); }};
-    };
-
-    template<typename T>
-    PtrCaster<T> cast_ptr(std::unique_ptr<T> ptr, std::string_view message = "cast failure") {
-        std::string msg { message };
-        return PtrCaster<T> { std::move(ptr), [=](auto ptr) { raise(msg, *ptr); }};
-    };
-
-    template<typename T>
-    [[noreturn]] void raise(std::string_view message, const T& node) {
-        std::ostringstream ss;
-        ss << message << ": ";
-        shakujo::common::util::JsonSerializer json { ss };
-        shakujo::model::util::NodeSerializer serializer {};
-        serializer.show_undefined_value(true);
-
-        serializer.serialize(json, &node);
-        throw std::logic_error(ss.str());
+    std::string name_of(model::expression::Expression const* node) const {
+        using common::util::dynamic_pointer_cast;
+        auto ref = dynamic_pointer_cast<model::expression::VariableReference>(node);
+        auto name = dynamic_pointer_cast<model::name::SimpleName>(ref->name());
+        return name->token();
     }
 
     template<typename T>

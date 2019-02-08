@@ -35,7 +35,7 @@ class ParserInsertTest : public ParserTestBase, public ::testing::Test {
 public:
     std::unique_ptr<InsertValuesStatement> parse_insert_values(std::string_view text) {
         std::string s { text };
-        return parse_program_main<InsertValuesStatement>(s, "must be a select statement");
+        return parse_program_main<InsertValuesStatement>(s);
     }
 };
 
@@ -49,7 +49,7 @@ TEST_F(ParserInsertTest, insert_values_simple) {
     {
         auto c = cols[0];
         EXPECT_FALSE(c->name());
-        EXPECT_EQ(v::Int(1), *cast_node(c->value()).to<Literal>()->value());
+        EXPECT_EQ(1, value_of<v::Int>(c->value()));
     }
 }
 
@@ -61,17 +61,17 @@ TEST_F(ParserInsertTest, insert_values_multiple_values) {
     {
         auto c = cols[0];
         EXPECT_FALSE(c->name());
-        EXPECT_EQ(v::Int(1), *cast_node(c->value()).to<Literal>()->value());
+        EXPECT_EQ(1, value_of<v::Int>(c->value()));
     }
     {
         auto c = cols[1];
         EXPECT_FALSE(c->name());
-        EXPECT_EQ(v::Int(2), *cast_node(c->value()).to<Literal>()->value());
+        EXPECT_EQ(2, value_of<v::Int>(c->value()));
     }
     {
         auto c = cols[2];
         EXPECT_FALSE(c->name());
-        EXPECT_EQ(v::Int(3), *cast_node(c->value()).to<Literal>()->value());
+        EXPECT_EQ(3, value_of<v::Int>(c->value()));
     }
 }
 
@@ -83,7 +83,7 @@ TEST_F(ParserInsertTest, insert_values_columns) {
     {
         auto c = cols[0];
         EXPECT_TRUE(equals(f.SimpleName("C1"), c->name()));
-        EXPECT_EQ(v::Int(1), *cast_node(c->value()).to<Literal>()->value());
+        EXPECT_EQ(1, value_of<v::Int>(c->value()));
     }
 }
 
@@ -95,17 +95,17 @@ TEST_F(ParserInsertTest, insert_values_multiple_columns) {
     {
         auto c = cols[0];
         EXPECT_TRUE(equals(f.SimpleName("C1"), c->name()));
-        EXPECT_EQ(v::Int(1), *cast_node(c->value()).to<Literal>()->value());
+        EXPECT_EQ(1, value_of<v::Int>(c->value()));
     }
     {
         auto c = cols[1];
         EXPECT_TRUE(equals(f.SimpleName("C2"), c->name()));
-        EXPECT_EQ(v::Int(2), *cast_node(c->value()).to<Literal>()->value());
+        EXPECT_EQ(2, value_of<v::Int>(c->value()));
     }
     {
         auto c = cols[2];
         EXPECT_TRUE(equals(f.SimpleName("C3"), c->name()));
-        EXPECT_EQ(v::Int(3), *cast_node(c->value()).to<Literal>()->value());
+        EXPECT_EQ(3, value_of<v::Int>(c->value()));
     }
 }
 }  // namespace shakujo::parser

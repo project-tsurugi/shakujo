@@ -35,7 +35,7 @@ class ParserDeleteTest : public ParserTestBase, public ::testing::Test {
 public:
     std::unique_ptr<DeleteStatement> parse(std::string_view text) {
         std::string s { text };
-        return parse_program_main<DeleteStatement>(s, "must be a select statement");
+        return parse_program_main<DeleteStatement>(s);
     }
 };
 
@@ -44,7 +44,7 @@ TEST_F(ParserDeleteTest, simple) {
 
     EXPECT_TRUE(equals(f.Name("TBL"), stmt->table()));
 
-    auto* source = cast_node(stmt->source()).to<ScanExpression>();
+    auto* source = dynamic_pointer_cast<ScanExpression>(stmt->source());
     EXPECT_TRUE(equals(stmt->table(), source->table()));
 }
 
@@ -53,11 +53,10 @@ TEST_F(ParserDeleteTest, conditional) {
 
     EXPECT_TRUE(equals(f.Name("TBL"), stmt->table()));
 
-    auto* source = cast_node(stmt->source()).to<SelectionExpression>();
-    auto* condition = cast_node(source->condition()).to<Literal>();
-    EXPECT_EQ(v::Int(1), *condition->value());
+    auto* source = dynamic_pointer_cast<SelectionExpression>(stmt->source());
+    EXPECT_EQ(1, value_of<v::Int>(source->condition()));
 
-    auto* scan = cast_node(source->operand()).to<ScanExpression>();
+    auto* scan = dynamic_pointer_cast<ScanExpression>(source->operand());
     EXPECT_TRUE(equals(stmt->table(), scan->table()));
 }
 }  // namespace shakujo::parser

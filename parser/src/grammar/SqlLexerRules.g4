@@ -3,7 +3,11 @@ import CaseInsensitiveLexerRules;
 
 K_SELECT: S E L E C T;
 K_FROM: F R O M;
+
 K_WHERE: W H E R E;
+
+K_ORDER: O R D E R;
+K_BY: B Y;
 
 K_INSERT: I N S E R T;
 K_VALUES: V A L U E S;

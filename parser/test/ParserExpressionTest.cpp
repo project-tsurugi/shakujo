@@ -30,14 +30,10 @@ using common::util::dynamic_pointer_cast;
 class ParserExpressionTest : public ParserTestBase, public ::testing::Test {
 public:
     int as_int(Expression const* expr) {
-        auto literal = dynamic_pointer_cast<Literal>(expr);
-        auto value = dynamic_pointer_cast<v::Int>(literal->value());
-        return static_cast<int>(value->get());
+        return value_of<v::Int>(expr);
     }
     std::string as_string(Expression const* expr) {
-        auto literal = dynamic_pointer_cast<Literal>(expr);
-        auto value = dynamic_pointer_cast<v::String>(literal->value());
-        return value->get();
+        return value_of<v::String>(expr);
     }
 };
 
