@@ -43,6 +43,11 @@ static const common::core::Type::Nullity NULLABLE = common::core::Type::Nullity:
 static const common::core::Type::Nullity NON_NULL = common::core::Type::Nullity::NEVER_NULL;
 static const common::core::type::Error ERROR_TYPE;
 
+using common::util::dynamic_pointer_cast;
+using common::util::is_defined;
+using common::util::is_valid;
+using common::util::make_clone;
+
 class AnalyzerTestBase {
 public:
     shakujo::model::IRFactory f;
@@ -82,32 +87,50 @@ public:
 
     std::shared_ptr<binding::ExpressionBinding> extract(model::key::ExpressionKey::Provider* provider, bool force = false) {
         auto ptr = env.binding_context().get(provider->expression_key());
-        if (!ptr || (!force && !ptr->is_valid())) {
+        if (!is_defined(ptr)) {
             throw std::runtime_error("yet not resolved");
+        }
+        if (!force && !is_valid(ptr)) {
+            throw std::runtime_error("not valid");
         }
         return ptr;
     }
 
-    std::shared_ptr<binding::VariableBinding> extract_var(model::key::VariableKey::Provider* provider, bool force = false) {
+    template<class T>
+    std::shared_ptr<binding::VariableBinding> extract_var(T* node, bool force = false) {
+        auto provider = dynamic_pointer_cast<model::key::VariableKey::Provider>(node);
         auto ptr = env.binding_context().get(provider->variable_key());
-        if (!ptr || (!force && !ptr->is_valid())) {
+        if (!is_defined(ptr)) {
             throw std::runtime_error("yet not resolved");
+        }
+        if (!force && !is_valid(ptr)) {
+            throw std::runtime_error("not valid");
         }
         return ptr;
     }
 
-    std::shared_ptr<binding::FunctionBinding> extract_func(model::key::FunctionKey::Provider* provider, bool force = false) {
+    template<class T>
+    std::shared_ptr<binding::FunctionBinding> extract_func(T* node, bool force = false) {
+        auto provider = dynamic_pointer_cast<model::key::FunctionKey::Provider>(node);
         auto ptr = env.binding_context().get(provider->function_key());
-        if (!ptr || (!force && !ptr->is_valid())) {
+        if (!is_defined(ptr)) {
             throw std::runtime_error("yet not resolved");
+        }
+        if (!force && !is_valid(ptr)) {
+            throw std::runtime_error("not valid");
         }
         return ptr;
     }
 
-    std::shared_ptr<binding::RelationBinding> extract_relation(model::key::RelationKey::Provider* provider, bool force = false) {
+    template<class T>
+    std::shared_ptr<binding::RelationBinding> extract_relation(T* node, bool force = false) {
+        auto provider = dynamic_pointer_cast<model::key::RelationKey::Provider>(node);
         auto ptr = env.binding_context().get(provider->relation_key());
-        if (!ptr || (!force && !ptr->is_valid())) {
+        if (!is_defined(ptr)) {
             throw std::runtime_error("yet not resolved");
+        }
+        if (!force && !is_valid(ptr)) {
+            throw std::runtime_error("not valid");
         }
         return ptr;
     }
@@ -172,7 +195,7 @@ public:
         return std::make_shared<binding::VariableBinding>(
             env.binding_context().next_variable_id(),
             common::core::Name(name),
-            common::util::make_clone(std::move(type)));
+            make_clone(std::move(type)));
     }
 
     std::string diagnostics() {

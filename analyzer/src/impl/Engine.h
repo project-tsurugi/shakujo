@@ -126,6 +126,7 @@ protected:
     void visit(model::expression::relation::SelectionExpression*, ScopeContext&) override;
     void visit(model::expression::relation::ProjectionExpression*, ScopeContext&) override;
     void visit(model::expression::relation::JoinExpression*, ScopeContext&) override;
+    void visit(model::expression::relation::OrderExpression*, ScopeContext&) override;
 
     void visit(model::statement::dml::InsertValuesStatement*, ScopeContext&) override;
     void visit(model::statement::dml::UpdateStatement*, ScopeContext&) override;
@@ -146,9 +147,20 @@ private:
         return extract(node->expression_key());
     }
 
+    std::shared_ptr<binding::VariableBinding> extract_binding(model::key::VariableKey::Provider const* node) {
+        return extract(node->variable_key());
+    }
+
     std::shared_ptr<binding::RelationBinding> extract_relation(model::expression::Expression const* node) {
         auto* provider = common::util::dynamic_pointer_cast<model::key::RelationKey::Provider>(node);
         return extract(provider->relation_key());
+    }
+
+    std::shared_ptr<binding::VariableBinding> find_variable(model::expression::Expression const* node) {
+        if (auto* ref = dynamic_cast<model::expression::VariableReference const*>(node)) {
+            return bindings().find(ref->variable_key());
+        }
+        return {};
     }
 
     void insert_cast(model::expression::Expression*, common::core::Type const*);

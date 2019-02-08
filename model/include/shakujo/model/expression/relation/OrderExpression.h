@@ -27,6 +27,7 @@
 #include "shakujo/model/expression/ExpressionKind.h"
 #include "shakujo/model/key/ExpressionKey.h"
 #include "shakujo/model/key/RelationKey.h"
+#include "shakujo/model/key/VariableKey.h"
 #include "shakujo/model/util/FragmentList.h"
 
 namespace shakujo::model::expression::relation {
@@ -61,7 +62,8 @@ public:
     /**
      * @brief Represents sort order.
      */
-    class Element final {
+    class Element final
+            : public key::VariableKey::Provider {
     private:
         class Impl;
         std::unique_ptr<Impl> impl_;
@@ -76,7 +78,7 @@ public:
         /**
          * @brief Destroys this object.
          */
-        ~Element() noexcept;
+        ~Element() noexcept override;
 
         /**
          * @brief Copy-constructs a new object.
@@ -146,16 +148,37 @@ public:
         OrderExpression::Element& direction(OrderExpression::Direction direction);
 
         /**
-         * @brief Returns a copy of this object.
-         * @return a clone of this
+         * @brief Returns referring variable key.
+         * @return referring variable key.
          */
-        Element* clone() const &;
+        key::VariableKey* variable_key() override;
+
+        /**
+         * @brief Returns referring variable key.
+         * @return referring variable key.
+         */
+        inline key::VariableKey const* variable_key() const override {
+            return const_cast<OrderExpression::Element*>(this)->variable_key();
+        }
+
+        /**
+         * @brief Sets referring variable key.
+         * @param variable_key referring variable key
+         * @return this
+         */
+        OrderExpression::Element& variable_key(std::unique_ptr<key::VariableKey> variable_key) override;
 
         /**
          * @brief Returns a copy of this object.
          * @return a clone of this
          */
-        Element* clone() &&;
+        Element* clone() const & override;
+
+        /**
+         * @brief Returns a copy of this object.
+         * @return a clone of this
+         */
+        Element* clone() && override;
 
     };
 public:

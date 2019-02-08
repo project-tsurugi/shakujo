@@ -1373,6 +1373,11 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         serialize(printer, value->direction());
         printer.exit_property("direction");
     }
+    {
+        printer.enter_property("variable_key");
+        serialize(printer, value->variable_key());
+        printer.exit_property("variable_key");
+    }
     if (!show_fragment_kind()) {
         printer.exit_object({});
     } else if (show_qualified_kind()) {

@@ -728,7 +728,6 @@ TEST_F(AnalyzerRelationTest, join_qualified_column) {
     EXPECT_EQ(cols[1], extract_var(right));
 }
 
-
 TEST_F(AnalyzerRelationTest, aggregation) {
     using Quantifier = binding::FunctionBinding::Quantifier;
     auto fid = [&] { return env.binding_context().next_function_id(); };
@@ -803,15 +802,101 @@ TEST_F(AnalyzerRelationTest, aggregation) {
         auto f = extract_func(c);
         EXPECT_EQ(f, count_int32);
 
-        auto v = extract_var(dynamic_pointer_cast<expression::VariableReference>(c->operand()));
+        auto v = extract_var(c->operand());
         EXPECT_EQ(v, agg_in.columns()[0]);
     }
 
     ASSERT_EQ(expr->columns().size(), 1U);
     {
         auto c = expr->columns()[0];
-        auto v = extract_var(dynamic_pointer_cast<expression::VariableReference>(c->value()));
+        auto v = extract_var(c->value());
         EXPECT_EQ(v, proj_in.columns()[0]);
+    }
+}
+
+TEST_F(AnalyzerRelationTest, order) {
+    // using IDir = model::expression::relation::OrderExpression::Direction;
+    using BDir = binding::RelationBinding::Order::Direction;
+
+    add(schema::TableInfo { "testing", {
+        { "C1", t::Int(32U, NON_NULL), },
+        { "C2", t::Int(32U, NON_NULL), },
+        { "C3", t::Int(32U, NON_NULL), },
+    }});
+    auto expr = analyze(f.OrderExpression(
+        f.ScanExpression(f.Name("testing")),
+        {
+            f.OrderExpressionElement(var("C2")),
+        }));
+    success();
+
+    auto relation = extract_relation(expr.get());
+    auto& cols = relation->process().columns();
+    ASSERT_EQ(3U, cols.size());
+
+    ASSERT_EQ(expr->elements().size(), 1);
+    {
+        auto* c = expr->elements()[0];
+        auto var = extract_var(c);
+        EXPECT_EQ(var, cols[1]);
+    }
+
+    auto&& order = relation->output().order();
+    ASSERT_EQ(1U, order.size());
+    {
+        auto&& c = order[0];
+        EXPECT_EQ(c.column(), cols[1]);
+        EXPECT_EQ(c.direction(), BDir::ASCENDANT);
+    }
+}
+
+TEST_F(AnalyzerRelationTest, order_complex) {
+    using IDir = model::expression::relation::OrderExpression::Direction;
+    using BDir = binding::RelationBinding::Order::Direction;
+
+    add(schema::TableInfo { "testing", {
+        { "C1", t::Int(32U, NON_NULL), },
+        { "C2", t::Int(32U, NON_NULL), },
+        { "C3", t::Int(32U, NON_NULL), },
+    }});
+    auto expr = analyze(f.OrderExpression(
+        f.ScanExpression(f.Name("testing")),
+        {
+            f.OrderExpressionElement(var("C1"), IDir::DESCENDANT),
+            f.OrderExpressionElement(literal(100)),
+            f.OrderExpressionElement(f.UnaryOperator(expression::UnaryOperator::Kind::SIGN_INVERSION, var("C3"))),
+        }));
+    success();
+
+    auto relation = extract_relation(expr.get());
+    auto& cols = relation->process().columns();
+    ASSERT_EQ(3U, cols.size());
+
+    ASSERT_EQ(expr->elements().size(), 3);
+    {
+        auto* c = expr->elements()[0];
+        auto var = extract_var(c);
+        EXPECT_EQ(var, cols[0]);
+    }
+    {
+        auto* c = expr->elements()[1];
+        auto var = extract_var(c);
+        EXPECT_EQ(*var->value(), v::Int(100));
+        EXPECT_FALSE(relation->process().index_of(*var).has_value());
+    }
+    {
+        auto* c = expr->elements()[2];
+        auto var = extract_var(c);
+        EXPECT_FALSE(var->value());
+        EXPECT_FALSE(relation->process().index_of(*var).has_value());
+    }
+
+    auto&& order = relation->output().order();
+    ASSERT_EQ(1U, order.size());
+    {
+        auto&& c = order[0];
+        EXPECT_EQ(c.column(), cols[0]);
+        EXPECT_EQ(c.direction(), BDir::DESCENDANT);
     }
 }
 

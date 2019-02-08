@@ -1377,6 +1377,91 @@ void Engine::visit(model::expression::relation::JoinExpression* node, ScopeConte
     bless(node, std::move(result_type));
 }
 
+void Engine::visit(model::expression::relation::OrderExpression* node, ScopeContext& prev) {
+    dispatch(node->operand(), prev);
+    auto source_expr = extract_binding(node->operand());
+    if (!is_valid(source_expr)) {
+        bless_undefined<binding::ExpressionBinding>(node);
+        bless_undefined<binding::RelationBinding>(node);
+        bless_undefined_each<binding::VariableBinding>(node->elements());
+        return;
+    }
+    if (!require_relation(node->operand())) {
+        bless_erroneous_expression(node);
+        bless_undefined<binding::RelationBinding>(node);
+        bless_undefined_each<binding::VariableBinding>(node->elements());
+        return;
+    }
+    auto source_relation = extract_relation(node->operand());
+    if (!source_relation->output().is_valid()) {
+        bless_undefined<binding::ExpressionBinding>(node);
+        bless_undefined<binding::RelationBinding>(node);
+        bless_undefined_each<binding::VariableBinding>(node->elements());
+        return;
+    }
+
+    auto relation = dynamic_pointer_cast<common::core::type::Relation>(source_expr->type());
+    RelationScope relation_scope { bindings(), &prev.variables(), relation, source_relation->output().columns() };
+    ScopeContext scope { relation_scope, prev.functions() };
+
+    bool saw_error = false;
+    for (auto* element : node->elements()) {
+        dispatch(element->key(), scope);
+        auto expr = extract_binding(element->key());
+        if (!is_valid(expr)) {
+            bless_undefined<binding::VariableBinding>(element);
+            saw_error = true;
+        } else {
+            if (auto inherited = find_variable(element->key()); is_valid(inherited)) {
+                bless(element, inherited);
+            } else {
+                auto id = bindings().next_variable_id();
+                auto name = to_string('#', id.get());
+                bless(element, std::make_shared<binding::VariableBinding>(
+                    std::move(id),
+                    common::core::Name {},
+                    make_clone(expr->type()),
+                    make_clone(expr->value())));
+            }
+        }
+    }
+    if (saw_error) {
+        bless_undefined<binding::ExpressionBinding>(node);
+        bless_undefined<binding::RelationBinding>(node);
+        return;
+    }
+
+    bless(node, make_clone(relation));
+
+    // copy for this output
+    auto output = source_relation->output();
+    output.order().clear();
+    for (auto* element : node->elements()) {
+        auto expr = extract(element->key()->expression_key());
+        auto var = extract(element->variable_key());
+
+        // just a column reference
+        if (source_relation->output().index_of(*var).has_value()) {
+            output.order().emplace_back(
+                std::move(var),
+                element->direction() == model::expression::relation::OrderExpression::Direction::ASCENDANT
+                    ? common::core::Direction::ASCENDANT
+                    : common::core::Direction::DESCENDANT);
+            continue;
+        }
+
+        // skip constant values
+        if (expr->constant()) {
+            continue;
+        }
+
+        // no more sort info
+        break;
+    }
+
+    bless(node, std::make_shared<binding::RelationBinding>(source_relation->output(), std::move(output)));
+}
+
 void Engine::visit(model::statement::dml::EmitStatement* node, ScopeContext& scope) {
     dispatch(node->source(), scope);
     auto expr = extract_binding(node->source());

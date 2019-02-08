@@ -24,6 +24,7 @@ import com.ashigeru.lang.codegen.ir.reflect.MetaClass;
 import com.ashigeru.lang.codegen.ir.reflect.Opt;
 import com.ashigeru.lang.codegen.spec.sql.expression.Expression;
 import com.ashigeru.lang.codegen.spec.sql.key.RelationKey;
+import com.ashigeru.lang.codegen.spec.sql.key.VariableKey;
 
 @Description("sorting records in relations")
 @Extends(Expression.class)
@@ -38,6 +39,7 @@ public class OrderExpression extends MetaClass {
     Property<List<Element>> elements = property();
 
     @Description("sort order")
+    @Extends(VariableKey.Provider.class)
     public static class Element extends MetaClass {
 
         @Description("sort key")

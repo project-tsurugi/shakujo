@@ -23,6 +23,7 @@
 #include "shakujo/model/expression/Expression.h"
 #include "shakujo/model/key/ExpressionKey.h"
 #include "shakujo/model/key/RelationKey.h"
+#include "shakujo/model/key/VariableKey.h"
 #include "shakujo/model/util/FragmentList.h"
 
 namespace shakujo::model::expression::relation {
@@ -58,6 +59,7 @@ class OrderExpression::Element::Impl {
 public:
     common::util::ManagedPtr<Expression> key_;
     OrderExpression::Direction direction_ { OrderExpression::Direction::ASCENDANT };
+    std::unique_ptr<key::VariableKey> variable_key_;
 
     Impl() = default;
     ~Impl() noexcept = default;
@@ -156,6 +158,15 @@ OrderExpression::Direction OrderExpression::Element::direction() const {
 
 OrderExpression::Element& OrderExpression::Element::direction(OrderExpression::Direction direction) {
     impl_->direction_ = direction;
+    return *this;
+}
+
+key::VariableKey* OrderExpression::Element::variable_key() {
+    return impl_->variable_key_.get();
+}
+
+OrderExpression::Element& OrderExpression::Element::variable_key(std::unique_ptr<key::VariableKey> variable_key) {
+    impl_->variable_key_ = std::move(variable_key);
     return *this;
 }
 
