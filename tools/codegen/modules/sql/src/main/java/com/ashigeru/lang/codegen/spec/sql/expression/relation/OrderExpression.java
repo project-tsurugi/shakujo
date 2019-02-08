@@ -21,6 +21,7 @@ import com.ashigeru.lang.codegen.ir.reflect.Default;
 import com.ashigeru.lang.codegen.ir.reflect.Description;
 import com.ashigeru.lang.codegen.ir.reflect.Extends;
 import com.ashigeru.lang.codegen.ir.reflect.MetaClass;
+import com.ashigeru.lang.codegen.ir.reflect.Opt;
 import com.ashigeru.lang.codegen.spec.sql.expression.Expression;
 import com.ashigeru.lang.codegen.spec.sql.key.RelationKey;
 
@@ -43,6 +44,7 @@ public class OrderExpression extends MetaClass {
         Property<Expression> key = property();
 
         @Description("sort direction")
+        @Opt
         Property<Direction> direction = property();
     }
 

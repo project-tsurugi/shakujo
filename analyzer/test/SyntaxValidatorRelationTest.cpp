@@ -122,4 +122,38 @@ TEST_F(SyntaxValidatorRelationTest, SelectionExpression) {
     should_error(f.SelectionExpression({}, literal()));
     should_error(f.SelectionExpression(literal(), {}));
 }
+
+TEST_F(SyntaxValidatorRelationTest, OrderExpression) {
+    using Direction = model::expression::relation::OrderExpression::Direction;
+    validate(f.OrderExpression(
+        literal(),
+        {
+            f.OrderExpressionElement(literal()),
+        }));
+    validate(f.OrderExpression(
+        literal(),
+        {
+            f.OrderExpressionElement(literal(), Direction::ASCENDANT),
+        }));
+    validate(f.OrderExpression(
+        literal(),
+        {
+            f.OrderExpressionElement(literal()),
+            f.OrderExpressionElement(literal(), Direction::ASCENDANT),
+            f.OrderExpressionElement(literal(), Direction::DESCENDANT),
+        }));
+    should_error(f.OrderExpression(
+        {},
+        {
+            f.OrderExpressionElement(literal()),
+        }));
+    should_error(f.OrderExpression(
+        literal(),
+        {}));
+    should_error(f.OrderExpression(
+        literal(),
+        {
+            f.OrderExpressionElement({}),
+        }));
+}
 }  // namespace shakujo::analyzer

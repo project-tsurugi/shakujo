@@ -89,7 +89,7 @@ protected:
     //    }
     //    // FIXME impl
     //
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     bool enter(model::name::SimpleName const* node) override {
@@ -141,49 +141,49 @@ protected:
 
     //bool enter(model::statement::WhileStatement const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     //bool enter(model::statement::ForStatement const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     //bool enter(model::statement::ForEachStatement const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     //bool enter(model::statement::ReturnStatement const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     //bool enter(model::statement::AnchorDeclaration const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     //bool enter(model::statement::BreakStatement const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     //bool enter(model::statement::ContinueStatement const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     bool enter(model::statement::ExpressionStatement const* node) override {
         if (!is_defined(node->body())) {
             report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "expression statement must have a valid body expression");
         }
-        return ConstNodeWalker::enter(node);
+        return true;
     }
 
     //bool enter(model::statement::RaiseStatement const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     bool enter(model::statement::LogStatement const* node) override {
@@ -213,7 +213,7 @@ protected:
         if (!is_defined(node->right())) {
             report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "binary operator must have a valid right term");
         }
-        return ConstNodeWalker::enter(node);
+        return true;
     }
 
     bool enter(model::expression::BlockExpression const* node) override {
@@ -225,27 +225,27 @@ protected:
         if (!is_defined(node->body())) {
             report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "block expression must have an valid body expression");
         }
-        return ConstNodeWalker::enter(node);
+        return true;
     }
 
     //bool enter(model::expression::CaseExpression const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     //bool enter(model::expression::CursorAdvanceExpression const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     //bool enter(model::expression::CursorCreationExpression const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     //bool enter(model::expression::CursorElementLoadExpression const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     bool enter(model::expression::FunctionCall const* node) override {
@@ -272,7 +272,7 @@ protected:
             default:
                 std::abort();
         }
-        return ConstNodeWalker::enter(node);
+        return true;
     }
 
     bool enter(model::expression::ImplicitCast const*) override {
@@ -287,17 +287,17 @@ protected:
         if (!is_defined(node->value())) {
             report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "literal must have a valid value");
         }
-        return ConstNodeWalker::enter(node);
+        return true;
     }
 
     //bool enter(model::expression::StringOperator const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     //bool enter(model::expression::TypeOperator const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     bool enter(model::expression::UnaryOperator const* node) override {
@@ -325,42 +325,42 @@ protected:
 
     //bool enter(model::expression::ArrayCreationExpression const* node) override {
     //    // FIXME impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     //bool enter(model::expression::ArrayElementLoadExpression const* node) override {
     //    // FIXME impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     //bool enter(model::expression::ArrayElementStoreExpression const* node) override {
     //    // FIXME impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     //bool enter(model::expression::VectorCreationExpression const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     //bool enter(model::expression::VectorElementLoadExpression const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     //bool enter(model::expression::VectorElementStoreExpression const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     //bool enter(model::expression::VectorLengthExpression const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     //bool enter(model::expression::TupleCreationExpression const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     bool enter(model::expression::TupleElementLoadExpression const* node) override {
@@ -460,32 +460,42 @@ protected:
 
     //bool enter(model::expression::relation::DistinctExpression const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     //bool enter(model::expression::relation::AggregationExpression const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
-    //bool enter(model::expression::relation::OrderExpression const* node) override {
-    //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
-    //}
+    bool enter(model::expression::relation::OrderExpression const* node) override {
+        if (!is_defined(node->operand())) {
+            report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "order-by clause must have a valid operand");
+        }
+        if (node->elements().empty()) {
+            report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "order-by clause must have one or more keys");
+        }
+        for (auto* element : node->elements()) {
+            if (!is_defined(element->key())) {
+                report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "order-by key must be a valid expression");
+            }
+        }
+        return true;
+    }
 
     //bool enter(model::expression::relation::LimitExpression const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     //bool enter(model::statement::VectorElementDeleteStatement const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     //bool enter(model::statement::VectorElementInsertStatement const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     bool enter(model::statement::ddl::CreateTableStatement const* node) override {
@@ -508,7 +518,7 @@ protected:
 
     //bool enter(model::statement::ddl::DropTableStatement const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     bool enter(model::statement::dml::DeleteStatement const* node) override {
@@ -530,7 +540,7 @@ protected:
 
     //bool enter(model::statement::dml::InsertRelationStatement const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     bool enter(model::statement::dml::InsertValuesStatement const* node) override {
@@ -585,27 +595,27 @@ protected:
 
     //bool enter(model::statement::transaction::TransactionBlockStatement const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     //bool enter(model::type::ArrayType const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     //bool enter(model::type::RelationType const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     //bool enter(model::type::TupleType const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 
     //bool enter(model::type::VectorType const* node) override {
     //    // FIXME: impl
-    //    return ConstNodeWalker::enter(node);
+    //    return true;
     //}
 };
 }  // namespace

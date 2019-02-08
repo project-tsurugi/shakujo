@@ -719,7 +719,7 @@ public:
      */
     std::unique_ptr<expression::relation::OrderExpression::Element> OrderExpressionElement(
             std::unique_ptr<expression::Expression> key,
-            expression::relation::OrderExpression::Direction direction);
+            expression::relation::OrderExpression::Direction direction = expression::relation::OrderExpression::Direction::ASCENDANT);
 
     /**
      * @brief returns a new empty expression::relation::ProjectionExpression.
