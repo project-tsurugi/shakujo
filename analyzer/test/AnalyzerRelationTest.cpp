@@ -731,7 +731,6 @@ TEST_F(AnalyzerRelationTest, join_qualified_column) {
 TEST_F(AnalyzerRelationTest, aggregation) {
     using Quantifier = binding::FunctionBinding::Quantifier;
     auto fid = [&] { return env.binding_context().next_function_id(); };
-    auto vid = [&] { return env.binding_context().next_variable_id(); };
     auto count_asterisk = std::make_shared<binding::FunctionBinding>(
         fid(),
         common::core::Name { "count" },
@@ -742,19 +741,17 @@ TEST_F(AnalyzerRelationTest, aggregation) {
         common::core::Name { "count" },
         std::make_unique<t::Int>(32U, NON_NULL),
         Quantifier::ALL,
-        std::make_shared<binding::VariableBinding>(
-            vid(),
-            common::core::Name { "count" },
-            std::make_unique<t::Int>(32U, NON_NULL)));
+        std::vector<binding::FunctionBinding::Parameter> {
+            { "count", std::make_unique<t::Int>(32U, NON_NULL), }
+        });
     auto count_int32n = std::make_shared<binding::FunctionBinding>(
         fid(),
         common::core::Name { "count" },
         std::make_unique<t::Int>(32U, NON_NULL),
         Quantifier::ALL,
-        std::make_shared<binding::VariableBinding>(
-            vid(),
-            common::core::Name { "count" },
-            std::make_unique<t::Int>(32U, NULLABLE)));
+        std::vector<binding::FunctionBinding::Parameter> {
+            { "count", std::make_unique<t::Int>(32U, NULLABLE), }
+        });
     env.register_builtin(std::make_shared<binding::FunctionBinding>(
         fid(),
         common::core::Name { "count" },

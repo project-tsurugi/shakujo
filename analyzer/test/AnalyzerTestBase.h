@@ -152,8 +152,8 @@ public:
         auto element = std::make_shared<binding::VariableBinding>(
                 env.binding_context().next_variable_id(),
                 static_cast<common::core::Name>(*name),
-                type,
-                value);
+                make_clone(type),
+                make_clone(value));
         env.variable_scope().insert(name.get(), element);
         return element->id();
     }
@@ -189,6 +189,10 @@ public:
         return add_function(std::make_shared<binding::FunctionBinding>(
             env.binding_context().next_function_id(),
             std::forward<Args>(args)...));
+    }
+
+    binding::FunctionBinding::Parameter parameter(std::string_view name, common::core::Type&& type) {
+        return { name, make_clone(type) };
     }
 
     std::shared_ptr<binding::VariableBinding> variable(std::string_view name, common::core::Type&& type) {

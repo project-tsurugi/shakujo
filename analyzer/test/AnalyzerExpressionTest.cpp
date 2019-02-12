@@ -979,7 +979,7 @@ TEST_F(AnalyzerExpressionTest, function_args) {
         common::core::Name("f"),
         std::make_unique<t::Int>(64U, NON_NULL),
         std::vector {
-            variable("p", t::Int(64U, NON_NULL)),
+            parameter("p", t::Int(64U, NON_NULL)),
         });
     auto expr = analyze(f.FunctionCall(
         f.Name("f"),
@@ -997,7 +997,7 @@ TEST_F(AnalyzerExpressionTest, function_args_conversion) {
         common::core::Name("f"),
         std::make_unique<t::Int>(64U, NON_NULL),
         std::vector {
-            variable("p", t::Int(64U, NON_NULL)),
+            parameter("p", t::Int(64U, NON_NULL)),
         });
     auto expr = analyze(f.FunctionCall(
         f.Name("f"),
@@ -1024,14 +1024,14 @@ TEST_F(AnalyzerExpressionTest, function_overload) {
                     common::core::Name("f"),
                     std::make_unique<t::Int>(64U, NULLABLE),
                     std::vector {
-                        variable("p", t::Int(64U, NULLABLE)),
+                        parameter("p", t::Int(64U, NULLABLE)),
                     }),
                 std::make_shared<binding::FunctionBinding>(
                     next_id(),
                     common::core::Name("f"),
                     std::make_unique<t::Float>(64U, NULLABLE),
                     std::vector {
-                        variable("p", t::Float(64U, NULLABLE)),
+                        parameter("p", t::Float(64U, NULLABLE)),
                     }),
             }));
     auto expr = analyze(f.FunctionCall(
@@ -1077,14 +1077,14 @@ TEST_F(AnalyzerExpressionTest, function_overload_not_found) {
                     common::core::Name("f"),
                     std::make_unique<t::Int>(64U, NULLABLE),
                     std::vector {
-                        variable("p", t::Int(64U, NULLABLE)),
+                        parameter("p", t::Int(64U, NULLABLE)),
                     }),
                 std::make_shared<binding::FunctionBinding>(
                     next_id(),
                     common::core::Name("f"),
                     std::make_unique<t::Float>(64U, NULLABLE),
                     std::vector {
-                        variable("p", t::Float(64U, NULLABLE)),
+                        parameter("p", t::Float(64U, NULLABLE)),
                     }),
             }));
     auto expr = analyze(f.FunctionCall(
@@ -1113,9 +1113,9 @@ TEST_F(AnalyzerExpressionTest, function_incompatible_argument_count) {
         common::core::Name("f"),
         std::make_unique<t::Int>(32U, NON_NULL),
         std::vector {
-            variable("a", t::Int(32U, NON_NULL)),
-            variable("b", t::Int(32U, NON_NULL)),
-            variable("c", t::Int(32U, NON_NULL)),
+            parameter("a", t::Int(32U, NON_NULL)),
+            parameter("b", t::Int(32U, NON_NULL)),
+            parameter("c", t::Int(32U, NON_NULL)),
         });
     auto expr = analyze(f.FunctionCall(
         f.Name("f"),
@@ -1132,7 +1132,7 @@ TEST_F(AnalyzerExpressionTest, function_incompatible_argument_type) {
         common::core::Name("f"),
         std::make_unique<t::Int>(32U, NON_NULL),
         std::vector {
-            variable("a", t::Int(32U, NON_NULL)),
+            parameter("a", t::Int(32U, NON_NULL)),
         });
     auto expr = analyze(f.FunctionCall(
         f.Name("f"),

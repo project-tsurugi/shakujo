@@ -35,6 +35,8 @@
 
 namespace shakujo::analyzer::impl {
 
+using common::util::make_clone;
+
 class RelationScope final : public scope::Scope<binding::VariableBinding> {
 private:
     scope::Scope<binding::VariableBinding> const* parent_;
@@ -68,7 +70,7 @@ public:
                     binding = std::make_shared<binding::VariableBinding>(
                         context.next_variable_id(),
                         common::core::Name(column.name()),
-                        column.type());
+                        make_clone(column.type()));
                 }
                 columns_.push_back(binding);
                 if (!table_.contains(column.name())) {

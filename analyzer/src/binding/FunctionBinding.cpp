@@ -32,16 +32,21 @@ public:
     Id<FunctionBinding> id_;
     common::core::Name name_;
     std::unique_ptr<common::core::Type> type_ {};
-    std::vector<std::shared_ptr<VariableBinding>> parameters_ {};
+    FunctionBinding::Quantifier quantifier_ {};
+    std::vector<Parameter> parameters_ {};
 
-    FunctionBinding::Quantifier quantifier_ { FunctionBinding::Quantifier::GROUND };
     std::vector<std::shared_ptr<FunctionBinding>> overload_candidates_ {};
 
     Impl(Id<FunctionBinding>&& id,
              common::core::Name&& name,
              std::unique_ptr<common::core::Type>&& type,
-             std::vector<std::shared_ptr<VariableBinding>>&& parameters)
-        : id_(std::move(id)), name_(std::move(name)), type_(std::move(type)), parameters_(std::move(parameters))
+             FunctionBinding::Quantifier quantifier,
+             std::vector<Parameter>&& parameters)
+        : id_(std::move(id))
+        , name_(std::move(name))
+        , type_(std::move(type))
+        , quantifier_(quantifier)
+        , parameters_(std::move(parameters))
     {}
 
     Impl(Id<FunctionBinding>&& id,
@@ -52,14 +57,13 @@ public:
     {}
 };
 
-FunctionBinding::~FunctionBinding() noexcept = default;
-
 FunctionBinding::FunctionBinding(
         Id<FunctionBinding> &&id,
         common::core::Name name,
         std::unique_ptr<common::core::Type> type,
-        std::vector<std::shared_ptr<VariableBinding>> parameters)
-    : impl_(new Impl { std::move(id), std::move(name), std::move(type), std::move(parameters) })
+        Quantifier quantifier,
+        std::vector<Parameter> parameters)
+    : impl_(new Impl { std::move(id), std::move(name), std::move(type), quantifier, std::move(parameters) })
 {}
 
 FunctionBinding::FunctionBinding(
@@ -68,6 +72,8 @@ FunctionBinding::FunctionBinding(
         std::vector<std::shared_ptr<FunctionBinding>> overload_candidates)
     : impl_(new Impl { std::move(id), std::move(name), std::move(overload_candidates) })
 {}
+
+FunctionBinding::~FunctionBinding() noexcept = default;
 
 Id<FunctionBinding> const& FunctionBinding::id() const {
     return impl_->id_;
@@ -86,7 +92,7 @@ FunctionBinding &FunctionBinding::type(std::unique_ptr<common::core::Type> type)
     return *this;
 }
 
-std::vector<std::shared_ptr<VariableBinding>>& FunctionBinding::parameters() {
+std::vector<FunctionBinding::Parameter>& FunctionBinding::parameters() {
     return impl_->parameters_;
 }
 
@@ -99,17 +105,17 @@ FunctionBinding &FunctionBinding::quantifier(FunctionBinding::Quantifier quantif
     return *this;
 }
 
-using tester_t = std::function<bool(VariableBinding const&, ExpressionBinding const&)>;
+using tester_t = std::function<bool(FunctionBinding::Parameter const&, ExpressionBinding const&)>;
 
-static bool eq_strict(VariableBinding const& parameter, ExpressionBinding const& argument) {
+static bool eq_strict(FunctionBinding::Parameter const& parameter, ExpressionBinding const& argument) {
     return parameter.type()->equals(*argument.type(), true);
 }
 
-static bool eq_nullable(VariableBinding const& parameter, ExpressionBinding const& argument) {
+static bool eq_nullable(FunctionBinding::Parameter const& parameter, ExpressionBinding const& argument) {
     return parameter.type()->equals(*argument.type(), false);
 }
 
-static bool eq_assignable(VariableBinding const& parameter, ExpressionBinding const& argument) {
+static bool eq_assignable(FunctionBinding::Parameter const& parameter, ExpressionBinding const& argument) {
     // FIXME: check conversion rule
     return impl::typing::is_assignment_convertible(parameter.type(), argument, false);
 }
@@ -129,7 +135,7 @@ FunctionBinding::resolve_overload(std::vector<ExpressionBinding const*> const& a
                 continue;
             }
             for (std::size_t i = 0, n = parameters.size(); i < n; ++i) {
-                if (tester(*parameters[i], *arguments[i])) {
+                if (tester(parameters[i], *arguments[i])) {
                     return candidate;
                 }
             }
@@ -153,7 +159,7 @@ FunctionBinding::resolve_overload(FunctionBinding::Quantifier quantifier, Expres
             if (parameters.size() != parameter_count) {
                 continue;
             }
-            if (tester(*parameters[0], *argument)) {
+            if (tester(parameters[0], *argument)) {
                 return candidate;
             }
         }

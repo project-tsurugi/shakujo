@@ -67,25 +67,6 @@ public:
             std::unique_ptr<common::core::Value> value = {});
 
     /**
-     * @brief Construct a new object.
-     * @param id the variable ID
-     * @param name the variable name
-     * @param type the variable type
-     * @param value the constant value
-     */
-    VariableBinding(
-            Id<VariableBinding>&& id,
-            common::core::Name name,
-            common::core::Type const* type,
-            common::core::Value const* value = {})
-        : VariableBinding(
-                std::move(id),
-                std::move(name),
-                common::util::make_clone(type),
-                common::util::make_clone(value))
-    {}
-
-    /**
      * @brief Destroys this object.
      */
     ~VariableBinding() noexcept;

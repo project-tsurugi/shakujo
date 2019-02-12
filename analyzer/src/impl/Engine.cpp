@@ -75,7 +75,7 @@ void Engine::visit(model::program::GlobalVariableDeclaration* node, ScopeContext
             result = std::make_shared<binding::VariableBinding>(
                     bindings().next_variable_id(),
                     name,
-                    expr->type());
+                    make_clone(expr->type()));
             // FIXME: propagate values
         } else {
             // may not come here; this is syntactic error
@@ -139,7 +139,7 @@ void Engine::visit(model::statement::LocalVariableDeclaration* node, ScopeContex
             result = std::make_shared<binding::VariableBinding>(
                     bindings().next_variable_id(),
                     name,
-                    expr->type());
+                    make_clone(expr->type()));
             // FIXME: propagate values
         } else {
             // may not come here; this is syntactic error
@@ -525,14 +525,14 @@ void Engine::visit(model::expression::FunctionCall* node, ScopeContext& scope) {
         auto&& param = func->parameters()[i];
         auto expr = arguments[i];
         // FIXME: check conversion rule
-        if (!typing::is_assignment_convertible(param->type(), *expr, false)) {
+        if (!typing::is_assignment_convertible(param.type(), *expr, false)) {
             report(node, Diagnostic::Code::INCOMPATIBLE_FUNCTION_ARGUMENT_TYPE, to_string(
                 "function: ", func->name(), ", ",
                 "parameter at: ", i, ", ",
-                "parameter type: ", param->type(), ", ",
+                "parameter type: ", param.type(), ", ",
                 "expression type: ", expr->type()));
         }
-        insert_cast(node->arguments()[i], param->type());
+        insert_cast(node->arguments()[i], param.type());
     }
     bless(node, func->type());
     bless(node, std::move(func));
@@ -1083,7 +1083,7 @@ void Engine::visit(model::expression::relation::ProjectionExpression* node, Scop
         auto var = std::make_shared<binding::VariableBinding>(
             bindings().next_variable_id(),
             std::move(name),
-            column_expr->type());
+            make_clone(column_expr->type()));
         columns.emplace_back(qualifiers, std::move(simple_name), make_clone(column_expr->type()));
         output.columns().push_back(var);
         bless(c, var);

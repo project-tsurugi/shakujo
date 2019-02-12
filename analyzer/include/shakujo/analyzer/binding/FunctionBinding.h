@@ -23,10 +23,10 @@
 
 #include "Id.h"
 #include "ExpressionBinding.h"
-#include "VariableBinding.h"
 
 #include "shakujo/common/core/Name.h"
 #include "shakujo/common/core/Type.h"
+#include "shakujo/common/util/ClonablePtr.h"
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/key/FunctionKey.h"
 
@@ -39,9 +39,46 @@ class FunctionBinding final {
 private:
     class Impl;
     std::unique_ptr<Impl> impl_;
-    std::vector<std::shared_ptr<binding::FunctionBinding>> overloads_ {};
 
 public:
+    /**
+     * @brief represents function parameter specification.
+     */
+    class Parameter {
+    public:
+        /**
+         * @brief creates a new instance.
+         * @param name the parameter name
+         * @param type the parameter type
+         */
+        Parameter(
+                std::string_view name,
+                std::unique_ptr<common::core::Type> type)
+            : name_(name)
+            , type_(std::move(type))
+        {}
+
+        /**
+         * @brief returns the parameter name.
+         * @return the parameter name
+         */
+        std::string const& name() const {
+            return name_;
+        }
+
+        /**
+         * @brief returns the parameter type
+         * @return the parameter type
+         */
+        common::core::Type const* type() const {
+            return type_.get();
+        }
+
+    private:
+        std::string name_;
+        common::util::ClonablePtr<common::core::Type> type_;
+    };
+
     /**
      * @brief represents a set quantifier.
      */
@@ -95,7 +132,14 @@ public:
             Id<FunctionBinding>&& id,
             common::core::Name name,
             std::unique_ptr<common::core::Type> type,
-            std::vector<std::shared_ptr<VariableBinding>> parameters = {});
+            std::vector<Parameter> parameters = {})
+        : FunctionBinding(
+            std::move(id),
+            std::move(name),
+            std::move(type),
+            Quantifier::GROUND,
+            std::move(parameters))
+    {}
 
     /**
      * @brief Constructs a new object.
@@ -106,21 +150,11 @@ public:
      * @param parameter the function parameter
      */
     FunctionBinding(
-        Id<FunctionBinding>&& id,
-        common::core::Name name,
-        std::unique_ptr<common::core::Type> type,
-        Quantifier quantifier,
-        std::shared_ptr<VariableBinding> parameter = {})
-        : FunctionBinding(
-        std::move(id),
-        std::move(name),
-        std::move(type),
-        {
-            std::move(parameter),
-        })
-    {
-        this->quantifier(quantifier);
-    }
+            Id<FunctionBinding>&& id,
+            common::core::Name name,
+            std::unique_ptr<common::core::Type> type,
+            Quantifier quantifier,
+            std::vector<Parameter> parameters = {});
 
     /**
      * @brief constructs a new object as an overload stub.
@@ -212,22 +246,6 @@ public:
     }
 
     /**
-     * @brief returns the function parameters.
-     * @return the function parameters
-     * @return empty if this is an overload stub
-     */
-    std::vector<std::shared_ptr<VariableBinding>>& parameters();
-
-    /**
-     * @brief returns the function parameters.
-     * @return the function parameters
-     * @return empty if this is an overload stub
-     */
-    inline const std::vector<std::shared_ptr<VariableBinding>>& parameters() const {
-        return const_cast<FunctionBinding*>(this)->parameters();
-    }
-
-    /**
      * @brief returns the quantifier of the corresponded function.
      * @return the quantifier
      */
@@ -239,6 +257,22 @@ public:
      * @return this
      */
     FunctionBinding& quantifier(Quantifier quantifier);
+
+    /**
+     * @brief returns the function parameters.
+     * @return the function parameters
+     * @return empty if this is an overload stub
+     */
+    std::vector<Parameter>& parameters();
+
+    /**
+     * @brief returns the function parameters.
+     * @return the function parameters
+     * @return empty if this is an overload stub
+     */
+    inline const std::vector<Parameter>& parameters() const {
+        return const_cast<FunctionBinding*>(this)->parameters();
+    }
 
     /**
      * @brief returns whether or not this binding represents a set function.
@@ -321,7 +355,7 @@ public:
             return false;
         }
         for (auto&& param : parameters()) {
-            if (!util::is_valid(param)) {
+            if (!util::is_valid(param.type())) {
                 return false;
             }
         }

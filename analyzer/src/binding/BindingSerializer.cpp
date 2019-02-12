@@ -163,16 +163,39 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, Functio
         auto size = list.size();
         printer.enter_array(size);
         for (auto& element : list) {
-            if (!element) {
-                printer.value(nullptr);
-            } else {
-                serialize(printer, element.get());
-            }
+            serialize(printer, &element);
         }
         printer.exit_array(size);
         printer.exit_property("parameters");
     }
     printer.exit_object("FunctionBinding");
+}
+
+void BindingSerializer::serialize(common::util::DataSerializer& printer, FunctionBinding::Parameter const* value) {
+    if (value == nullptr) {
+        printer.value(nullptr);
+        return;
+    }
+    if (show_qualified_kind()) {
+        printer.enter_object("Parameter");
+    } else {
+        printer.enter_object("FunctionBinding::Parameter");
+    }
+    {
+        printer.enter_property("name");
+        printer.value(value->name());
+        printer.exit_property("name");
+    }
+    {
+        printer.enter_property("type");
+        serialize(printer, value->type());
+        printer.exit_property("type");
+    }
+    if (show_qualified_kind()) {
+        printer.exit_object("Parameter");
+    } else {
+        printer.exit_object("FunctionBinding::Parameter");
+    }
 }
 
 void BindingSerializer::serialize(common::util::DataSerializer& printer, FunctionBinding::Quantifier value) {
