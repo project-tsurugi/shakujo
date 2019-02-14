@@ -83,12 +83,11 @@ install(
     EXPORT_LINK_INTERFACE_LIBRARIES
 )
 
-add_library(shakujo SHARED)
-target_sources(shakujo
-    PRIVATE $<TARGET_OBJECTS:common>
-    PRIVATE $<TARGET_OBJECTS:model>
-    PRIVATE $<TARGET_OBJECTS:parser>
-    PRIVATE $<TARGET_OBJECTS:analyzer>
+add_library(shakujo SHARED
+    $<TARGET_OBJECTS:common>
+    $<TARGET_OBJECTS:model>
+    $<TARGET_OBJECTS:parser>
+    $<TARGET_OBJECTS:analyzer>
 )
 target_link_libraries(shakujo
     PUBLIC common-interface
