@@ -240,6 +240,17 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, Relatio
         printer.exit_property("destination_table");
     }
     {
+        printer.enter_property("destination_columns");
+        auto& list = value->destination_columns();
+        auto size = list.size();
+        printer.enter_array(size);
+        for (auto& element : list) {
+            serialize(printer, element.get());
+        }
+        printer.exit_array(size);
+        printer.exit_property("destination_columns");
+    }
+    {
         printer.enter_property("join_columns");
         auto& list = value->join_columns();
         auto size = list.size();
