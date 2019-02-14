@@ -19,10 +19,10 @@ add_library(model OBJECT
 
 target_include_directories(model
     PRIVATE .
+    PUBLIC $<TARGET_PROPERTY:model-interface,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
 target_link_libraries(model
-    PUBLIC model-interface
     PUBLIC common
 )
 

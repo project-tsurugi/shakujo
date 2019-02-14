@@ -12,10 +12,7 @@ add_library(common OBJECT
 
 target_include_directories(common
     PRIVATE .
-)
-
-target_link_libraries(common
-    PUBLIC common-interface
+    PUBLIC $<TARGET_PROPERTY:common-interface,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
 set_compile_options(common)

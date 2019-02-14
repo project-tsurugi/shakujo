@@ -34,12 +34,12 @@ add_library(parser OBJECT
 
 target_include_directories(parser
     PRIVATE .
+    PUBLIC $<TARGET_PROPERTY:parser-interface,INTERFACE_INCLUDE_DIRECTORIES>
     PRIVATE ${ANTLR_OUTPUT_DIR}
     PRIVATE ${ANTLR_RUNTIME_INCLUDE_DIR}
 )
 
 target_link_libraries(parser
-    PUBLIC parser-interface
     PUBLIC model
     PRIVATE glog::glog
 )

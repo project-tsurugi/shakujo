@@ -10,10 +10,10 @@ add_library(analyzer OBJECT
 
 target_include_directories(analyzer
     PRIVATE .
+    PUBLIC $<TARGET_PROPERTY:analyzer-interface,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
 target_link_libraries(analyzer
-    PUBLIC analyzer-interface
     PUBLIC model
 )
 
