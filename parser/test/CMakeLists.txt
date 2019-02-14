@@ -5,5 +5,5 @@ file(GLOB TEST_SOURCES
 register_tests(
     TARGET parser
     SOURCES ${TEST_SOURCES}
-    DEPENDS glog::glog
+    DEPENDS common model glog::glog
 )

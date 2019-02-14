@@ -8,5 +8,5 @@ file(GLOB TEST_SOURCES
 register_tests(
     TARGET analyzer
     SOURCES ${TEST_SOURCES}
-    DEPENDS analyzer-impl
+    DEPENDS common model analyzer-impl
 )

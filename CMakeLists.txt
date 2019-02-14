@@ -35,6 +35,13 @@ find_package(Java REQUIRED COMPONENTS Runtime)
 find_package(Doxygen)
 find_package(glog REQUIRED)
 
+if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(UUID REQUIRED uuid)
+elseif(APPLE)
+    find_library(COREFOUNDATION_LIBRARY CoreFoundation)
+endif()
+
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 include(CompileOptions)
@@ -75,6 +82,36 @@ install(
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${package_name}
     EXPORT_LINK_INTERFACE_LIBRARIES
 )
+
+add_library(shakujo SHARED)
+target_sources(shakujo
+    PRIVATE $<TARGET_OBJECTS:common>
+    PRIVATE $<TARGET_OBJECTS:model>
+    PRIVATE $<TARGET_OBJECTS:parser>
+    PRIVATE $<TARGET_OBJECTS:analyzer>
+)
+target_link_libraries(shakujo
+    PUBLIC common-interface
+    PUBLIC model-interface
+    PUBLIC parser-interface
+    PUBLIC analyzer-interface
+    PRIVATE glog::glog
+)
+
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+    target_link_libraries(shakujo
+        PRIVATE ${UUID_LIBRARIES})
+elseif(APPLE)
+    target_link_libraries(shakujo
+        PRIVATE ${COREFOUNDATION_LIBRARY})
+endif()
+
+set_target_properties(shakujo PROPERTIES
+    LIBRARY_OUTPUT_NAME shakujo
+    SOVERSION ${PROJECT_VERSION}
+)
+set_compile_options(shakujo)
+install_custom(shakujo ${export_name})
 
 add_subdirectory(common)
 add_subdirectory(model)

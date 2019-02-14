@@ -11,8 +11,7 @@ target_include_directories(example-analyzer
 )
 
 target_link_libraries(example-analyzer
-    PUBLIC parser
-    PUBLIC analyzer
+    PRIVATE shakujo
 )
 
 set_compile_options(example-analyzer)

@@ -6,7 +6,7 @@ file(GLOB SOURCES
     "schema/*.cpp"
 )
 
-add_library(common STATIC
+add_library(common OBJECT
     ${SOURCES}
 )
 
@@ -19,4 +19,3 @@ target_link_libraries(common
 )
 
 set_compile_options(common)
-install_custom(common ${export_name})

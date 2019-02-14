@@ -9,4 +9,5 @@ file(GLOB TEST_SOURCES
 register_tests(
     TARGET model
     SOURCES ${TEST_SOURCES}
+    DEPENDS common
 )

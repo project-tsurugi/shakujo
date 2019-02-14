@@ -13,7 +13,7 @@ file(GLOB SOURCES
     "util/*.cpp"
 )
 
-add_library(model STATIC
+add_library(model OBJECT
     ${SOURCES}
 )
 
@@ -27,4 +27,3 @@ target_link_libraries(model
 )
 
 set_compile_options(model)
-install_custom(model ${export_name})

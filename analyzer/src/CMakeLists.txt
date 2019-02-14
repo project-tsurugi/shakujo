@@ -4,7 +4,7 @@ file(GLOB SOURCES
     "impl/*.cpp"
 )
 
-add_library(analyzer STATIC
+add_library(analyzer OBJECT
     ${SOURCES}
 )
 
@@ -18,8 +18,6 @@ target_link_libraries(analyzer
 )
 
 set_compile_options(analyzer)
-install_custom(analyzer ${export_name})
-
 
 # for tests
 add_library(analyzer-impl INTERFACE)

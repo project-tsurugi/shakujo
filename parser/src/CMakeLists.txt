@@ -1,10 +1,3 @@
-if (CMAKE_SYSTEM_NAME MATCHES "Linux")
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(UUID REQUIRED uuid)
-elseif(APPLE)
-    find_library(COREFOUNDATION_LIBRARY CoreFoundation)
-endif()
-
 file(GLOB ANTLR_SOURCES
     "grammar/ShakujoParser.g4"
     "grammar/ShakujoLexer.g4"
@@ -33,7 +26,7 @@ file(GLOB_RECURSE ANTLR_RUNTIME_SOURCES
     "${ANTLR_RUNTIME_INCLUDE_DIR}/*.cpp"
 )
 
-add_library(parser
+add_library(parser OBJECT
     ${SOURCES}
     ${ANTLR_GENERATED_SOURCES}
     ${ANTLR_RUNTIME_SOURCES}
@@ -64,5 +57,4 @@ elseif (CMAKE_SYSTEM_NAME MATCHES "Linux")
 endif()
 
 set_compile_options(parser)
-install_custom(parser ${export_name})
 antlr_fix_compile_option(parser)

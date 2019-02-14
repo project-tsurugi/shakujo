@@ -11,7 +11,7 @@ target_include_directories(example-visitor
 )
 
 target_link_libraries(example-visitor
-    PUBLIC model
+    PRIVATE shakujo
 )
 
 set_compile_options(example-visitor)

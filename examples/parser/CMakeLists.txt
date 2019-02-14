@@ -11,7 +11,7 @@ target_include_directories(example-parser
 )
 
 target_link_libraries(example-parser
-    PUBLIC parser
+    PRIVATE shakujo
 )
 
 set_compile_options(example-parser)
