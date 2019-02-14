@@ -48,8 +48,8 @@ TEST_F(AnalyzerDmlTest, emit) {
     success();
 
     auto rbinding = extract_relation(stmt.get());
-    EXPECT_EQ(rbinding->output().source_table().name(), "testing");
-    ASSERT_EQ(rbinding->output().columns().size(), 1U);
+    EXPECT_EQ(rbinding->process().source_table().name(), "testing");
+    EXPECT_EQ(rbinding->process().columns().size(), 1U);
 
     auto* relation = extract_relation_type(stmt->source());
     auto& cols = relation->columns();
@@ -78,7 +78,7 @@ TEST_F(AnalyzerDmlTest, insert_values) {
 
     auto rbinding = extract_relation(stmt.get());
     EXPECT_EQ(rbinding->destination_table().name(), "testing");
-    ASSERT_EQ(rbinding->output().columns().size(), 1U);
+    ASSERT_EQ(rbinding->destination_columns().size(), 1U);
 
     auto& columns = stmt->columns();
     ASSERT_EQ(1U, columns.size());
@@ -88,7 +88,7 @@ TEST_F(AnalyzerDmlTest, insert_values) {
         EXPECT_EQ(1, get<v::Int>(c->value()));
 
         auto var = extract_var(c);
-        EXPECT_EQ(var->name(), "C1");
+        EXPECT_EQ(rbinding->destination_index_of(*var), 0U);
         EXPECT_EQ(*var->type(), t::Int(32U, NON_NULL));
     }
 }
@@ -106,7 +106,7 @@ TEST_F(AnalyzerDmlTest, insert_values_wo_colum_names) {
 
     auto rbinding = extract_relation(stmt.get());
     EXPECT_EQ(rbinding->destination_table().name(), "testing");
-    ASSERT_EQ(rbinding->output().columns().size(), 1U);
+    ASSERT_EQ(rbinding->destination_columns().size(), 1U);
 
     auto& columns = stmt->columns();
     ASSERT_EQ(1U, columns.size());
@@ -116,7 +116,7 @@ TEST_F(AnalyzerDmlTest, insert_values_wo_colum_names) {
         EXPECT_EQ(1, get<v::Int>(c->value()));
 
         auto var = extract_var(c);
-        EXPECT_EQ(var->name(), "C1");
+        EXPECT_EQ(rbinding->destination_index_of(*var), 0U);
         EXPECT_EQ(*var->type(), t::Int(32U, NON_NULL));
     }
 }
@@ -138,7 +138,7 @@ TEST_F(AnalyzerDmlTest, insert_values_reorder_columns) {
 
     auto rbinding = extract_relation(stmt.get());
     EXPECT_EQ(rbinding->destination_table().name(), "testing");
-    ASSERT_EQ(rbinding->output().columns().size(), 3U);
+    ASSERT_EQ(rbinding->destination_columns().size(), 3U);
 
     auto& columns = stmt->columns();
     ASSERT_EQ(3U, columns.size());
@@ -148,7 +148,7 @@ TEST_F(AnalyzerDmlTest, insert_values_reorder_columns) {
         EXPECT_EQ(1, get<v::Int>(c->value()));
 
         auto var = extract_var(c);
-        EXPECT_EQ(var->name(), "C1");
+        EXPECT_EQ(rbinding->destination_index_of(*var), 0U);
         EXPECT_EQ(*var->type(), t::Int(32U, NON_NULL));
     }
     {
@@ -157,7 +157,7 @@ TEST_F(AnalyzerDmlTest, insert_values_reorder_columns) {
         EXPECT_EQ(2, get<v::Int>(c->value()));
 
         auto var = extract_var(c);
-        EXPECT_EQ(var->name(), "C2");
+        EXPECT_EQ(rbinding->destination_index_of(*var), 1U);
         EXPECT_EQ(*var->type(), t::Int(32U, NON_NULL));
     }
     {
@@ -166,7 +166,7 @@ TEST_F(AnalyzerDmlTest, insert_values_reorder_columns) {
         EXPECT_EQ(3, get<v::Int>(c->value()));
 
         auto var = extract_var(c);
-        EXPECT_EQ(var->name(), "C3");
+        EXPECT_EQ(rbinding->destination_index_of(*var), 2U);
         EXPECT_EQ(*var->type(), t::Int(32U, NON_NULL));
     }
 }
@@ -186,7 +186,7 @@ TEST_F(AnalyzerDmlTest, insert_values_omit_columns) {
 
     auto rbinding = extract_relation(stmt.get());
     EXPECT_EQ(rbinding->destination_table().name(), "testing");
-    ASSERT_EQ(rbinding->output().columns().size(), 3U);
+    ASSERT_EQ(rbinding->destination_columns().size(), 3U);
 
     auto& columns = stmt->columns();
     ASSERT_EQ(3U, columns.size());
@@ -196,7 +196,7 @@ TEST_F(AnalyzerDmlTest, insert_values_omit_columns) {
         EXPECT_EQ(-1, get<v::Int>(c->value()));
 
         auto var = extract_var(c);
-        EXPECT_EQ(var->name(), "C1");
+        EXPECT_EQ(rbinding->destination_index_of(*var), 0U);
         EXPECT_EQ(*var->type(), t::Int(32U, NON_NULL));
     }
     {
@@ -205,7 +205,7 @@ TEST_F(AnalyzerDmlTest, insert_values_omit_columns) {
         EXPECT_EQ(2, get<v::Int>(c->value()));
 
         auto var = extract_var(c);
-        EXPECT_EQ(var->name(), "C2");
+        EXPECT_EQ(rbinding->destination_index_of(*var), 1U);
         EXPECT_EQ(*var->type(), t::Int(32U, NON_NULL));
     }
     {
@@ -216,7 +216,7 @@ TEST_F(AnalyzerDmlTest, insert_values_omit_columns) {
         EXPECT_EQ(v::Null(), *as<expression::Literal>(cast->operand())->value());
 
         auto var = extract_var(c);
-        EXPECT_EQ(var->name(), "C3");
+        EXPECT_EQ(rbinding->destination_index_of(*var), 2U);
         EXPECT_EQ(*var->type(), t::Int(32U, NULLABLE));
     }
 }
@@ -232,6 +232,10 @@ TEST_F(AnalyzerDmlTest, insert_values_promote) {
         }));
     success();
 
+    auto rbinding = extract_relation(stmt.get());
+    EXPECT_EQ(rbinding->destination_table().name(), "testing");
+    ASSERT_EQ(rbinding->destination_columns().size(), 1U);
+
     auto& columns = stmt->columns();
     ASSERT_EQ(1U, columns.size());
     {
@@ -240,7 +244,7 @@ TEST_F(AnalyzerDmlTest, insert_values_promote) {
         EXPECT_EQ(t::Int(64U, NON_NULL), cast_type(c->value()));
 
         auto var = extract_var(c);
-        EXPECT_EQ(var->name(), "C1");
+        EXPECT_EQ(rbinding->destination_index_of(*var), 0U);
         EXPECT_EQ(*var->type(), t::Int(64U, NON_NULL));
     }
 }
@@ -261,6 +265,10 @@ TEST_F(AnalyzerDmlTest, insert_values_promote_force) {
         }));
     success();
 
+    auto rbinding = extract_relation(stmt.get());
+    EXPECT_EQ(rbinding->destination_table().name(), "testing");
+    ASSERT_EQ(rbinding->destination_columns().size(), 1U);
+
     auto& columns = stmt->columns();
     ASSERT_EQ(1U, columns.size());
     {
@@ -269,7 +277,7 @@ TEST_F(AnalyzerDmlTest, insert_values_promote_force) {
         EXPECT_EQ(t::Int(32U, NON_NULL), cast_type(c->value()));
 
         auto var = extract_var(c);
-        EXPECT_EQ(var->name(), "C1");
+        EXPECT_EQ(rbinding->destination_index_of(*var), 0U);
         EXPECT_EQ(*var->type(), t::Int(32U, NON_NULL));
     }
 }
@@ -340,15 +348,15 @@ TEST_F(AnalyzerDmlTest, update) {
 
     auto rbinding = extract_relation(stmt.get());
     EXPECT_EQ(rbinding->destination_table().name(), "testing");
+    ASSERT_EQ(rbinding->destination_columns().size(), 3U);
     ASSERT_EQ(rbinding->process().columns().size(), 3U);
-    ASSERT_EQ(rbinding->output().columns().size(), 1U);
 
     {
         auto&& c = stmt->columns()[0];
         EXPECT_EQ(get<v::Int>(c->value()), 1);
 
         auto v = extract_var(c);
-        EXPECT_EQ(v->name(), "C2");
+        EXPECT_EQ(rbinding->destination_index_of(*v), 1U);
         EXPECT_EQ(*v->type(), t::Int(32U, NON_NULL));
     }
 }
@@ -371,27 +379,27 @@ TEST_F(AnalyzerDmlTest, update_multiple_columns) {
 
     auto rbinding = extract_relation(stmt.get());
     EXPECT_EQ(rbinding->destination_table().name(), "testing");
+    ASSERT_EQ(rbinding->destination_columns().size(), 3U);
     ASSERT_EQ(rbinding->process().columns().size(), 3U);
-    ASSERT_EQ(rbinding->output().columns().size(), 3U);
 
     {
         auto&& c = stmt->columns()[0];
         auto v = extract_var(c);
-        EXPECT_EQ(v->name(), "C2");
+        EXPECT_EQ(rbinding->destination_index_of(*v), 1U);
         EXPECT_EQ(*v->type(), t::Int(32U, NON_NULL));
         EXPECT_EQ(get<v::Int>(c->value()), 2);
     }
     {
         auto&& c = stmt->columns()[1];
         auto v = extract_var(c);
-        EXPECT_EQ(v->name(), "C1");
+        EXPECT_EQ(rbinding->destination_index_of(*v), 0U);
         EXPECT_EQ(*v->type(), t::Int(32U, NON_NULL));
         EXPECT_EQ(get<v::Int>(c->value()), 1);
     }
     {
         auto&& c = stmt->columns()[2];
         auto v = extract_var(c);
-        EXPECT_EQ(v->name(), "C3");
+        EXPECT_EQ(rbinding->destination_index_of(*v), 2U);
         EXPECT_EQ(*v->type(), t::Int(32U, NON_NULL));
         EXPECT_EQ(get<v::Int>(c->value()), 3);
     }
@@ -413,15 +421,15 @@ TEST_F(AnalyzerDmlTest, update_conversion) {
 
     auto rbinding = extract_relation(stmt.get());
     EXPECT_EQ(rbinding->destination_table().name(), "testing");
+    ASSERT_EQ(rbinding->destination_columns().size(), 3U);
     ASSERT_EQ(rbinding->process().columns().size(), 3U);
-    ASSERT_EQ(rbinding->output().columns().size(), 1U);
 
     {
         auto&& c = stmt->columns()[0];
         EXPECT_EQ(cast_type(c->value()), t::Int(64U, NON_NULL));
 
         auto v = extract_var(c);
-        EXPECT_EQ(v->name(), "C2");
+        EXPECT_EQ(rbinding->destination_index_of(*v), 1U);
         EXPECT_EQ(*v->type(), t::Int(64U, NON_NULL));
     }
 }
@@ -526,7 +534,7 @@ TEST_F(AnalyzerDmlTest, delete) {
 
     auto rbinding = extract_relation(stmt.get());
     EXPECT_EQ(rbinding->destination_table().name(), "testing");
-    ASSERT_EQ(rbinding->output().columns().size(), 3U);
+    ASSERT_EQ(rbinding->destination_columns().size(), 3U);
 }
 
 TEST_F(AnalyzerDmlTest, delete_not_a_relation) {
