@@ -94,6 +94,10 @@ target_link_libraries(shakujo
     PUBLIC model-interface
     PUBLIC parser-interface
     PUBLIC analyzer-interface
+    PRIVATE common
+    PRIVATE model
+    PRIVATE parser
+    PRIVATE analyzer
     PRIVATE glog::glog
 )
 
