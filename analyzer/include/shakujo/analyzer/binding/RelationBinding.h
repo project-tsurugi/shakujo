@@ -16,6 +16,7 @@
 #ifndef SHAKUJO_ANALYZER_BINDING_RELATION_BINDING_H_
 #define SHAKUJO_ANALYZER_BINDING_RELATION_BINDING_H_
 
+#include <algorithm>
 #include <any>
 #include <map>
 #include <memory>
@@ -103,6 +104,7 @@ public:
 
         /**
          * @brief returns the variables that reflect individual row columns.
+         * Each element is sorted by the column of the corresponded relation.
          * @return the column variables
          */
         std::vector<std::shared_ptr<VariableBinding>>& columns() {
@@ -111,6 +113,7 @@ public:
 
         /**
          * @brief returns the variables that reflect individual row columns.
+         * Each element is sorted by the column of the corresponded relation.
          * @return the column variables
          */
         std::vector<std::shared_ptr<VariableBinding>> const& columns() const {
@@ -387,8 +390,6 @@ public:
 
     /**
      * @brief returns the profile for processing the corresponded operator.
-     * If the corresponded operation is a statement (not expression), this profile represents the relation of
-     * operation target (e.g. insert/update/delete target, or emitting relation).
      * @return the profile for processing the corresponded operator
      */
     inline Profile const& process() const {
@@ -397,8 +398,6 @@ public:
 
     /**
      * @brief returns the output profile.
-     * If the corresponded operation is a statement (not expression), this profile represents the relation of
-     * operation target (e.g. insert/update/delete target, or emitting relation).
      * @return the output profile
      */
     inline Profile& output() {
@@ -436,6 +435,39 @@ public:
     RelationBinding& destination_table(common::schema::TableInfo const& info) {
         destination_table_ = info.is_valid() ? &info : nullptr;
         return *this;
+    }
+
+    /**
+     * @brief returns the variables that reflect columns of the destination table.
+     * @return the column variables, ordered by corresponded TableInfo::columns()
+     * @return empty if the destination table is not defined
+     */
+    std::vector<std::shared_ptr<VariableBinding>>& destination_columns() {
+        return destination_columns_;
+    }
+
+    /**
+     * @brief returns the variables that reflect columns of the destination table.
+     * @return the column variables, ordered by corresponded TableInfo::columns()
+     * @return empty if the destination table is not defined
+     */
+    std::vector<std::shared_ptr<VariableBinding>> const& destination_columns() const {
+        return destination_columns_;
+    }
+
+    /**
+     * @brief returns the index of the destination column.
+     * @param binding the column binding
+     * @return the column index (0-origin)
+     * @return empty if the binding does not indicates any columns in the destination table
+     */
+    std::optional<std::size_t> destination_index_of(VariableBinding const& binding) const {
+        for (std::size_t i = 0, n = destination_columns_.size(); i < n; ++i) {
+            if (destination_columns_[i]->id() == binding.id()) {
+                return std::make_optional(i);
+            }
+        }
+        return {};
     }
 
     /**
@@ -545,13 +577,21 @@ public:
                 return false;
             }
         }
-        return !process_.columns().empty() || !output_.columns().empty();
+        for (auto&& c : destination_columns_) {
+            if (!common::util::is_valid(c)) {
+                return false;
+            }
+        }
+        return !process_.columns().empty()
+            || !output_.columns().empty()
+            || !destination_columns_.empty();
     }
 
 private:
     Profile process_;
     Profile output_;
     common::schema::TableInfo const* destination_table_ {};
+    std::vector<std::shared_ptr<VariableBinding>> destination_columns_ {};
     std::vector<JoinColumn> join_columns_ {};
     std::map<std::string, std::any> attributes_ {};
 };

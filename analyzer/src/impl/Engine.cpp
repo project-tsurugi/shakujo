@@ -1104,6 +1104,20 @@ void Engine::visit(model::expression::relation::ProjectionExpression* node, Scop
     bless(node, std::make_unique<common::core::type::Relation>(std::move(columns)));
 }
 
+std::vector<std::shared_ptr<binding::VariableBinding>> Engine::create_column_variables(
+        common::schema::TableInfo const& table) {
+    std::vector<std::shared_ptr<binding::VariableBinding>> results;
+    results.reserve(table.columns().size());
+    for (auto&& column : table.columns()) {
+        auto variable = std::make_shared<binding::VariableBinding>(
+            bindings().next_variable_id(),
+            common::core::Name { column.name() },
+            make_clone(column.type()));
+        results.emplace_back(std::move(variable));
+    }
+    return results;
+}
+
 std::vector<binding::RelationBinding::JoinColumn> Engine::compute_join_columns(
         model::expression::relation::JoinExpression const* node,
         std::vector<std::shared_ptr<binding::VariableBinding>> const& left_variables,
@@ -1475,7 +1489,7 @@ void Engine::visit(model::statement::dml::EmitStatement* node, ScopeContext& sco
         return;
     }
     auto profile = source_relation->output();
-    bless(node, std::make_shared<binding::RelationBinding>(profile, profile));
+    bless(node, std::make_shared<binding::RelationBinding>(std::move(profile)));
 }
 
 void Engine::visit(model::statement::dml::InsertValuesStatement* node, ScopeContext& prev) {
@@ -1575,17 +1589,17 @@ void Engine::visit(model::statement::dml::InsertValuesStatement* node, ScopeCont
         dispatch(s, scope);
     }
 
-    std::vector<std::shared_ptr<binding::VariableBinding>> columns;
+    auto destination = create_column_variables(table_info);
     assert(node->columns().size() == table_info.columns().size());  // NOLINT
     for (std::size_t i = 0, n = node->columns().size(); i < n; i++) {
         auto& info = table_info.columns()[i];
         auto* column = node->columns()[i];
+        auto var = destination[i];
         assert(info.name() == column->name()->token());  // NOLINT
 
         // FIXME: resolve special expressions like DEFAULT, NOW, ...
         dispatch(column->value(), scope);
         auto expr = extract_binding(column->value());
-        std::shared_ptr<binding::VariableBinding> var;
         if (is_valid(expr)) {
             // FIXME: check conversion rule
             if (!typing::is_assignment_convertible(info.type(), *expr, true)) {
@@ -1601,22 +1615,16 @@ void Engine::visit(model::statement::dml::InsertValuesStatement* node, ScopeCont
                 var = std::make_shared<binding::VariableBinding>();
             } else {
                 insert_cast(column->value(), info.type());
-                var = std::make_shared<binding::VariableBinding>(
-                    bindings().next_variable_id(),
-                    common::core::Name { info.name() },
-                    make_clone(info.type()));
             }
         } else {
             var = std::make_shared<binding::VariableBinding>();
         }
-        columns.push_back(var);
-        bless(column, var);
+        bless(column, std::move(var));
     }
 
-    auto meta = std::make_shared<binding::RelationBinding>(
-        binding::RelationBinding::Profile {},
-        binding::RelationBinding::Profile { std::move(columns) });
+    auto meta = std::make_shared<binding::RelationBinding>();
     meta->destination_table(table_info);
+    meta->destination_columns() = std::move(destination);
     bless(node, meta);
 }
 
@@ -1668,6 +1676,7 @@ void Engine::visit(model::statement::dml::UpdateStatement* node, ScopeContext& p
         dispatch(c->value(), scope);
     }
 
+    auto destination = create_column_variables(table_info);
     std::set<std::string> saw_columns {};
     for (auto* c : node->columns()) {
         auto&& name = c->name()->token();
@@ -1687,6 +1696,7 @@ void Engine::visit(model::statement::dml::UpdateStatement* node, ScopeContext& p
 
         assert(column_index.value() < table_info.columns().size());  // NOLINT
         auto column_info = table_info.columns()[column_index.value()];
+        auto column_var = destination[column_index.value()];
         auto expr = extract_binding(c->value());
         if (!typing::is_assignment_convertible(column_info.type(), *expr, true)) {
             report(c->value(), Diagnostic::Code::INCOMPATIBLE_EXPRESSION_TYPE, to_string(
@@ -1697,22 +1707,12 @@ void Engine::visit(model::statement::dml::UpdateStatement* node, ScopeContext& p
             continue;
         }
         insert_cast(c->value(), column_info.type());
-        bless(c, std::make_shared<binding::VariableBinding>(
-            bindings().next_variable_id(),
-            common::core::Name { column_info.name() },
-            make_clone(column_info.type())));
+        bless(c, std::move(column_var));
     }
 
-    std::vector<std::shared_ptr<binding::VariableBinding>> columns {};
-    columns.reserve(node->columns().size());
-    for (auto* c : node->columns()) {
-        columns.emplace_back(extract(c->variable_key()));
-    }
-
-    auto meta = std::make_shared<binding::RelationBinding>(
-        source_relation->output(),
-        binding::RelationBinding::Profile { std::move(columns) });
+    auto meta = std::make_shared<binding::RelationBinding>(source_relation->output());
     meta->destination_table(table_info);
+    meta->destination_columns() = std::move(destination);
     bless(node, meta);
 }
 
@@ -1748,8 +1748,9 @@ void Engine::visit(model::statement::dml::DeleteStatement* node, ScopeContext& s
         return;
     }
 
-    auto meta = std::make_shared<binding::RelationBinding>(source_relation->output(), source_relation->output());
+    auto meta = std::make_shared<binding::RelationBinding>(source_relation->output());
     meta->destination_table(table_info);
+    meta->destination_columns() = create_column_variables(table_info);
     bless(node, meta);
 }
 
