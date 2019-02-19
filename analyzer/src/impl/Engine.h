@@ -236,7 +236,7 @@ private:
 
     std::vector<std::shared_ptr<binding::VariableBinding>> create_column_variables(common::schema::TableInfo const&);
 
-    std::vector<binding::RelationBinding::JoinColumn> compute_join_columns(
+    std::vector<binding::JoinStrategy::Column> compute_join_columns(
             model::expression::relation::JoinExpression const* node,
             std::vector<std::shared_ptr<binding::VariableBinding>> const& left_variables,
             std::vector<std::shared_ptr<binding::VariableBinding>> const& right_variables,

@@ -924,7 +924,6 @@ void Engine::enrich_relation_profile(
         model::Node* node, binding::RelationBinding::Profile& profile,
         common::schema::TableInfo const& table, common::schema::IndexInfo const& index) {
     profile.source_table(table);
-    profile.source_index(index);
     if (table.primary_index().is_valid()) {
         // FIXME: or index was unique
         profile.distinct(true);
@@ -968,12 +967,14 @@ void Engine::visit(model::expression::relation::ScanExpression* node, ScopeConte
     for (auto& c : table_info.columns()) {
         columns.emplace_back(qualifiers, c.name(), c.type());
     }
-    auto relation = std::make_unique<common::core::type::Relation>(std::move(columns));
-    RelationScope vars { bindings(), &prev.variables(), relation.get(), {} }; // compute columns from type
+    auto relation_type = std::make_unique<common::core::type::Relation>(std::move(columns));
+    RelationScope vars { bindings(), &prev.variables(), relation_type.get(), {} }; // compute columns from type
 
     auto profile = vars.profile();
     enrich_relation_profile(node, profile, table_info, table_info.primary_index());
-    bless(node, std::make_shared<binding::RelationBinding>(profile, profile));
+    auto relation = std::make_shared<binding::RelationBinding>(profile, profile);
+    relation->scan_strategy({ table_info, binding::ScanStrategy::Kind::FULL, });
+    bless(node, std::move(relation));
     if (is_defined(node->condition())) {
         ScopeContext scope { vars, prev.functions() };
 
@@ -988,7 +989,7 @@ void Engine::visit(model::expression::relation::ScanExpression* node, ScopeConte
             return;
         }
     }
-    bless(node, std::move(relation));
+    bless(node, std::move(relation_type));
 }
 
 void Engine::visit(model::expression::relation::SelectionExpression* node, ScopeContext& prev) {
@@ -1118,7 +1119,7 @@ std::vector<std::shared_ptr<binding::VariableBinding>> Engine::create_column_var
     return results;
 }
 
-std::vector<binding::RelationBinding::JoinColumn> Engine::compute_join_columns(
+std::vector<binding::JoinStrategy::Column> Engine::compute_join_columns(
         model::expression::relation::JoinExpression const* node,
         std::vector<std::shared_ptr<binding::VariableBinding>> const& left_variables,
         std::vector<std::shared_ptr<binding::VariableBinding>> const& right_variables,
@@ -1160,7 +1161,7 @@ std::vector<binding::RelationBinding::JoinColumn> Engine::compute_join_columns(
         return {};
     }
 
-    std::vector<binding::RelationBinding::JoinColumn> columns {};
+    std::vector<binding::JoinStrategy::Column> columns {};
     for (std::size_t i = 0, n = left->columns().size(); i < n; ++i) {
         auto&& left_column = left->columns()[i];
         auto left_variable = left_variables[i];
@@ -1228,6 +1229,19 @@ std::vector<binding::RelationBinding::JoinColumn> Engine::compute_join_columns(
     return columns;
 }
 
+template<class T>
+static inline bool is_in(T&&) {
+    return false;
+}
+
+template<class T, class... Args>
+static inline bool is_in(T&& value, T&& first, Args&&... rest) {
+    if (value == first) {
+        return true;
+    }
+    return is_in(std::forward<T>(value), std::forward<Args>(rest)...);
+}
+
 void Engine::visit(model::expression::relation::JoinExpression* node, ScopeContext& prev) {
     using Kind = model::expression::relation::JoinExpression::Kind;
     dispatch(node->left(), prev);
@@ -1256,66 +1270,26 @@ void Engine::visit(model::expression::relation::JoinExpression* node, ScopeConte
     auto* right_type = dynamic_pointer_cast<common::core::type::Relation>(right_expr->type());
     auto&& left_variables = left_relation->output().columns();
     auto&& right_variables = right_relation->output().columns();
-    std::vector<binding::RelationBinding::JoinColumn> result_join_columns {};
+    std::vector<binding::JoinStrategy::Column> result_join_columns ;
+
+    auto natural = is_in(node->operator_kind(),
+        Kind::NATURAL_INNER,
+        Kind::NATURAL_LEFT_OUTER,
+        Kind::NATURAL_RIGHT_OUTER,
+        Kind::NATURAL_FULL_OUTER);
+    auto left_outer = is_in(node->operator_kind(),
+        Kind::LEFT_OUTER,
+        Kind::FULL_OUTER,
+        Kind::NATURAL_LEFT_OUTER,
+        Kind::NATURAL_FULL_OUTER);
+    auto right_outer = is_in(node->operator_kind(),
+        Kind::RIGHT_OUTER,
+        Kind::FULL_OUTER,
+        Kind::NATURAL_RIGHT_OUTER,
+        Kind::NATURAL_FULL_OUTER);
+    auto union_join = node->operator_kind() == Kind::UNION_OUTER;
+
     switch (node->operator_kind()) {
-        case Kind::CROSS:
-        case Kind::INNER:
-            result_join_columns = compute_join_columns(
-                node,
-                left_variables, right_variables,
-                left_type, right_type,
-                false, false, false);
-            break;
-        case Kind::LEFT_OUTER:
-            result_join_columns = compute_join_columns(
-                node,
-                left_variables, right_variables,
-                left_type, right_type,
-                false, false, true);
-            break;
-        case Kind::RIGHT_OUTER:
-            result_join_columns = compute_join_columns(
-                node,
-                left_variables, right_variables,
-                left_type, right_type,
-                false, true, false);
-            break;
-        case Kind::FULL_OUTER:
-        case Kind::UNION_OUTER:
-            result_join_columns = compute_join_columns(
-                node,
-                left_variables, right_variables,
-                left_type, right_type,
-                false, true, true);
-            break;
-        case Kind::NATURAL_INNER:
-            result_join_columns = compute_join_columns(
-                node,
-                left_variables, right_variables,
-                left_type, right_type,
-                true, false, false);
-            break;
-        case Kind::NATURAL_LEFT_OUTER:
-            result_join_columns = compute_join_columns(
-                node,
-                left_variables, right_variables,
-                left_type, right_type,
-                true, false, true);
-            break;
-        case Kind::NATURAL_RIGHT_OUTER:
-            result_join_columns = compute_join_columns(
-                node,
-                left_variables, right_variables,
-                left_type, right_type,
-                true, true, false);
-            break;
-        case Kind::NATURAL_FULL_OUTER:
-            result_join_columns = compute_join_columns(
-                node,
-                left_variables, right_variables,
-                left_type, right_type,
-                true, true, true);
-            break;
         case Kind::LEFT_SEMI:
             result_join_columns.reserve(left_variables.size());
             for (std::size_t i = 0, n = left_variables.size(); i < n; ++i) {
@@ -1342,6 +1316,15 @@ void Engine::visit(model::expression::relation::JoinExpression* node, ScopeConte
             break;
         case Kind::INVALID:
             std::abort();
+        default:
+            result_join_columns = compute_join_columns(
+                node,
+                left_variables, right_variables,
+                left_type, right_type,
+                natural,
+                right_outer || union_join,
+                left_outer || union_join);
+            break;
     }
     if (result_join_columns.empty()) {
         bless_erroneous_expression(node);
@@ -1386,7 +1369,15 @@ void Engine::visit(model::expression::relation::JoinExpression* node, ScopeConte
     auto relation = std::make_shared<binding::RelationBinding>(
         binding::RelationBinding::Profile { process_columns },
         relation_scope.profile());
-    relation->join_columns() = std::move(result_join_columns);
+    relation->join_strategy({
+        union_join ? binding::JoinStrategy::Kind::UNION : binding::JoinStrategy::Kind::NESTED_LOOP,
+        natural,
+        left_outer,
+        right_outer,
+        node->operator_kind() == Kind::LEFT_SEMI,
+        node->operator_kind() == Kind::RIGHT_SEMI,
+        std::move(result_join_columns),
+    });
     bless(node, std::move(relation));
     bless(node, std::move(result_type));
 }

@@ -116,13 +116,6 @@ public:
      * @param printer the destination printer
      * @param value the target value
      */
-    virtual void serialize(common::util::DataSerializer& printer, RelationBinding::JoinColumn const* value);  // NOLINT
-
-    /**
-     * @brief serializes the value into given printer.
-     * @param printer the destination printer
-     * @param value the target value
-     */
     virtual void serialize(common::util::DataSerializer& printer, common::schema::TableInfo const* value);  // NOLINT
 
     /**
@@ -131,6 +124,41 @@ public:
      * @param value the target value
      */
     virtual void serialize(common::util::DataSerializer& printer, common::schema::IndexInfo const* value);  // NOLINT
+
+    /**
+     * @brief serializes the value into given printer.
+     * @param printer the destination printer
+     * @param value the target value
+     */
+    virtual void serialize(common::util::DataSerializer& printer, ScanStrategy const* value);  // NOLINT
+
+    /**
+     * @brief serializes the value into given printer.
+     * @param printer the destination printer
+     * @param value the target value
+     */
+    virtual void serialize(common::util::DataSerializer& printer, ScanStrategy::Kind value);  // NOLINT
+
+    /**
+     * @brief serializes the value into given printer.
+     * @param printer the destination printer
+     * @param value the target value
+     */
+    virtual void serialize(common::util::DataSerializer& printer, JoinStrategy const* value);  // NOLINT
+
+    /**
+     * @brief serializes the value into given printer.
+     * @param printer the destination printer
+     * @param value the target value
+     */
+    virtual void serialize(common::util::DataSerializer& printer, JoinStrategy::Kind value);  // NOLINT
+
+    /**
+     * @brief serializes the value into given printer.
+     * @param printer the destination printer
+     * @param value the target value
+     */
+    virtual void serialize(common::util::DataSerializer& printer, JoinStrategy::Column const* value);  // NOLINT
 };
 
 }  // namespace shakujo::analyzer::binding

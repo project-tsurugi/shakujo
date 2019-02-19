@@ -251,15 +251,14 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, Relatio
         printer.exit_property("destination_columns");
     }
     {
-        printer.enter_property("join_columns");
-        auto& list = value->join_columns();
-        auto size = list.size();
-        printer.enter_array(size);
-        for (auto& element : list) {
-            serialize(printer, &element);
-        }
-        printer.exit_array(size);
-        printer.exit_property("join_columns");
+        printer.enter_property("scan_strategy");
+        serialize(printer, &value->scan_strategy());
+        printer.exit_property("scan_strategy");
+    }
+    {
+        printer.enter_property("join_strategy");
+        serialize(printer, &value->join_strategy());
+        printer.exit_property("join_strategy");
     }
     printer.exit_object("RelationBinding");
 }
@@ -294,11 +293,6 @@ void BindingSerializer::serialize(common::util::DataSerializer &printer, Relatio
             printer.enter_property("source_table");
             serialize(printer, &value->source_table());
             printer.exit_property("source_table");
-        }
-        {
-            printer.enter_property("source_index");
-            serialize(printer, &value->source_index());
-            printer.exit_property("source_index");
         }
         {
             printer.enter_property("order");
@@ -346,15 +340,216 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, Relatio
     }
 }
 
-void BindingSerializer::serialize(common::util::DataSerializer& printer, RelationBinding::JoinColumn const* value) {
+void BindingSerializer::serialize(common::util::DataSerializer& printer, common::schema::TableInfo const* value) {
+    if (!is_valid(value)) {
+        printer.value(nullptr);
+        return;
+    }
+    printer.enter_object("TableInfo");
+    {
+        printer.enter_property("name");
+        printer.value(value->name());
+        printer.exit_property("name");
+    }
+    printer.exit_object("TableInfo");
+}
+
+void BindingSerializer::serialize(common::util::DataSerializer& printer, common::schema::IndexInfo const* value) {
+    if (!is_valid(value)) {
+        printer.value(nullptr);
+        return;
+    }
+    printer.enter_object("IndexInfo");
+    {
+        printer.enter_property("is_primary");
+        printer.value(value->is_primary());
+        printer.exit_property("is_primary");
+    }
+    {
+        printer.enter_property("name");
+        printer.value(value->name());
+        printer.exit_property("name");
+    }
+    printer.exit_object("IndexInfo");
+}
+
+void BindingSerializer::serialize(common::util::DataSerializer& printer, ScanStrategy const* value) {
+    if (value == nullptr) {
+        printer.value(nullptr);
+        return;
+    }
+    printer.enter_object("ScanStrategy");
+    {
+        printer.enter_property("kind");
+        serialize(printer, value->kind());
+        printer.exit_property("kind");
+    }
+    {
+        printer.enter_property("table");
+        serialize(printer, &value->table());
+        printer.exit_property("table");
+    }
+    {
+        printer.enter_property("index");
+        serialize(printer, &value->index());
+        printer.exit_property("index");
+    }
+    {
+        printer.enter_property("key_columns");
+        auto& list = value->key_columns();
+        auto size = list.size();
+        printer.enter_array(size);
+        for (auto& element : list) {
+            serialize(printer, element.get());
+        }
+        printer.exit_array(size);
+        printer.exit_property("key_columns");
+    }
+    {
+        printer.enter_property("lower_limit");
+        auto& list = value->lower_limit();
+        auto size = list.size();
+        printer.enter_array(size);
+        for (auto& element : list) {
+            serialize(printer, element.get());
+        }
+        printer.exit_array(size);
+        printer.exit_property("lower_limit");
+    }
+    {
+        printer.enter_property("lower_inclusive");
+        printer.value(value->lower_inclusive());
+        printer.exit_property("lower_inclusive");
+    }
+    {
+        printer.enter_property("upper_limit");
+        auto& list = value->upper_limit();
+        auto size = list.size();
+        printer.enter_array(size);
+        for (auto& element : list) {
+            serialize(printer, element.get());
+        }
+        printer.exit_array(size);
+        printer.exit_property("upper_limit");
+    }
+    {
+        printer.enter_property("upper_inclusive");
+        printer.value(value->upper_inclusive());
+        printer.exit_property("upper_inclusive");
+    }
+    {
+        printer.enter_property("prefix");
+        auto& list = value->prefix();
+        auto size = list.size();
+        printer.enter_array(size);
+        for (auto& element : list) {
+            serialize(printer, element.get());
+        }
+        printer.exit_array(size);
+        printer.exit_property("prefix");
+    }
+    printer.exit_object("ScanStrategy");
+}
+
+void BindingSerializer::serialize(common::util::DataSerializer& printer, ScanStrategy::Kind value) {
+    if (show_enum_kind()) {
+        if (show_qualified_kind()) {
+            printer.enter_object("Kind");
+        } else {
+            printer.enter_object("ScanStrategy::Kind");
+        }
+        printer.enter_property("value");
+        printer.value(to_string_view(value));
+        printer.exit_property("value");
+        if (show_qualified_kind()) {
+            printer.exit_object("Kind");
+        } else {
+            printer.exit_object("ScanStrategy::Kind");
+        }
+    } else {
+        printer.value(to_string_view(value));
+    }
+}
+
+void BindingSerializer::serialize(common::util::DataSerializer& printer, JoinStrategy const* value) {
+    if (value == nullptr) {
+        printer.value(nullptr);
+        return;
+    }
+    printer.enter_object("JoinStrategy");
+    {
+        printer.enter_property("kind");
+        serialize(printer, value->kind());
+        printer.exit_property("kind");
+    }
+    {
+        printer.enter_property("natural");
+        printer.value(value->natural());
+        printer.exit_property("natural");
+    }
+    {
+        printer.enter_property("left_outer");
+        printer.value(value->left_outer());
+        printer.exit_property("left_outer");
+    }
+    {
+        printer.enter_property("right_outer");
+        printer.value(value->right_outer());
+        printer.exit_property("right_outer");
+    }
+    {
+        printer.enter_property("left_semi");
+        printer.value(value->left_semi());
+        printer.exit_property("left_semi");
+    }
+    {
+        printer.enter_property("right_semi");
+        printer.value(value->right_semi());
+        printer.exit_property("right_semi");
+    }
+    {
+        printer.enter_property("columns");
+        auto& list = value->columns();
+        auto size = list.size();
+        printer.enter_array(size);
+        for (auto& element : list) {
+            serialize(printer, &element);
+        }
+        printer.exit_array(size);
+        printer.exit_property("columns");
+    }
+    printer.exit_object("JoinStrategy");
+}
+
+void BindingSerializer::serialize(common::util::DataSerializer& printer, JoinStrategy::Kind value) {
+    if (show_enum_kind()) {
+        if (show_qualified_kind()) {
+            printer.enter_object("Kind");
+        } else {
+            printer.enter_object("JoinStrategy::Kind");
+        }
+        printer.enter_property("value");
+        printer.value(to_string_view(value));
+        printer.exit_property("value");
+        if (show_qualified_kind()) {
+            printer.exit_object("Kind");
+        } else {
+            printer.exit_object("JoinStrategy::Kind");
+        }
+    } else {
+        printer.value(to_string_view(value));
+    }
+}
+
+void BindingSerializer::serialize(common::util::DataSerializer& printer, JoinStrategy::Column const* value) {
     if (value == nullptr) {
         printer.value(nullptr);
         return;
     }
     if (show_qualified_kind()) {
-        printer.enter_object("JoinColumn");
+        printer.enter_object("Column");
     } else {
-        printer.enter_object("RelationBinding::JoinColumn");
+        printer.enter_object("JoinStrategy::Column");
     }
     {
         printer.enter_property("qualifiers");
@@ -393,43 +588,10 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, Relatio
         printer.exit_property("nullify_right_source");
     }
     if (show_qualified_kind()) {
-        printer.exit_object("JoinColumn");
+        printer.exit_object("Column");
     } else {
-        printer.exit_object("RelationBinding::JoinColumn");
+        printer.exit_object("JoinStrategy::Column");
     }
-}
-
-void BindingSerializer::serialize(common::util::DataSerializer& printer, common::schema::TableInfo const* value) {
-    if (!is_valid(value)) {
-        printer.value(nullptr);
-        return;
-    }
-    printer.enter_object("TableInfo");
-    {
-        printer.enter_property("name");
-        printer.value(value->name());
-        printer.exit_property("name");
-    }
-    printer.exit_object("TableInfo");
-}
-
-void BindingSerializer::serialize(common::util::DataSerializer& printer, common::schema::IndexInfo const* value) {
-    if (!is_valid(value)) {
-        printer.value(nullptr);
-        return;
-    }
-    printer.enter_object("IndexInfo");
-    {
-        printer.enter_property("is_primary");
-        printer.value(value->is_primary());
-        printer.exit_property("is_primary");
-    }
-    {
-        printer.enter_property("name");
-        printer.value(value->name());
-        printer.exit_property("name");
-    }
-    printer.exit_object("IndexInfo");
 }
 
 }  // namespace shakujo::analyzer::binding

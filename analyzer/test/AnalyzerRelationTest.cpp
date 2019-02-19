@@ -80,6 +80,12 @@ TEST_F(AnalyzerRelationTest, scan) {
     EXPECT_TRUE(binding->output().source_table());
     EXPECT_EQ(binding->output().order().size(), 0U);
     EXPECT_FALSE(binding->output().distinct());
+
+    auto&& strategy = binding->scan_strategy();
+    ASSERT_TRUE(strategy.is_valid());
+    EXPECT_EQ(strategy.table().name(), "testing");
+    EXPECT_FALSE(strategy.index());
+    EXPECT_EQ(strategy.kind(), binding::ScanStrategy::Kind::FULL);
 }
 
 TEST_F(AnalyzerRelationTest, scan_alias) {
@@ -96,6 +102,13 @@ TEST_F(AnalyzerRelationTest, scan_alias) {
     EXPECT_EQ("C1", cols[0].name());
     EXPECT_EQ(t::Int(32, NON_NULL), *cols[0].type());
     EXPECT_EQ(names({"TT"}), cols[0].qualifiers());
+
+    auto binding = extract_relation(expr.get());
+    auto&& strategy = binding->scan_strategy();
+    ASSERT_TRUE(strategy.is_valid());
+    EXPECT_EQ(strategy.table().name(), "testing");
+    EXPECT_FALSE(strategy.index());
+    EXPECT_EQ(strategy.kind(), binding::ScanStrategy::Kind::FULL);
 }
 
 TEST_F(AnalyzerRelationTest, scan_select) {
@@ -112,6 +125,13 @@ TEST_F(AnalyzerRelationTest, scan_select) {
     EXPECT_EQ("C1", cols[0].name());
     EXPECT_EQ(t::Int(32, NON_NULL), *cols[0].type());
     EXPECT_EQ(names({"testing"}), cols[0].qualifiers());
+
+    auto binding = extract_relation(expr.get());
+    auto&& strategy = binding->scan_strategy();
+    ASSERT_TRUE(strategy.is_valid());
+    EXPECT_EQ(strategy.table().name(), "testing");
+    EXPECT_FALSE(strategy.index());
+    EXPECT_EQ(strategy.kind(), binding::ScanStrategy::Kind::FULL);
 }
 
 TEST_F(AnalyzerRelationTest, scan_not_found) {
@@ -421,17 +441,35 @@ TEST_F(AnalyzerRelationTest, join) {
     ));
     success();
 
-    auto* relation = extract_relation_type(expr.get());
-    auto& cols = relation->columns();
-    ASSERT_EQ(2U, cols.size());
+    auto relation = extract_relation(expr.get());
+    auto&& left = extract_relation(expr->left())->output();
+    auto&& right = extract_relation(expr->right())->output();
+    auto&& output = relation->output();
+    auto&& join = relation->join_strategy();
 
-    EXPECT_EQ(names({"T1"}), cols[0].qualifiers());
-    EXPECT_EQ("C1", cols[0].name());
-    EXPECT_EQ(t::Int(32, NON_NULL), *cols[0].type());
+    EXPECT_EQ(join.kind(), binding::JoinStrategy::Kind::NESTED_LOOP);
+    EXPECT_FALSE(join.natural());
+    EXPECT_FALSE(join.left_outer());
+    EXPECT_FALSE(join.right_outer());
+    EXPECT_FALSE(join.left_semi());
+    EXPECT_FALSE(join.right_semi());
 
-    EXPECT_EQ(names({"T2"}), cols[1].qualifiers());
-    EXPECT_EQ("C2", cols[1].name());
-    EXPECT_EQ(t::Int(32, NON_NULL), *cols[1].type());
+    auto&& columns = join.columns();
+    ASSERT_EQ(columns.size(), 2U);
+    {
+        auto&& c = columns[0];
+        EXPECT_EQ(c.output(), output.columns()[0]);
+        EXPECT_EQ(c.left_source(), left.columns()[0]);
+        EXPECT_EQ(c.right_source(), nullptr);
+        EXPECT_FALSE(c.nullify_left_source());
+    }
+    {
+        auto&& c = columns[1];
+        EXPECT_EQ(c.output(), output.columns()[1]);
+        EXPECT_EQ(c.left_source(), nullptr);
+        EXPECT_EQ(c.right_source(), right.columns()[0]);
+        EXPECT_FALSE(c.nullify_right_source());
+    }
 }
 
 TEST_F(AnalyzerRelationTest, join_inner) {
@@ -453,15 +491,38 @@ TEST_F(AnalyzerRelationTest, join_inner) {
     success();
 
     auto relation = extract_relation(expr.get());
-    auto& cols = relation->process().columns();
-    ASSERT_EQ(2U, cols.size());
+    auto&& left = extract_relation(expr->left())->output();
+    auto&& right = extract_relation(expr->right())->output();
+    auto&& output = relation->output();
+    auto&& join = relation->join_strategy();
+
+    EXPECT_EQ(join.kind(), binding::JoinStrategy::Kind::NESTED_LOOP);
+    EXPECT_FALSE(join.natural());
+    EXPECT_FALSE(join.left_outer());
+    EXPECT_FALSE(join.right_outer());
+    EXPECT_FALSE(join.left_semi());
+    EXPECT_FALSE(join.right_semi());
+
+    auto&& columns = join.columns();
+    ASSERT_EQ(columns.size(), 2U);
+    {
+        auto&& c = columns[0];
+        EXPECT_EQ(c.output(), output.columns()[0]);
+        EXPECT_EQ(c.left_source(), left.columns()[0]);
+        EXPECT_EQ(c.right_source(), nullptr);
+        EXPECT_FALSE(c.nullify_left_source());
+    }
+    {
+        auto&& c = columns[1];
+        EXPECT_EQ(c.output(), output.columns()[1]);
+        EXPECT_EQ(c.left_source(), nullptr);
+        EXPECT_EQ(c.right_source(), right.columns()[0]);
+        EXPECT_FALSE(c.nullify_right_source());
+    }
 
     auto* cond = as<expression::BinaryOperator>(expr->condition());
-    auto* left = as<expression::VariableReference>(cond->left());
-    EXPECT_EQ(cols[0], extract_var(left));
-
-    auto* right = as<expression::VariableReference>(cond->right());
-    EXPECT_EQ(cols[1], extract_var(right));
+    EXPECT_EQ(left.columns()[0], extract_var(cond->left()));
+    EXPECT_EQ(right.columns()[0], extract_var(cond->right()));
 }
 
 TEST_F(AnalyzerRelationTest, join_left_outer) {
@@ -475,19 +536,46 @@ TEST_F(AnalyzerRelationTest, join_left_outer) {
         model::expression::relation::JoinExpression::Kind::LEFT_OUTER,
         f.ScanExpression(f.Name("T1")),
         f.ScanExpression(f.Name("T2")),
-        {}
+        f.BinaryOperator(
+            model::expression::BinaryOperator::Kind::EQUAL,
+            var("C1"),
+            var("C2"))
     ));
     success();
 
-    auto* relation = extract_relation_type(expr.get());
-    auto& cols = relation->columns();
-    ASSERT_EQ(2U, cols.size());
+    auto relation = extract_relation(expr.get());
+    auto&& left = extract_relation(expr->left())->output();
+    auto&& right = extract_relation(expr->right())->output();
+    auto&& output = relation->output();
+    auto&& join = relation->join_strategy();
 
-    EXPECT_EQ("C1", cols[0].name());
-    EXPECT_EQ(t::Int(32, NON_NULL), *cols[0].type());
+    EXPECT_EQ(join.kind(), binding::JoinStrategy::Kind::NESTED_LOOP);
+    EXPECT_FALSE(join.natural());
+    EXPECT_TRUE(join.left_outer());
+    EXPECT_FALSE(join.right_outer());
+    EXPECT_FALSE(join.left_semi());
+    EXPECT_FALSE(join.right_semi());
 
-    EXPECT_EQ("C2", cols[1].name());
-    EXPECT_EQ(t::Int(32, NULLABLE), *cols[1].type());
+    auto&& columns = join.columns();
+    ASSERT_EQ(columns.size(), 2U);
+    {
+        auto&& c = columns[0];
+        EXPECT_EQ(c.output(), output.columns()[0]);
+        EXPECT_EQ(c.left_source(), left.columns()[0]);
+        EXPECT_EQ(c.right_source(), nullptr);
+        EXPECT_FALSE(c.nullify_left_source());
+    }
+    {
+        auto&& c = columns[1];
+        EXPECT_EQ(c.output(), output.columns()[1]);
+        EXPECT_EQ(c.left_source(), nullptr);
+        EXPECT_EQ(c.right_source(), right.columns()[0]);
+        EXPECT_TRUE(c.nullify_right_source());
+    }
+
+    auto* cond = as<expression::BinaryOperator>(expr->condition());
+    EXPECT_EQ(left.columns()[0], extract_var(cond->left()));
+    EXPECT_EQ(right.columns()[0], extract_var(cond->right()));
 }
 
 TEST_F(AnalyzerRelationTest, join_right_outer) {
@@ -501,19 +589,46 @@ TEST_F(AnalyzerRelationTest, join_right_outer) {
         model::expression::relation::JoinExpression::Kind::RIGHT_OUTER,
         f.ScanExpression(f.Name("T1")),
         f.ScanExpression(f.Name("T2")),
-        {}
+        f.BinaryOperator(
+            model::expression::BinaryOperator::Kind::EQUAL,
+            var("C1"),
+            var("C2"))
     ));
     success();
 
-    auto* relation = extract_relation_type(expr.get());
-    auto& cols = relation->columns();
-    ASSERT_EQ(2U, cols.size());
+    auto relation = extract_relation(expr.get());
+    auto&& left = extract_relation(expr->left())->output();
+    auto&& right = extract_relation(expr->right())->output();
+    auto&& output = relation->output();
+    auto&& join = relation->join_strategy();
 
-    EXPECT_EQ("C1", cols[0].name());
-    EXPECT_EQ(t::Int(32, NULLABLE), *cols[0].type());
+    EXPECT_EQ(join.kind(), binding::JoinStrategy::Kind::NESTED_LOOP);
+    EXPECT_FALSE(join.natural());
+    EXPECT_FALSE(join.left_outer());
+    EXPECT_TRUE(join.right_outer());
+    EXPECT_FALSE(join.left_semi());
+    EXPECT_FALSE(join.right_semi());
 
-    EXPECT_EQ("C2", cols[1].name());
-    EXPECT_EQ(t::Int(32, NON_NULL), *cols[1].type());
+    auto&& columns = join.columns();
+    ASSERT_EQ(columns.size(), 2U);
+    {
+        auto&& c = columns[0];
+        EXPECT_EQ(c.output(), output.columns()[0]);
+        EXPECT_EQ(c.left_source(), left.columns()[0]);
+        EXPECT_EQ(c.right_source(), nullptr);
+        EXPECT_TRUE(c.nullify_left_source());
+    }
+    {
+        auto&& c = columns[1];
+        EXPECT_EQ(c.output(), output.columns()[1]);
+        EXPECT_EQ(c.left_source(), nullptr);
+        EXPECT_EQ(c.right_source(), right.columns()[0]);
+        EXPECT_FALSE(c.nullify_right_source());
+    }
+
+    auto* cond = as<expression::BinaryOperator>(expr->condition());
+    EXPECT_EQ(left.columns()[0], extract_var(cond->left()));
+    EXPECT_EQ(right.columns()[0], extract_var(cond->right()));
 }
 
 TEST_F(AnalyzerRelationTest, join_full_outer) {
@@ -527,19 +642,46 @@ TEST_F(AnalyzerRelationTest, join_full_outer) {
         model::expression::relation::JoinExpression::Kind::FULL_OUTER,
         f.ScanExpression(f.Name("T1")),
         f.ScanExpression(f.Name("T2")),
-        {}
+        f.BinaryOperator(
+            model::expression::BinaryOperator::Kind::EQUAL,
+            var("C1"),
+            var("C2"))
     ));
     success();
 
-    auto* relation = extract_relation_type(expr.get());
-    auto& cols = relation->columns();
-    ASSERT_EQ(2U, cols.size());
+    auto relation = extract_relation(expr.get());
+    auto&& left = extract_relation(expr->left())->output();
+    auto&& right = extract_relation(expr->right())->output();
+    auto&& output = relation->output();
+    auto&& join = relation->join_strategy();
 
-    EXPECT_EQ("C1", cols[0].name());
-    EXPECT_EQ(t::Int(32, NULLABLE), *cols[0].type());
+    EXPECT_EQ(join.kind(), binding::JoinStrategy::Kind::NESTED_LOOP);
+    EXPECT_FALSE(join.natural());
+    EXPECT_TRUE(join.left_outer());
+    EXPECT_TRUE(join.right_outer());
+    EXPECT_FALSE(join.left_semi());
+    EXPECT_FALSE(join.right_semi());
 
-    EXPECT_EQ("C2", cols[1].name());
-    EXPECT_EQ(t::Int(32, NULLABLE), *cols[1].type());
+    auto&& columns = join.columns();
+    ASSERT_EQ(columns.size(), 2U);
+    {
+        auto&& c = columns[0];
+        EXPECT_EQ(c.output(), output.columns()[0]);
+        EXPECT_EQ(c.left_source(), left.columns()[0]);
+        EXPECT_EQ(c.right_source(), nullptr);
+        EXPECT_TRUE(c.nullify_left_source());
+    }
+    {
+        auto&& c = columns[1];
+        EXPECT_EQ(c.output(), output.columns()[1]);
+        EXPECT_EQ(c.left_source(), nullptr);
+        EXPECT_EQ(c.right_source(), right.columns()[0]);
+        EXPECT_TRUE(c.nullify_right_source());
+    }
+
+    auto* cond = as<expression::BinaryOperator>(expr->condition());
+    EXPECT_EQ(left.columns()[0], extract_var(cond->left()));
+    EXPECT_EQ(right.columns()[0], extract_var(cond->right()));
 }
 
 TEST_F(AnalyzerRelationTest, join_natural) {
@@ -559,21 +701,43 @@ TEST_F(AnalyzerRelationTest, join_natural) {
     ));
     success();
 
-    auto* relation = extract_relation_type(expr.get());
-    auto& cols = relation->columns();
-    ASSERT_EQ(3U, cols.size());
+    auto relation = extract_relation(expr.get());
+    auto&& left = extract_relation(expr->left())->output();
+    auto&& right = extract_relation(expr->right())->output();
+    auto&& output = relation->output();
+    auto&& join = relation->join_strategy();
 
-    EXPECT_EQ(names({"T1", "T2"}), cols[0].qualifiers());
-    EXPECT_EQ("K", cols[0].name());
-    EXPECT_EQ(t::Int(32, NON_NULL), *cols[0].type());
+    EXPECT_EQ(join.kind(), binding::JoinStrategy::Kind::NESTED_LOOP);
+    EXPECT_TRUE(join.natural());
+    EXPECT_FALSE(join.left_outer());
+    EXPECT_FALSE(join.right_outer());
+    EXPECT_FALSE(join.left_semi());
+    EXPECT_FALSE(join.right_semi());
 
-    EXPECT_EQ(names({"T1"}), cols[1].qualifiers());
-    EXPECT_EQ("C1", cols[1].name());
-    EXPECT_EQ(t::Int(32, NON_NULL), *cols[1].type());
-
-    EXPECT_EQ(names({"T2"}), cols[2].qualifiers());
-    EXPECT_EQ("C2", cols[2].name());
-    EXPECT_EQ(t::Int(32, NON_NULL), *cols[2].type());
+    auto&& columns = join.columns();
+    ASSERT_EQ(columns.size(), 3U);
+    {
+        auto&& c = columns[0];
+        EXPECT_EQ(c.output(), output.columns()[0]);
+        EXPECT_EQ(c.left_source(), left.columns()[0]);
+        EXPECT_EQ(c.right_source(), right.columns()[0]);
+        EXPECT_FALSE(c.nullify_left_source());
+        EXPECT_FALSE(c.nullify_right_source());
+    }
+    {
+        auto&& c = columns[1];
+        EXPECT_EQ(c.output(), output.columns()[1]);
+        EXPECT_EQ(c.left_source(), left.columns()[1]);
+        EXPECT_EQ(c.right_source(), nullptr);
+        EXPECT_FALSE(c.nullify_left_source());
+    }
+    {
+        auto&& c = columns[2];
+        EXPECT_EQ(c.output(), output.columns()[2]);
+        EXPECT_EQ(c.left_source(), nullptr);
+        EXPECT_EQ(c.right_source(), right.columns()[1]);
+        EXPECT_FALSE(c.nullify_right_source());
+    }
 }
 
 TEST_F(AnalyzerRelationTest, join_natural_missing) {
@@ -717,15 +881,38 @@ TEST_F(AnalyzerRelationTest, join_qualified_column) {
     success();
 
     auto relation = extract_relation(expr.get());
-    auto& cols = relation->process().columns();
-    ASSERT_EQ(2U, cols.size());
+    auto&& left = extract_relation(expr->left())->output();
+    auto&& right = extract_relation(expr->right())->output();
+    auto&& output = relation->output();
+    auto&& join = relation->join_strategy();
+
+    EXPECT_EQ(join.kind(), binding::JoinStrategy::Kind::NESTED_LOOP);
+    EXPECT_FALSE(join.natural());
+    EXPECT_FALSE(join.left_outer());
+    EXPECT_FALSE(join.right_outer());
+    EXPECT_FALSE(join.left_semi());
+    EXPECT_FALSE(join.right_semi());
+
+    auto&& columns = join.columns();
+    ASSERT_EQ(columns.size(), 2U);
+    {
+        auto&& c = columns[0];
+        EXPECT_EQ(c.output(), output.columns()[0]);
+        EXPECT_EQ(c.left_source(), left.columns()[0]);
+        EXPECT_EQ(c.right_source(), nullptr);
+        EXPECT_FALSE(c.nullify_left_source());
+    }
+    {
+        auto&& c = columns[1];
+        EXPECT_EQ(c.output(), output.columns()[1]);
+        EXPECT_EQ(c.left_source(), nullptr);
+        EXPECT_EQ(c.right_source(), right.columns()[0]);
+        EXPECT_FALSE(c.nullify_right_source());
+    }
 
     auto* cond = as<expression::BinaryOperator>(expr->condition());
-    auto* left = as<expression::VariableReference>(cond->left());
-    EXPECT_EQ(cols[0], extract_var(left));
-
-    auto* right = as<expression::VariableReference>(cond->right());
-    EXPECT_EQ(cols[1], extract_var(right));
+    EXPECT_EQ(left.columns()[0], extract_var(cond->left()));
+    EXPECT_EQ(right.columns()[0], extract_var(cond->right()));
 }
 
 TEST_F(AnalyzerRelationTest, aggregation) {

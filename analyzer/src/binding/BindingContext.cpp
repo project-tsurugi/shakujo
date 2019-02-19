@@ -18,7 +18,12 @@
 #include <sstream>
 #include <stdexcept>
 
+#include "shakujo/common/util/utility.h"
+
 namespace shakujo::analyzer::binding {
+
+using common::util::is_defined;
+using common::util::to_string;
 
 namespace {
     template<typename B, typename K = typename B::key_type>
@@ -58,15 +63,13 @@ public:
     typename std::shared_ptr<typename T::binding_type> extract(
             typename T::key_type const* key,
             std::string_view name = {}) const {
-        if (!key->template has_entity<T>()) {
+        if (!is_defined(key) || !key->template has_entity<T>()) {
             if (name.empty()) return {};
             std::ostringstream ss;
-            if (key->template has_entity<typename T::entity_type>()) {
-                ss << name << " is not yet initialized";
-            } else {
-                ss << name << " is incompatible for this context kind";
+            if (!is_defined(key) || key->template has_entity<typename T::entity_type>()) {
+                throw std::domain_error(to_string(name, " is not yet initialized"));
             }
-            throw std::domain_error(ss.str());
+            throw std::domain_error(to_string(name, " is incompatible for this context kind"));
         }
         auto entity = key->template entity<T>();
         if (entity->identity_.get() != identity_.get()) {
