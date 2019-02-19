@@ -46,25 +46,23 @@ TEST_F(AnalyzerDdlTest, CreateTable) {
         }));
     success();
 
-    EXPECT_TRUE(equals(f.Name("table"), stmt->table()));
+    auto&& table = extract_relation(stmt.get())->destination_table();
+    ASSERT_TRUE(table);
+    EXPECT_EQ(table.name(), "table");
 
-    auto& cols = stmt->columns();
-    ASSERT_EQ(1U, cols.size());
+    auto&& columns = table.columns();
+    ASSERT_EQ(columns.size(), 1U);
     {
-        auto* c = cols[0];
-        EXPECT_TRUE(equals(f.SimpleName("C1"), c->name()));
-        EXPECT_TRUE(equals(f.Int32Type(), c->type()));
-        EXPECT_FALSE(c->value());
-
-        auto& attrs = c->attributes();
-        EXPECT_EQ(0U, attrs.size());
+        auto&& c = columns[0];
+        EXPECT_EQ(c.name(), "C1");
+        EXPECT_EQ(*c.type(), t::Int(32U, NULLABLE));
+        EXPECT_EQ(c.default_value(), nullptr);
     }
 
-    auto& attrs = stmt->attributes();
-    EXPECT_EQ(0U, attrs.size());
+    EXPECT_FALSE(table.primary_index().is_valid());
 
-    auto& pks = stmt->primary_keys();
-    ASSERT_EQ(0U, pks.size());
+    auto&& indices = table.secondary_indices();
+    ASSERT_EQ(indices.size(), 0U);
 }
 
 TEST_F(AnalyzerDdlTest, CreateTable_default_value) {
@@ -75,16 +73,18 @@ TEST_F(AnalyzerDdlTest, CreateTable_default_value) {
         }));
     success();
 
-    EXPECT_TRUE(equals(f.Name("table"), stmt->table()));
 
-    auto& cols = stmt->columns();
-    ASSERT_EQ(1U, cols.size());
+    auto&& table = extract_relation(stmt.get())->destination_table();
+    ASSERT_TRUE(table);
+    EXPECT_EQ(table.name(), "table");
+
+    auto&& columns = table.columns();
+    ASSERT_EQ(columns.size(), 1U);
     {
-        auto* c = cols[0];
-        EXPECT_TRUE(equals(f.SimpleName("C1"), c->name()));
-        EXPECT_TRUE(equals(f.Int32Type(), c->type()));
-        EXPECT_EQ(1024, get<v::Int>(c->value()));
-        EXPECT_EQ(t::Int(32U, NULLABLE), type(c->value()));
+        auto&& c = columns[0];
+        EXPECT_EQ(c.name(), "C1");
+        EXPECT_EQ(*c.type(), t::Int(32U, NULLABLE));
+        EXPECT_EQ(*c.default_value(), v::Int(1024));
     }
 }
 
@@ -102,17 +102,24 @@ TEST_F(AnalyzerDdlTest, CreateTable_default_value_not_null) {
         }));
     success();
 
-    EXPECT_TRUE(equals(f.Name("table"), stmt->table()));
 
-    auto& cols = stmt->columns();
-    ASSERT_EQ(1U, cols.size());
+    auto&& table = extract_relation(stmt.get())->destination_table();
+    ASSERT_TRUE(table);
+    EXPECT_EQ(table.name(), "table");
+
+    auto&& columns = table.columns();
+    ASSERT_EQ(columns.size(), 1U);
     {
-        auto* c = cols[0];
-        EXPECT_TRUE(equals(f.SimpleName("C1"), c->name()));
-        EXPECT_TRUE(equals(f.Int32Type(), c->type()));
-        EXPECT_EQ(1024, get<v::Int>(c->value()));
-        EXPECT_EQ(t::Int(32U, NON_NULL), type(c->value()));
+        auto&& c = columns[0];
+        EXPECT_EQ(c.name(), "C1");
+        EXPECT_EQ(*c.type(), t::Int(32U, NON_NULL));
+        EXPECT_EQ(*c.default_value(), v::Int(1024));
     }
+
+    EXPECT_FALSE(table.primary_index().is_valid());
+
+    auto&& indices = table.secondary_indices();
+    ASSERT_EQ(indices.size(), 0U);
 }
 
 TEST_F(AnalyzerDdlTest, CreateTable_default_value_primary_key) {
@@ -129,17 +136,30 @@ TEST_F(AnalyzerDdlTest, CreateTable_default_value_primary_key) {
         }));
     success();
 
-    EXPECT_TRUE(equals(f.Name("table"), stmt->table()));
+    auto&& table = extract_relation(stmt.get())->destination_table();
+    ASSERT_TRUE(table);
+    EXPECT_EQ(table.name(), "table");
 
-    auto& cols = stmt->columns();
-    ASSERT_EQ(1U, cols.size());
+    auto&& columns = table.columns();
+    ASSERT_EQ(columns.size(), 1U);
     {
-        auto* c = cols[0];
-        EXPECT_TRUE(equals(f.SimpleName("C1"), c->name()));
-        EXPECT_TRUE(equals(f.Int32Type(), c->type()));
-        EXPECT_EQ(1024, get<v::Int>(c->value()));
-        EXPECT_EQ(t::Int(32U, NON_NULL), type(c->value()));
+        auto&& c = columns[0];
+        EXPECT_EQ(c.name(), "C1");
+        EXPECT_EQ(*c.type(), t::Int(32U, NON_NULL));
+        EXPECT_EQ(*c.default_value(), v::Int(1024));
     }
+
+    auto&& pk = table.primary_index().columns();
+    EXPECT_TRUE(table.primary_index().is_primary());
+    ASSERT_EQ(pk.size(), 1U);
+    {
+        auto&& c = pk[0];
+        EXPECT_EQ(c.name(), "C1");
+        EXPECT_EQ(c.direction(), common::core::Direction::ASCENDANT);
+    }
+
+    auto&& indices = table.secondary_indices();
+    ASSERT_EQ(indices.size(), 0U);
 }
 
 TEST_F(AnalyzerDdlTest, CreateTable_column_primary_key) {
@@ -151,33 +171,94 @@ TEST_F(AnalyzerDdlTest, CreateTable_column_primary_key) {
                 f.Int32Type(),
                 {},
                 {
-                    CreateTableStatement::Column::Attribute::PRIMARY_KEY,
+                    CreateTableStatement::Column::Attribute::NOT_NULL,
                 }),
+        },
+        {},
+        {
+            f.CreateTableStatementPrimaryKey(f.Name("C1")),
         }));
     success();
 
-    EXPECT_TRUE(equals(f.Name("table"), stmt->table()));
+    auto&& table = extract_relation(stmt.get())->destination_table();
+    ASSERT_TRUE(table);
+    EXPECT_EQ(table.name(), "table");
 
-    auto& cols = stmt->columns();
-    ASSERT_EQ(1U, cols.size());
+    auto&& columns = table.columns();
+    ASSERT_EQ(columns.size(), 1U);
     {
-        auto* c = cols[0];
-        EXPECT_TRUE(equals(f.SimpleName("C1"), c->name()));
-        EXPECT_TRUE(equals(f.Int32Type(), c->type()));
-        EXPECT_FALSE(c->value());
-
-        auto& attrs = c->attributes();
-        EXPECT_EQ(1U, attrs.size());
-        EXPECT_NE(attrs.end(), attrs.find(CreateTableStatement::Column::Attribute::NOT_NULL));
+        auto&& c = columns[0];
+        EXPECT_EQ(c.name(), "C1");
+        EXPECT_EQ(*c.type(), t::Int(32U, NON_NULL));
+        EXPECT_EQ(c.default_value(), nullptr);
     }
 
-    auto& pks = stmt->primary_keys();
-    ASSERT_EQ(1U, pks.size());
+    auto&& pk = table.primary_index().columns();
+    EXPECT_TRUE(table.primary_index().is_primary());
+    ASSERT_EQ(pk.size(), 1U);
     {
-        auto* k = pks[0];
-        EXPECT_TRUE(equals(f.SimpleName("C1"), k->name()));
-        EXPECT_EQ(CreateTableStatement::PrimaryKey::Direction::DONT_CARE, k->direction());
+        auto&& c = pk[0];
+        EXPECT_EQ(c.name(), "C1");
+        EXPECT_EQ(c.direction(), common::core::Direction::ASCENDANT);
     }
+
+    auto&& indices = table.secondary_indices();
+    ASSERT_EQ(indices.size(), 0U);
+}
+
+TEST_F(AnalyzerDdlTest, CreateTable_column_primary_key_multiple) {
+    auto stmt = analyze(f.CreateTableStatement(
+        f.Name("table"),
+        {
+            f.CreateTableStatementColumn(f.Name("C1"), f.Int32Type()),
+            f.CreateTableStatementColumn(f.Name("C2"), f.Int32Type()),
+            f.CreateTableStatementColumn(f.Name("C3"), f.Int32Type()),
+        },
+        {},
+        {
+            f.CreateTableStatementPrimaryKey(f.Name("C3"), CreateTableStatement::PrimaryKey::Direction::ASCENDANT),
+            f.CreateTableStatementPrimaryKey(f.Name("C2"), CreateTableStatement::PrimaryKey::Direction::DESCENDANT),
+        }));
+    success();
+
+    auto&& table = extract_relation(stmt.get())->destination_table();
+    ASSERT_TRUE(table);
+    EXPECT_EQ(table.name(), "table");
+
+    auto&& columns = table.columns();
+    ASSERT_EQ(columns.size(), 3U);
+    {
+        auto&& c = columns[0];
+        EXPECT_EQ(c.name(), "C1");
+        EXPECT_EQ(*c.type(), t::Int(32U, NULLABLE));
+    }
+    {
+        auto&& c = columns[1];
+        EXPECT_EQ(c.name(), "C2");
+        EXPECT_EQ(*c.type(), t::Int(32U, NULLABLE));
+    }
+    {
+        auto&& c = columns[2];
+        EXPECT_EQ(c.name(), "C3");
+        EXPECT_EQ(*c.type(), t::Int(32U, NULLABLE));
+    }
+
+    auto&& pk = table.primary_index().columns();
+    EXPECT_TRUE(table.primary_index().is_primary());
+    ASSERT_EQ(pk.size(), 2U);
+    {
+        auto&& c = pk[0];
+        EXPECT_EQ(c.name(), "C3");
+        EXPECT_EQ(c.direction(), common::core::Direction::ASCENDANT);
+    }
+    {
+        auto&& c = pk[1];
+        EXPECT_EQ(c.name(), "C2");
+        EXPECT_EQ(c.direction(), common::core::Direction::DESCENDANT);
+    }
+
+    auto&& indices = table.secondary_indices();
+    ASSERT_EQ(indices.size(), 0U);
 }
 
 TEST_F(AnalyzerDdlTest, CreateTable_duplicate_columns) {
@@ -213,6 +294,20 @@ TEST_F(AnalyzerDdlTest, CreateTable_unknown_primary_key) {
         {},
         {
             f.CreateTableStatementPrimaryKey(f.Name("MISSING"))
+        }));
+    success(false);
+}
+
+TEST_F(AnalyzerDdlTest, CreateTable_duplicate_primary_key_multiple) {
+    auto stmt = analyze(f.CreateTableStatement(
+        f.Name("table"),
+        {
+            f.CreateTableStatementColumn(f.Name("C1"), f.Int32Type()),
+        },
+        {},
+        {
+            f.CreateTableStatementPrimaryKey(f.Name("C1")),
+            f.CreateTableStatementPrimaryKey(f.Name("C1")),
         }));
     success(false);
 }

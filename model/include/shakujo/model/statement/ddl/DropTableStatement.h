@@ -24,6 +24,7 @@
 #include <set>
 #include <iostream>
 
+#include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/name/Name.h"
 #include "shakujo/model/statement/Statement.h"
 #include "shakujo/model/statement/StatementKind.h"
@@ -33,7 +34,8 @@ namespace shakujo::model::statement::ddl {
  * @brief Represents drop table statement.
  */
 class DropTableStatement
-        : public Statement {
+        : public Statement
+        , public key::RelationKey::Provider {
 private:
     class Impl;
     std::unique_ptr<Impl> impl_;
@@ -129,6 +131,27 @@ public:
     inline std::set<DropTableStatement::Attribute> const& attributes() const {
         return const_cast<DropTableStatement*>(this)->attributes();
     }
+    /**
+     * @brief Returns relation key.
+     * @return relation key.
+     */
+    key::RelationKey* relation_key() override;
+
+    /**
+     * @brief Returns relation key.
+     * @return relation key.
+     */
+    inline key::RelationKey const* relation_key() const override {
+        return const_cast<DropTableStatement*>(this)->relation_key();
+    }
+
+    /**
+     * @brief Sets relation key.
+     * @param relation_key relation key
+     * @return this
+     */
+    DropTableStatement& relation_key(std::unique_ptr<key::RelationKey> relation_key) override;
+
     /**
      * @brief Returns a copy of this object.
      * @return a clone of this

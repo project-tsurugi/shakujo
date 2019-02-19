@@ -22,6 +22,7 @@
 
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/expression/Expression.h"
+#include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/name/Name.h"
 #include "shakujo/model/name/SimpleName.h"
 #include "shakujo/model/type/Type.h"
@@ -35,6 +36,7 @@ public:
     util::FragmentList<CreateTableStatement::Column> columns_;
     std::set<CreateTableStatement::Attribute> attributes_;
     util::FragmentList<CreateTableStatement::PrimaryKey> primary_keys_;
+    std::unique_ptr<key::RelationKey> relation_key_;
 
     Impl() = default;
     ~Impl() noexcept = default;
@@ -142,6 +144,15 @@ std::set<CreateTableStatement::Attribute>& CreateTableStatement::attributes() {
 
 util::FragmentList<CreateTableStatement::PrimaryKey>& CreateTableStatement::primary_keys() {
     return impl_->primary_keys_;
+}
+
+key::RelationKey* CreateTableStatement::relation_key() {
+    return impl_->relation_key_.get();
+}
+
+CreateTableStatement& CreateTableStatement::relation_key(std::unique_ptr<key::RelationKey> relation_key) {
+    impl_->relation_key_ = std::move(relation_key);
+    return *this;
 }
 
 CreateTableStatement* CreateTableStatement::clone() const & {

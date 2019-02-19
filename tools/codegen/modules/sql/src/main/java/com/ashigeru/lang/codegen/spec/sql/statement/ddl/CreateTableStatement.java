@@ -23,6 +23,7 @@ import com.ashigeru.lang.codegen.ir.reflect.Extends;
 import com.ashigeru.lang.codegen.ir.reflect.MetaClass;
 import com.ashigeru.lang.codegen.ir.reflect.Opt;
 import com.ashigeru.lang.codegen.spec.sql.expression.Expression;
+import com.ashigeru.lang.codegen.spec.sql.key.RelationKey;
 import com.ashigeru.lang.codegen.spec.sql.name.Name;
 import com.ashigeru.lang.codegen.spec.sql.name.SimpleName;
 import com.ashigeru.lang.codegen.spec.sql.statement.Statement;
@@ -30,6 +31,7 @@ import com.ashigeru.lang.codegen.spec.sql.type.Type;
 
 @Description("create table statement")
 @Extends(Statement.class)
+@Extends(RelationKey.Provider.class)
 @SuppressWarnings("javadoc")
 public class CreateTableStatement extends MetaClass {
 

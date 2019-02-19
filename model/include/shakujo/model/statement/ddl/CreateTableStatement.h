@@ -25,6 +25,7 @@
 #include <iostream>
 
 #include "shakujo/model/expression/Expression.h"
+#include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/name/Name.h"
 #include "shakujo/model/name/SimpleName.h"
 #include "shakujo/model/statement/Statement.h"
@@ -37,7 +38,8 @@ namespace shakujo::model::statement::ddl {
  * @brief Represents create table statement.
  */
 class CreateTableStatement
-        : public Statement {
+        : public Statement
+        , public key::RelationKey::Provider {
 private:
     class Impl;
     std::unique_ptr<Impl> impl_;
@@ -452,6 +454,27 @@ public:
     inline util::FragmentList<CreateTableStatement::PrimaryKey> const& primary_keys() const {
         return const_cast<CreateTableStatement*>(this)->primary_keys();
     }
+    /**
+     * @brief Returns relation key.
+     * @return relation key.
+     */
+    key::RelationKey* relation_key() override;
+
+    /**
+     * @brief Returns relation key.
+     * @return relation key.
+     */
+    inline key::RelationKey const* relation_key() const override {
+        return const_cast<CreateTableStatement*>(this)->relation_key();
+    }
+
+    /**
+     * @brief Sets relation key.
+     * @param relation_key relation key
+     * @return this
+     */
+    CreateTableStatement& relation_key(std::unique_ptr<key::RelationKey> relation_key) override;
+
     /**
      * @brief Returns a copy of this object.
      * @return a clone of this

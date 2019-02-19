@@ -438,6 +438,21 @@ public:
     }
 
     /**
+     * @brief sets the destination table information.
+     * @param info the destination table
+     * @return this
+     */
+    RelationBinding& destination_table(common::schema::TableInfo&& info) {
+        destination_table_own_ = std::move(info);
+        if (destination_table_own_.is_valid()) {
+            destination_table_ = &destination_table_own_;
+        } else {
+            destination_table_ = nullptr;
+        }
+        return *this;
+    }
+
+    /**
      * @brief returns the variables that reflect columns of the destination table.
      * @return the column variables, ordered by corresponded TableInfo::columns()
      * @return empty if the destination table is not defined
@@ -584,6 +599,7 @@ public:
         }
         return !process_.columns().empty()
             || !output_.columns().empty()
+            || common::util::is_valid(destination_table_)
             || !destination_columns_.empty();
     }
 
@@ -591,6 +607,7 @@ private:
     Profile process_;
     Profile output_;
     common::schema::TableInfo const* destination_table_ {};
+    common::schema::TableInfo destination_table_own_ {};
     std::vector<std::shared_ptr<VariableBinding>> destination_columns_ {};
     std::vector<JoinColumn> join_columns_ {};
     std::map<std::string, std::any> attributes_ {};

@@ -1754,9 +1754,21 @@ void Engine::visit(model::statement::dml::DeleteStatement* node, ScopeContext& s
     bless(node, meta);
 }
 
+inline static common::core::Direction convert(model::statement::ddl::CreateTableStatement::PrimaryKey::Direction d) {
+    using IN = model::statement::ddl::CreateTableStatement::PrimaryKey::Direction;
+    using OUT = common::core::Direction;
+    switch (d) {
+        case IN::DONT_CARE: return OUT::ASCENDANT;
+        case IN::ASCENDANT: return OUT::ASCENDANT;
+        case IN::DESCENDANT: return OUT::DESCENDANT;
+        default: std::abort();
+    }
+}
+
 void Engine::visit(model::statement::ddl::CreateTableStatement* node, ScopeContext& scope) {
     using Column = model::statement::ddl::CreateTableStatement::Column;
-    using PrimaryKey = model::statement::ddl::CreateTableStatement::PrimaryKey;
+
+    bool saw_error = false;
 
     // duplicate check
     std::set<std::string> saw_columns;
@@ -1766,45 +1778,63 @@ void Engine::visit(model::statement::ddl::CreateTableStatement* node, ScopeConte
         } else {
             report(column->name(), Diagnostic::Code::DUPLICATE_COLUMN, to_string(
                 "column \"", column->name(), "\" is already declared in \"", node->table(), "\""));
+            saw_error = true;
         }
     }
+
     // resolve in-place PRIMARY KEYs
+    std::vector<common::schema::IndexInfo::Column> pk_columns;
     for (auto* column : node->columns()) {
         // in-place PRIMARY KEY
         auto& attrs = column->attributes();
-        auto it = attrs.find(Column::Attribute::PRIMARY_KEY);
-        if (it != attrs.end()) {
-            if (!node->primary_keys().empty()) {
+        if (attrs.find(Column::Attribute::PRIMARY_KEY) != attrs.end()) {
+            if (!node->primary_keys().empty() || !pk_columns.empty()) {
                 report(column->name(), Diagnostic::Code::DUPLICATE_PRIMARY_KEY, to_string(
                     "table \"", node->table(), "\" is already declared primary key"));
+                saw_error = true;
             } else {
-                node->primary_keys().push_back(ir_factory.CreateTableStatementPrimaryKey(
-                    make_clone(column->name()),
-                    PrimaryKey::Direction::DONT_CARE));
-                attrs.erase(it);
+                pk_columns.emplace_back(column->name()->token());
             }
         }
     }
-    // mark NOT NULLs for primary key elements
+    // collect primary key elements
+    assert(node->primary_keys().empty() || pk_columns.empty());  // NOLINT
     for (auto* key : node->primary_keys()) {
-        bool saw = false;
-        for (auto* column : node->columns()) {
-            if (equals(column->name(), key->name())) {
-                column->attributes().emplace(Column::Attribute::NOT_NULL);
-                saw = true;
+        bool green = true;
+        for (auto&& column : pk_columns) {
+            if (key->name()->token() == column.name()) {
+                report(key->name(), Diagnostic::Code::DUPLICATE_PRIMARY_KEY, to_string(
+                    "table \"", node->table(), "\" is already declared primary key"));
+                saw_error = true;
+                green = false;
                 break;
             }
         }
-        if (!saw) {
+        if (!green) {
+            continue;
+        }
+        bool found = false;
+        for (auto* column : node->columns()) {
+            if (equals(column->name(), key->name())) {
+                pk_columns.emplace_back(column->name()->token(), convert(key->direction()));
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
             report(key->name(), Diagnostic::Code::COLUMN_NOT_FOUND, to_string(
                 "table \"", node->table(), "\" does not have column \"", key->name(), "\""));
+            saw_error = true;
         }
     }
+
     // resolve columns
+    std::vector<common::schema::TableInfo::Column> info_columns;
     for (auto* column : node->columns()) {
         auto& attrs = column->attributes();
         // FIXME: supported types
         std::unique_ptr<common::core::Type> type;
+        std::unique_ptr<common::core::Value> default_value;
         switch (column->type()->kind()) {
             case model::type::TypeKind::TUPLE_TYPE:
             case model::type::TypeKind::RELATION_TYPE:
@@ -1812,11 +1842,12 @@ void Engine::visit(model::statement::ddl::CreateTableStatement* node, ScopeConte
                 report(column->type(), Diagnostic::Code::INVALID_COLUMN_TYPE, to_string(
                     column->type(), " is not supported type in the column \"", column->name(),
                     "\" in table \"", node->table(), "\""));
+                saw_error = true;
                 break;
             default:
-                // FIXME: introduce type binding
                 type = typing::convert(column->type());
-                if (attrs.find(Column::Attribute::NOT_NULL) != attrs.end()) {
+                if (attrs.find(Column::Attribute::NOT_NULL) != attrs.end()
+                        || attrs.find(Column::Attribute::PRIMARY_KEY) != attrs.end()) {
                     type = typing::nullity(type.get(), common::core::Type::Nullity::NEVER_NULL);
                 }
                 break;
@@ -1836,20 +1867,35 @@ void Engine::visit(model::statement::ddl::CreateTableStatement* node, ScopeConte
                     if (typing::is_assignment_convertible(type.get(), *default_expr, false)) {
                         // fix literal type instead of casting
                         literal->type(make_clone(type));
-                        default_expr->type(std::move(type));
+                        default_expr->type(make_clone(type));
+                        default_value = make_clone(literal->value());
                     } else {
                         report(column->value(), Diagnostic::Code::INCOMPATIBLE_EXPRESSION_TYPE, to_string(
                             "default value of column \"", column->name(), "\" is incompatible, ",
                             "value type: ", default_expr->type(), ", ",
                             "column type: ", *type));
+                        saw_error = true;
                     }
                 } else {
                     report(column->value(), Diagnostic::Code::NOT_IMPLEMENTED, to_string(
                         "column default value: ", column->value()->kind()));
+                    saw_error = true;
                 }
             }
         }
+
+        info_columns.emplace_back(column->name()->token(), std::move(type), std::move(default_value));
     }
+    auto binding = std::make_shared<binding::RelationBinding>();
+    if (!saw_error) {
+        binding->destination_table({
+            common::core::Name { node->table()->segments() },
+            std::move(info_columns),
+            common::schema::IndexInfo { std::move(pk_columns) },
+        });
+        binding->destination_columns() = create_column_variables(binding->destination_table());
+    }
+    bless(node, std::move(binding));
 }
 
 std::unique_ptr<common::core::Type>

@@ -21,6 +21,7 @@
 #include <set>
 
 #include "shakujo/common/util/utility.h"
+#include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/name/Name.h"
 
 namespace shakujo::model::statement::ddl {
@@ -29,6 +30,7 @@ class DropTableStatement::Impl {
 public:
     std::unique_ptr<name::Name> table_;
     std::set<DropTableStatement::Attribute> attributes_;
+    std::unique_ptr<key::RelationKey> relation_key_;
 
     Impl() = default;
     ~Impl() noexcept = default;
@@ -72,6 +74,15 @@ std::unique_ptr<name::Name> DropTableStatement::release_table() {
 
 std::set<DropTableStatement::Attribute>& DropTableStatement::attributes() {
     return impl_->attributes_;
+}
+
+key::RelationKey* DropTableStatement::relation_key() {
+    return impl_->relation_key_.get();
+}
+
+DropTableStatement& DropTableStatement::relation_key(std::unique_ptr<key::RelationKey> relation_key) {
+    impl_->relation_key_ = std::move(relation_key);
+    return *this;
 }
 
 DropTableStatement* DropTableStatement::clone() const & {

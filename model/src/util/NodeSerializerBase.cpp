@@ -2386,6 +2386,11 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, statem
         printer.exit_array(size);
         printer.exit_property("primary_keys");
     }
+    {
+        printer.enter_property("relation_key");
+        serialize(printer, value->relation_key());
+        printer.exit_property("relation_key");
+    }
     printer.exit_object("CreateTableStatement");
 }
 
@@ -2540,6 +2545,11 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, statem
         }
         printer.exit_array(size);
         printer.exit_property("attributes");
+    }
+    {
+        printer.enter_property("relation_key");
+        serialize(printer, value->relation_key());
+        printer.exit_property("relation_key");
     }
     printer.exit_object("DropTableStatement");
 }
