@@ -425,9 +425,6 @@ protected:
         }
         switch (node->operator_kind()) {
             case Kind::INNER:
-            case Kind::LEFT_OUTER:
-            case Kind::RIGHT_OUTER:
-            case Kind::FULL_OUTER:
                 // don't care whether or not join specification exists
                 break;
 
@@ -443,6 +440,9 @@ protected:
                 }
                 break;
 
+            case Kind::LEFT_OUTER:
+            case Kind::RIGHT_OUTER:
+            case Kind::FULL_OUTER:
             case Kind::LEFT_SEMI:
             case Kind::RIGHT_SEMI:
                 if (!is_defined(node->condition())) {

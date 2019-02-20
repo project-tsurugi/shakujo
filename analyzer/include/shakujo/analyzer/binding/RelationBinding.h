@@ -27,15 +27,17 @@
 #include <utility>
 #include <vector>
 
-#include "shakujo/common/util/utility.h"
-
 #include "VariableBinding.h"
+#include "ScanStrategy.h"
+#include "JoinStrategy.h"
 
 #include "shakujo/common/core/Direction.h"
 #include "shakujo/common/schema/TableInfo.h"
 #include "shakujo/common/schema/IndexInfo.h"
 
 #include "shakujo/model/key/RelationKey.h"
+
+#include "shakujo/common/util/utility.h"
 
 namespace shakujo::analyzer::binding {
 
@@ -161,31 +163,6 @@ public:
         }
 
         /**
-         * @brief returns the source index information.
-         * @return the source index information
-         *      only if the source_table() is valid and the corresponded relation comes from the index
-         * @return the invalid IndexInfo otherwise
-         */
-        common::schema::IndexInfo const& source_index() const {
-            using common::util::is_defined;
-            if (is_defined(source_index_)) {
-                return *source_index_;
-            }
-            static common::schema::IndexInfo const INVALID {};
-            return INVALID;
-        }
-
-        /**
-         * @brief sets the source index information.
-         * @param info the source index
-         * @return this
-         */
-        Profile& source_index(common::schema::IndexInfo const& info) {
-            source_index_ = info.is_valid() ? &info : nullptr;
-            return *this;
-        }
-
-        /**
          * @brief return the order of rows in the corresponded relation.
          * @return order if rows are sorted by the resulting elements
          * @return empty if rows are not ordered
@@ -243,122 +220,9 @@ public:
     private:
         std::vector<std::shared_ptr<VariableBinding>> columns_ {};
         common::schema::TableInfo const* source_table_ {};
-        common::schema::IndexInfo const* source_index_ {};
         std::vector<Order> order_ {};
+        // FIXME: unique keys
         bool distinct_ { false };
-    };
-
-    /**
-     * @brief join operation detail of each resulting column.
-     */
-    class JoinColumn {
-    public:
-        /**
-         * @brief constructs a new object.
-         * @param qualifiers the output variable qualifiers - FIXME: variable binding with aliases instead
-         * @param output the output column binding
-         * @param left_source the source column binding from the left operand
-         * @param nullify_left_source whether or not the value from the left operand must be nullified
-         * @param right_source the source column binding from the right operand
-         * @param nullify_right_source whether or not the value from the right operand must be nullified
-         */
-        JoinColumn(
-                std::vector<common::core::Name> qualifiers,
-                std::shared_ptr<binding::VariableBinding> output,
-                std::shared_ptr<binding::VariableBinding> left_source, bool nullify_left_source,
-                std::shared_ptr<binding::VariableBinding> right_source, bool nullify_right_source)
-            : qualifiers_(std::move(qualifiers)), output_(std::move(output))
-            , left_source_(std::move(left_source)), nullify_left_source_(nullify_left_source)
-            , right_source_(std::move(right_source)), nullify_right_source_(nullify_right_source)
-        {}
-
-        /**
-         * @brief constructs a new object which refers the left operand.
-         * @param output the output column binding
-         * @param source the source column binding from the left operand
-         * @param nullify whether or not the value from the left operand must be nullified
-         * @return the created object
-         */
-        inline static JoinColumn left(
-                std::vector<common::core::Name> qualifiers,
-                std::shared_ptr<binding::VariableBinding> output,
-                std::shared_ptr<binding::VariableBinding> source, bool nullify) {
-            return { std::move(qualifiers), std::move(output), std::move(source), nullify, {}, {} };
-        }
-
-        /**
-         * @brief constructs a new object which refers the left operand.
-         * @param output the output column binding
-         * @param source the source column binding from the left operand
-         * @param nullify whether or not the value from the left operand must be nullified
-         * @return the created object
-         */
-        inline static JoinColumn right(
-                std::vector<common::core::Name> qualifiers,
-                std::shared_ptr<binding::VariableBinding> output,
-                std::shared_ptr<binding::VariableBinding> source, bool nullify) {
-            return { std::move(qualifiers), std::move(output), {}, {}, std::move(source), nullify };
-        }
-
-        /**
-         * @brief returns the available output column qualifiers.
-         * @return output column qualifiers
-         */
-        std::vector<common::core::Name> const& qualifiers() const {
-            return qualifiers_;
-        }
-
-        /**
-         * @brief returns the output column binding.
-         * @return the output column binding
-         */
-        std::shared_ptr<binding::VariableBinding> output() const {
-            return output_;
-        }
-
-        /**
-         * @brief returns the source column binding from the left operand.
-         * @return the source column binding
-         * @return empty if the target output does not refer column from the left operand
-         */
-        std::shared_ptr<binding::VariableBinding> left_source() const {
-            return left_source_;
-        }
-
-        /**
-         * @brief returns the source column binding from the right operand.
-         * @return the source column binding
-         * @return empty if the target output does not refer column from the right operand
-         */
-        std::shared_ptr<binding::VariableBinding> right_source() const {
-            return right_source_;
-        }
-
-        /**
-         * @brief returns whether or not the value from left operand must be nullified before compare or output.
-         * @return true if the output column value must be nullified
-         * @return false otherwise, or the target output does not refer value from the left operand
-         */
-        bool nullify_left_source() const {
-            return nullify_left_source_;
-        }
-
-        /**
-         * @brief returns whether or not the value from right operand must be nullified before compare or output.
-         * @return true if the output column value must be nullified
-         * @return false otherwise, or the target output does not refer value from the right operand
-         */
-        bool nullify_right_source() const {
-            return nullify_right_source_;
-        }
-
-    private:
-        std::vector<common::core::Name> qualifiers_;
-        std::shared_ptr<binding::VariableBinding> output_;
-        std::shared_ptr<binding::VariableBinding> left_source_;
-        bool nullify_left_source_;
-        std::shared_ptr<binding::VariableBinding> right_source_;
-        bool nullify_right_source_;
     };
 
     /**
@@ -486,23 +350,59 @@ public:
     }
 
     /**
-     * @brief returns the join operation of individual columns.
-     * This is only available for JoinExpressions.
-     * @return the join operations
-     * @return empty if the corresponded operation is not a valid JoinExpression
+     * @brief returns the scan strategy.
+     * @return the scan strategy of corresponded operation
+     * @return undefined if the corresponded operation is not a scan
      */
-    std::vector<JoinColumn>& join_columns() {
-        return join_columns_;
+    ScanStrategy& scan_strategy() {
+        return scan_strategy_;
     }
 
     /**
-     * @brief returns the join operation of individual columns.
-     * This is only available for JoinExpressions.
-     * @return the join operations
-     * @return empty if the corresponded operation is not a valid JoinExpression
+     * @brief returns the scan strategy.
+     * @return the scan strategy of corresponded operation
+     * @return undefined if the corresponded operation is not a scan
      */
-    std::vector<JoinColumn> const& join_columns() const {
-        return join_columns_;
+    ScanStrategy const& scan_strategy() const {
+        return scan_strategy_;
+    }
+
+    /**
+     * @brief sets the scan strategy
+     * @param strategy the strategy
+     * @return this
+     */
+    RelationBinding& scan_strategy(ScanStrategy strategy) {
+        scan_strategy_ = std::move(strategy);
+        return *this;
+    }
+
+    /**
+     * @brief returns the join strategy.
+     * @return the join strategy of corresponded operation
+     * @return undefined if the corresponded operation is not a join
+     */
+    JoinStrategy& join_strategy() {
+        return join_strategy_;
+    }
+
+    /**
+     * @brief returns the join strategy.
+     * @return the join strategy of corresponded operation
+     * @return undefined if the corresponded operation is not a join
+     */
+    JoinStrategy const& join_strategy() const {
+        return join_strategy_;
+    }
+
+    /**
+     * @brief sets the join strategy
+     * @param strategy the strategy
+     * @return this
+     */
+    RelationBinding& join_strategy(JoinStrategy strategy) {
+        join_strategy_ = std::move(strategy);
+        return *this;
     }
 
     /**
@@ -609,7 +509,8 @@ private:
     common::schema::TableInfo const* destination_table_ {};
     common::schema::TableInfo destination_table_own_ {};
     std::vector<std::shared_ptr<VariableBinding>> destination_columns_ {};
-    std::vector<JoinColumn> join_columns_ {};
+    ScanStrategy scan_strategy_;
+    JoinStrategy join_strategy_;
     std::map<std::string, std::any> attributes_ {};
 };
 }  // namespace shakujo::analyzer::binding

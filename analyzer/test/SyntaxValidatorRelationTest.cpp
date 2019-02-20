@@ -97,6 +97,12 @@ TEST_F(SyntaxValidatorRelationTest, JoinExpression) {
         literal(),
         literal()
     ));
+    validate(f.JoinExpression(
+        Kind::LEFT_OUTER,
+        literal(),
+        literal(),
+        literal()
+    ));
     should_error(f.JoinExpression(
         Kind::INNER,
         {},
@@ -114,6 +120,12 @@ TEST_F(SyntaxValidatorRelationTest, JoinExpression) {
         literal(),
         literal(),
         literal()
+    ));
+    should_error(f.JoinExpression(
+        Kind::LEFT_OUTER,
+        literal(),
+        literal(),
+        {}
     ));
 }
 
