@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SHAKUJO_ANALYZER_IMPL_RELATION_SCOPE_H_
-#define SHAKUJO_ANALYZER_IMPL_RELATION_SCOPE_H_
+#ifndef SHAKUJO_ANALYZER_ANALYZE_RELATION_SCOPE_H_
+#define SHAKUJO_ANALYZER_ANALYZE_RELATION_SCOPE_H_
 
 #include <algorithm>
 #include <map>
@@ -33,7 +33,7 @@
 #include "shakujo/common/core/Name.h"
 #include "shakujo/common/core/type/Relation.h"
 
-namespace shakujo::analyzer::impl {
+namespace shakujo::analyzer::analyze {
 
 using common::util::make_clone;
 
@@ -118,6 +118,6 @@ public:
         return {};
     }
 };
-}  // namespace shakujo::analyzer::impl
+}  // namespace shakujo::analyzer::analyze
 
-#endif  //SHAKUJO_ANALYZER_IMPL_RELATION_SCOPE_H_
+#endif  //SHAKUJO_ANALYZER_ANALYZE_RELATION_SCOPE_H_

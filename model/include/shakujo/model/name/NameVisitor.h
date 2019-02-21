@@ -57,7 +57,7 @@ public:
      * @see QualifiedName
      */
     virtual Return visit(QualifiedName* node, Args... args) {  // NOLINT
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -68,7 +68,7 @@ public:
      * @see SimpleName
      */
     virtual Return visit(SimpleName* node, Args... args) {  // NOLINT
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -80,12 +80,12 @@ public:
     Return dispatch(Name* node, Args... args) {  // NOLINT
         switch (node->kind()) {
         case NameKind::QUALIFIED_NAME:
-            return visit(dynamic_cast<QualifiedName*>(node), args...);
+            return visit(dynamic_cast<QualifiedName*>(node), std::forward<Args>(args)...);
         case NameKind::SIMPLE_NAME:
-            return visit(dynamic_cast<SimpleName*>(node), args...);
+            return visit(dynamic_cast<SimpleName*>(node), std::forward<Args>(args)...);
         }
         // may not occur
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
 };

@@ -32,6 +32,11 @@ namespace shakujo::common::core::type {
 class Int final : public Numeric {
 public:
     /**
+     * @brief the kind of this type.
+     */
+    static inline constexpr Kind tag = Kind::INT;
+
+    /**
      * @brief the corresponded value type.
      */
     using value_type = value::Int;
@@ -89,7 +94,7 @@ public:
     }
 
     Type::Kind kind() const override {
-        return Type::Kind::INT;
+        return tag;
     }
 
     /**

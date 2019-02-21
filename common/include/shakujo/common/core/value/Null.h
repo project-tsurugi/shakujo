@@ -34,6 +34,11 @@ public:
     using type = std::nullptr_t;
 
     /**
+     * @brief the kind of this value.
+     */
+    static inline constexpr auto tag = Kind::NULL_;
+
+    /**
      * @brief Constructs a new object.
      */
     constexpr explicit Null(type = {}) noexcept {};  // NOLINT
@@ -69,8 +74,8 @@ public:
      */
     Null& operator=(Null&& other) noexcept = default;
 
-    Value::Kind kind() const override {
-        return Value::Kind::NULL_;
+    Kind kind() const override {
+        return tag;
     }
 
     Null* clone() const & override {

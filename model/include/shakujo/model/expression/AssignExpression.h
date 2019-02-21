@@ -186,11 +186,16 @@ public:
 
 public:
     /**
+     * @brief the node kind.
+     */
+    static inline constexpr ExpressionKind tag = ExpressionKind::ASSIGN_EXPRESSION;
+
+    /**
      * @brief Returns the node kind.
      * @return the node kind
-     */
-    ExpressionKind kind() const override {
-        return ExpressionKind::ASSIGN_EXPRESSION;
+     * @see tag
+     */ExpressionKind kind() const override {
+        return tag;
     }
 
 };

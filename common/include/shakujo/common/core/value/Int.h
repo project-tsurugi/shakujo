@@ -33,6 +33,11 @@ public:
      */
     using type = intmax_t;
 
+    /**
+     * @brief the kind of this value.
+     */
+    static inline constexpr auto tag = Kind::INT;
+
 private:
     type value_;
 
@@ -74,8 +79,8 @@ public:
      */
     Int& operator=(Int&& other) noexcept = default;
 
-    Value::Kind kind() const override {
-        return Value::Kind::INT;
+    Kind kind() const override {
+        return tag;
     }
 
     Int* clone() const & override {

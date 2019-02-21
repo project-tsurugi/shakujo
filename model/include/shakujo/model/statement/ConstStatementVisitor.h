@@ -79,7 +79,7 @@ public:
      * @see AnchorDeclaration
      */
     virtual Return visit(AnchorDeclaration const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -90,7 +90,7 @@ public:
      * @see BlockStatement
      */
     virtual Return visit(BlockStatement const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -101,7 +101,7 @@ public:
      * @see BranchStatement
      */
     virtual Return visit(BranchStatement const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -112,7 +112,7 @@ public:
      * @see BreakStatement
      */
     virtual Return visit(BreakStatement const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -123,7 +123,7 @@ public:
      * @see ContinueStatement
      */
     virtual Return visit(ContinueStatement const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -134,7 +134,7 @@ public:
      * @see EmptyStatement
      */
     virtual Return visit(EmptyStatement const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -145,7 +145,7 @@ public:
      * @see ExpressionStatement
      */
     virtual Return visit(ExpressionStatement const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -156,7 +156,7 @@ public:
      * @see ForEachStatement
      */
     virtual Return visit(ForEachStatement const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -167,7 +167,7 @@ public:
      * @see ForStatement
      */
     virtual Return visit(ForStatement const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -178,7 +178,7 @@ public:
      * @see LocalVariableDeclaration
      */
     virtual Return visit(LocalVariableDeclaration const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -189,7 +189,7 @@ public:
      * @see LogStatement
      */
     virtual Return visit(LogStatement const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -200,7 +200,7 @@ public:
      * @see RaiseStatement
      */
     virtual Return visit(RaiseStatement const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -211,7 +211,7 @@ public:
      * @see ReturnStatement
      */
     virtual Return visit(ReturnStatement const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -222,7 +222,7 @@ public:
      * @see VectorElementDeleteStatement
      */
     virtual Return visit(VectorElementDeleteStatement const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -233,7 +233,7 @@ public:
      * @see VectorElementInsertStatement
      */
     virtual Return visit(VectorElementInsertStatement const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -244,7 +244,7 @@ public:
      * @see WhileStatement
      */
     virtual Return visit(WhileStatement const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -255,7 +255,7 @@ public:
      * @see ddl::CreateTableStatement
      */
     virtual Return visit(ddl::CreateTableStatement const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -266,7 +266,7 @@ public:
      * @see ddl::DropTableStatement
      */
     virtual Return visit(ddl::DropTableStatement const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -277,7 +277,7 @@ public:
      * @see dml::DeleteStatement
      */
     virtual Return visit(dml::DeleteStatement const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -288,7 +288,7 @@ public:
      * @see dml::EmitStatement
      */
     virtual Return visit(dml::EmitStatement const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -299,7 +299,7 @@ public:
      * @see dml::InsertRelationStatement
      */
     virtual Return visit(dml::InsertRelationStatement const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -310,7 +310,7 @@ public:
      * @see dml::InsertValuesStatement
      */
     virtual Return visit(dml::InsertValuesStatement const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -321,7 +321,7 @@ public:
      * @see dml::UpdateStatement
      */
     virtual Return visit(dml::UpdateStatement const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -332,7 +332,7 @@ public:
      * @see transaction::TransactionBlockStatement
      */
     virtual Return visit(transaction::TransactionBlockStatement const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -344,56 +344,56 @@ public:
     Return dispatch(Statement const* node, Args... args) {
         switch (node->kind()) {
         case StatementKind::ANCHOR_DECLARATION:
-            return visit(dynamic_cast<AnchorDeclaration const*>(node), args...);
+            return visit(dynamic_cast<AnchorDeclaration const*>(node), std::forward<Args>(args)...);
         case StatementKind::BLOCK_STATEMENT:
-            return visit(dynamic_cast<BlockStatement const*>(node), args...);
+            return visit(dynamic_cast<BlockStatement const*>(node), std::forward<Args>(args)...);
         case StatementKind::BRANCH_STATEMENT:
-            return visit(dynamic_cast<BranchStatement const*>(node), args...);
+            return visit(dynamic_cast<BranchStatement const*>(node), std::forward<Args>(args)...);
         case StatementKind::BREAK_STATEMENT:
-            return visit(dynamic_cast<BreakStatement const*>(node), args...);
+            return visit(dynamic_cast<BreakStatement const*>(node), std::forward<Args>(args)...);
         case StatementKind::CONTINUE_STATEMENT:
-            return visit(dynamic_cast<ContinueStatement const*>(node), args...);
+            return visit(dynamic_cast<ContinueStatement const*>(node), std::forward<Args>(args)...);
         case StatementKind::EMPTY_STATEMENT:
-            return visit(dynamic_cast<EmptyStatement const*>(node), args...);
+            return visit(dynamic_cast<EmptyStatement const*>(node), std::forward<Args>(args)...);
         case StatementKind::EXPRESSION_STATEMENT:
-            return visit(dynamic_cast<ExpressionStatement const*>(node), args...);
+            return visit(dynamic_cast<ExpressionStatement const*>(node), std::forward<Args>(args)...);
         case StatementKind::FOR_EACH_STATEMENT:
-            return visit(dynamic_cast<ForEachStatement const*>(node), args...);
+            return visit(dynamic_cast<ForEachStatement const*>(node), std::forward<Args>(args)...);
         case StatementKind::FOR_STATEMENT:
-            return visit(dynamic_cast<ForStatement const*>(node), args...);
+            return visit(dynamic_cast<ForStatement const*>(node), std::forward<Args>(args)...);
         case StatementKind::LOCAL_VARIABLE_DECLARATION:
-            return visit(dynamic_cast<LocalVariableDeclaration const*>(node), args...);
+            return visit(dynamic_cast<LocalVariableDeclaration const*>(node), std::forward<Args>(args)...);
         case StatementKind::LOG_STATEMENT:
-            return visit(dynamic_cast<LogStatement const*>(node), args...);
+            return visit(dynamic_cast<LogStatement const*>(node), std::forward<Args>(args)...);
         case StatementKind::RAISE_STATEMENT:
-            return visit(dynamic_cast<RaiseStatement const*>(node), args...);
+            return visit(dynamic_cast<RaiseStatement const*>(node), std::forward<Args>(args)...);
         case StatementKind::RETURN_STATEMENT:
-            return visit(dynamic_cast<ReturnStatement const*>(node), args...);
+            return visit(dynamic_cast<ReturnStatement const*>(node), std::forward<Args>(args)...);
         case StatementKind::VECTOR_ELEMENT_DELETE_STATEMENT:
-            return visit(dynamic_cast<VectorElementDeleteStatement const*>(node), args...);
+            return visit(dynamic_cast<VectorElementDeleteStatement const*>(node), std::forward<Args>(args)...);
         case StatementKind::VECTOR_ELEMENT_INSERT_STATEMENT:
-            return visit(dynamic_cast<VectorElementInsertStatement const*>(node), args...);
+            return visit(dynamic_cast<VectorElementInsertStatement const*>(node), std::forward<Args>(args)...);
         case StatementKind::WHILE_STATEMENT:
-            return visit(dynamic_cast<WhileStatement const*>(node), args...);
+            return visit(dynamic_cast<WhileStatement const*>(node), std::forward<Args>(args)...);
         case StatementKind::CREATE_TABLE_STATEMENT:
-            return visit(dynamic_cast<ddl::CreateTableStatement const*>(node), args...);
+            return visit(dynamic_cast<ddl::CreateTableStatement const*>(node), std::forward<Args>(args)...);
         case StatementKind::DROP_TABLE_STATEMENT:
-            return visit(dynamic_cast<ddl::DropTableStatement const*>(node), args...);
+            return visit(dynamic_cast<ddl::DropTableStatement const*>(node), std::forward<Args>(args)...);
         case StatementKind::DELETE_STATEMENT:
-            return visit(dynamic_cast<dml::DeleteStatement const*>(node), args...);
+            return visit(dynamic_cast<dml::DeleteStatement const*>(node), std::forward<Args>(args)...);
         case StatementKind::EMIT_STATEMENT:
-            return visit(dynamic_cast<dml::EmitStatement const*>(node), args...);
+            return visit(dynamic_cast<dml::EmitStatement const*>(node), std::forward<Args>(args)...);
         case StatementKind::INSERT_RELATION_STATEMENT:
-            return visit(dynamic_cast<dml::InsertRelationStatement const*>(node), args...);
+            return visit(dynamic_cast<dml::InsertRelationStatement const*>(node), std::forward<Args>(args)...);
         case StatementKind::INSERT_VALUES_STATEMENT:
-            return visit(dynamic_cast<dml::InsertValuesStatement const*>(node), args...);
+            return visit(dynamic_cast<dml::InsertValuesStatement const*>(node), std::forward<Args>(args)...);
         case StatementKind::UPDATE_STATEMENT:
-            return visit(dynamic_cast<dml::UpdateStatement const*>(node), args...);
+            return visit(dynamic_cast<dml::UpdateStatement const*>(node), std::forward<Args>(args)...);
         case StatementKind::TRANSACTION_BLOCK_STATEMENT:
-            return visit(dynamic_cast<transaction::TransactionBlockStatement const*>(node), args...);
+            return visit(dynamic_cast<transaction::TransactionBlockStatement const*>(node), std::forward<Args>(args)...);
         }
         // may not occur
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
 };

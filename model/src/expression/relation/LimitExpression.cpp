@@ -23,6 +23,7 @@
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/expression/Expression.h"
 #include "shakujo/model/key/ExpressionKey.h"
+#include "shakujo/model/key/RelationKey.h"
 
 namespace shakujo::model::expression::relation {
 
@@ -31,6 +32,7 @@ public:
     common::util::ManagedPtr<Expression> operand_;
     std::size_t count_ { static_cast<std::size_t>(-1) };
     std::unique_ptr<key::ExpressionKey> expression_key_;
+    std::unique_ptr<key::RelationKey> relation_key_;
 
     Impl() = default;
     ~Impl() noexcept = default;
@@ -85,6 +87,15 @@ key::ExpressionKey* LimitExpression::expression_key() {
 
 LimitExpression& LimitExpression::expression_key(std::unique_ptr<key::ExpressionKey> expression_key) {
     impl_->expression_key_ = std::move(expression_key);
+    return *this;
+}
+
+key::RelationKey* LimitExpression::relation_key() {
+    return impl_->relation_key_.get();
+}
+
+LimitExpression& LimitExpression::relation_key(std::unique_ptr<key::RelationKey> relation_key) {
+    impl_->relation_key_ = std::move(relation_key);
     return *this;
 }
 

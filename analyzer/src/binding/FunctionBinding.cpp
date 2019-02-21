@@ -23,7 +23,7 @@
 #include "shakujo/common/core/Type.h"
 #include "shakujo/common/core/Value.h"
 
-#include "impl/typing.h"
+#include "analyze/typing.h"
 
 namespace shakujo::analyzer::binding {
 
@@ -117,7 +117,7 @@ static bool eq_nullable(FunctionBinding::Parameter const& parameter, ExpressionB
 
 static bool eq_assignable(FunctionBinding::Parameter const& parameter, ExpressionBinding const& argument) {
     // FIXME: check conversion rule
-    return impl::typing::is_assignment_convertible(parameter.type(), argument, false);
+    return analyze::typing::is_assignment_convertible(parameter.type(), argument, false);
 }
 
 std::shared_ptr<FunctionBinding>

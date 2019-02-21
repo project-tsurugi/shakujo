@@ -141,11 +141,16 @@ public:
 
 public:
     /**
+     * @brief the node kind.
+     */
+    static inline constexpr NameKind tag = NameKind::QUALIFIED_NAME;
+
+    /**
      * @brief Returns the node kind.
      * @return the node kind
-     */
-    NameKind kind() const override {
-        return NameKind::QUALIFIED_NAME;
+     * @see tag
+     */NameKind kind() const override {
+        return tag;
     }
 
 };

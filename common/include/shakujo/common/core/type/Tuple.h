@@ -147,6 +147,11 @@ private:
 
 public:
     /**
+     * @brief the kind of this type.
+     */
+    static inline constexpr Kind tag = Kind::TUPLE;
+
+    /**
      * @brief Constructs a new object.
      * @param elements the tuple elements
      * @param nullity nullity of the type
@@ -202,7 +207,7 @@ public:
     Tuple& operator=(Tuple&& other) noexcept = default;
 
     Type::Kind kind() const override {
-        return Type::Kind::TUPLE;
+        return tag;
     }
 
     bool is_valid() const override {

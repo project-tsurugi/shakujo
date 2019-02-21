@@ -121,11 +121,16 @@ public:
 
 public:
     /**
+     * @brief the node kind.
+     */
+    static inline constexpr ExpressionKind tag = ExpressionKind::PLACEHOLDER;
+
+    /**
      * @brief Returns the node kind.
      * @return the node kind
-     */
-    ExpressionKind kind() const override {
-        return ExpressionKind::PLACEHOLDER;
+     * @see tag
+     */ExpressionKind kind() const override {
+        return tag;
     }
 
 };

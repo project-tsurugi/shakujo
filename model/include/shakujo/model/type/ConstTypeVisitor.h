@@ -68,7 +68,7 @@ public:
      * @see ArrayType
      */
     virtual Return visit(ArrayType const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -79,7 +79,7 @@ public:
      * @see BooleanType
      */
     virtual Return visit(BooleanType const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -90,7 +90,7 @@ public:
      * @see CharType
      */
     virtual Return visit(CharType const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -101,7 +101,7 @@ public:
      * @see Float32Type
      */
     virtual Return visit(Float32Type const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -112,7 +112,7 @@ public:
      * @see Float64Type
      */
     virtual Return visit(Float64Type const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -123,7 +123,7 @@ public:
      * @see Int32Type
      */
     virtual Return visit(Int32Type const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -134,7 +134,7 @@ public:
      * @see Int64Type
      */
     virtual Return visit(Int64Type const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -145,7 +145,7 @@ public:
      * @see NullType
      */
     virtual Return visit(NullType const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -156,7 +156,7 @@ public:
      * @see RelationType
      */
     virtual Return visit(RelationType const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -167,7 +167,7 @@ public:
      * @see StringType
      */
     virtual Return visit(StringType const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -178,7 +178,7 @@ public:
      * @see TupleType
      */
     virtual Return visit(TupleType const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -189,7 +189,7 @@ public:
      * @see VarCharType
      */
     virtual Return visit(VarCharType const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -200,7 +200,7 @@ public:
      * @see VectorType
      */
     virtual Return visit(VectorType const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -212,34 +212,34 @@ public:
     Return dispatch(Type const* node, Args... args) {
         switch (node->kind()) {
         case TypeKind::ARRAY_TYPE:
-            return visit(dynamic_cast<ArrayType const*>(node), args...);
+            return visit(dynamic_cast<ArrayType const*>(node), std::forward<Args>(args)...);
         case TypeKind::BOOLEAN_TYPE:
-            return visit(dynamic_cast<BooleanType const*>(node), args...);
+            return visit(dynamic_cast<BooleanType const*>(node), std::forward<Args>(args)...);
         case TypeKind::CHAR_TYPE:
-            return visit(dynamic_cast<CharType const*>(node), args...);
+            return visit(dynamic_cast<CharType const*>(node), std::forward<Args>(args)...);
         case TypeKind::FLOAT32_TYPE:
-            return visit(dynamic_cast<Float32Type const*>(node), args...);
+            return visit(dynamic_cast<Float32Type const*>(node), std::forward<Args>(args)...);
         case TypeKind::FLOAT64_TYPE:
-            return visit(dynamic_cast<Float64Type const*>(node), args...);
+            return visit(dynamic_cast<Float64Type const*>(node), std::forward<Args>(args)...);
         case TypeKind::INT32_TYPE:
-            return visit(dynamic_cast<Int32Type const*>(node), args...);
+            return visit(dynamic_cast<Int32Type const*>(node), std::forward<Args>(args)...);
         case TypeKind::INT64_TYPE:
-            return visit(dynamic_cast<Int64Type const*>(node), args...);
+            return visit(dynamic_cast<Int64Type const*>(node), std::forward<Args>(args)...);
         case TypeKind::NULL_TYPE:
-            return visit(dynamic_cast<NullType const*>(node), args...);
+            return visit(dynamic_cast<NullType const*>(node), std::forward<Args>(args)...);
         case TypeKind::RELATION_TYPE:
-            return visit(dynamic_cast<RelationType const*>(node), args...);
+            return visit(dynamic_cast<RelationType const*>(node), std::forward<Args>(args)...);
         case TypeKind::STRING_TYPE:
-            return visit(dynamic_cast<StringType const*>(node), args...);
+            return visit(dynamic_cast<StringType const*>(node), std::forward<Args>(args)...);
         case TypeKind::TUPLE_TYPE:
-            return visit(dynamic_cast<TupleType const*>(node), args...);
+            return visit(dynamic_cast<TupleType const*>(node), std::forward<Args>(args)...);
         case TypeKind::VAR_CHAR_TYPE:
-            return visit(dynamic_cast<VarCharType const*>(node), args...);
+            return visit(dynamic_cast<VarCharType const*>(node), std::forward<Args>(args)...);
         case TypeKind::VECTOR_TYPE:
-            return visit(dynamic_cast<VectorType const*>(node), args...);
+            return visit(dynamic_cast<VectorType const*>(node), std::forward<Args>(args)...);
         }
         // may not occur
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
 };

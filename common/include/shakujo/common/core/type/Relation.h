@@ -181,6 +181,11 @@ private:
 
 public:
     /**
+     * @brief the kind of this type.
+     */
+    static inline constexpr Kind tag = Kind::RELATION;
+
+    /**
      * @brief Constructs a new object.
      * @param elements the tuple elements
      */
@@ -236,7 +241,7 @@ public:
     Relation& operator=(Relation&& other) noexcept = default;
 
     Type::Kind kind() const override {
-        return Type::Kind::RELATION;
+        return tag;
     }
 
     bool is_valid() const override {

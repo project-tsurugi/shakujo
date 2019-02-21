@@ -1214,6 +1214,11 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         serialize(printer, value->expression_key());
         printer.exit_property("expression_key");
     }
+    {
+        printer.enter_property("relation_key");
+        serialize(printer, value->relation_key());
+        printer.exit_property("relation_key");
+    }
     printer.exit_object("DistinctExpression");
 }
 
@@ -1296,6 +1301,11 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         printer.enter_property("expression_key");
         serialize(printer, value->expression_key());
         printer.exit_property("expression_key");
+    }
+    {
+        printer.enter_property("relation_key");
+        serialize(printer, value->relation_key());
+        printer.exit_property("relation_key");
     }
     printer.exit_object("LimitExpression");
 }
@@ -1474,11 +1484,6 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         printer.enter_property("alias");
         serialize(printer, value->alias());
         printer.exit_property("alias");
-    }
-    {
-        printer.enter_property("condition");
-        serialize(printer, value->condition());
-        printer.exit_property("condition");
     }
     {
         printer.enter_property("expression_key");

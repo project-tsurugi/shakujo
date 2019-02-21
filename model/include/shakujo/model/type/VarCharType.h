@@ -100,11 +100,16 @@ public:
 
 public:
     /**
+     * @brief the node kind.
+     */
+    static inline constexpr TypeKind tag = TypeKind::VAR_CHAR_TYPE;
+
+    /**
      * @brief Returns the node kind.
      * @return the node kind
-     */
-    TypeKind kind() const override {
-        return TypeKind::VAR_CHAR_TYPE;
+     * @see tag
+     */TypeKind kind() const override {
+        return tag;
     }
 
 };

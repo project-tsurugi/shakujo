@@ -28,10 +28,15 @@ namespace shakujo::common::core::type {
  */
 class Char final : public Textual {
 private:
-    bool variant_;
+    bool varying_;
     std::size_t size_;
 
 public:
+    /**
+     * @brief the kind of this type.
+     */
+    static inline constexpr Kind tag = Kind::CHAR;
+
     /**
      * @brief the corresponded value type.
      */
@@ -39,12 +44,12 @@ public:
 
     /**
      * @brief Constructs a new object.
-     * @param variant true to variant character
+     * @param varying true to varying length character
      * @param size the size in bytes
      * @param nullity the nullity
      */
-    constexpr Char(bool variant, std::size_t size, Type::Nullity nullity = Type::Nullity::NULLABLE) noexcept
-        : Textual(nullity), variant_(variant), size_(size)
+    constexpr Char(bool varying, std::size_t size, Type::Nullity nullity = Type::Nullity::NULLABLE) noexcept
+        : Textual(nullity), varying_(varying), size_(size)
     {}
 
     /**
@@ -96,7 +101,7 @@ public:
     }
 
     Type::Kind kind() const override {
-        return Type::Kind::CHAR;
+        return tag;
     }
 
     /**
@@ -105,7 +110,16 @@ public:
      * @return false otherwise (a.k.a. CHAR)
      */
     constexpr bool variant() const {
-        return variant_;
+        return varying_;
+    }
+
+    /**
+     * @brief returns whether or not the character length is varying.
+     * @return true if it is varying length (a.k.a. VARCHAR)
+     * @return false otherwise (a.k.a. CHAR)
+     */
+    constexpr bool varying() const {
+        return varying_;
     }
 
     /**

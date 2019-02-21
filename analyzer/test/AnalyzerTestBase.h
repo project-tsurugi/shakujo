@@ -215,10 +215,15 @@ public:
         return ss.str();
     }
 
+    template<typename T>
+    common::util::ManagedPtr<T> manage(std::unique_ptr<T> node) {
+        return common::util::ManagedPtr { std::move(node) };
+    }
+
     template<typename T, typename M>
     std::unique_ptr<T> analyze_managed(std::unique_ptr<T> node) {
-        shakujo::common::util::ManagedPtr<M> manager { std::move(node) };
-        Analyzer {}.analyze(env, manager.get());
+        auto manager = manage<M>(std::move(node));
+        do_analyze(manager.get());
         auto ptr = common::util::dynamic_pointer_cast<T>(manager.release());
         if (ptr) {
             env.reporter().report(Diagnostic { Diagnostic::Code::MESSAGE, to_string(ptr.get()) });
@@ -229,9 +234,17 @@ public:
 
     template<typename T>
     std::unique_ptr<T> analyze_unmanaged(std::unique_ptr<T> node) {
-        Analyzer {}.analyze(env, node.get());
-        env.reporter().report(Diagnostic { Diagnostic::Code::MESSAGE, to_string(node.get()) });
+        do_analyze(node.get());
         return std::move(node);
+    }
+
+    template<class T>
+    void do_analyze(T* node, bool fail_on_error = false) {
+        Analyzer {}.analyze(env, node);
+        env.reporter().report(Diagnostic { Diagnostic::Code::MESSAGE, to_string(node) });
+        if (fail_on_error && env.reporter().saw_error()) {
+            throw std::invalid_argument(common::util::to_string(diagnostics()));
+        }
     }
 
     template<typename T>
@@ -250,6 +263,10 @@ public:
 
     std::unique_ptr<model::expression::Expression> var(std::string_view name) {
         return f.VariableReference(f.Name(name));
+    }
+
+    std::unique_ptr<model::expression::Expression> var(std::string_view qualifier, std::string_view name) {
+        return f.VariableReference(f.Name(qualifier, name));
     }
 
     std::unique_ptr<model::expression::Expression> literal(
@@ -309,6 +326,11 @@ public:
             return as<T>(esp->body());
         }
         throw std::bad_cast();
+    }
+
+    template<class T>
+    bool is_instance(model::Node const* node) {
+        return dynamic_cast<T const*>(node) != nullptr;
     }
 
     common::core::Type const& type(model::expression::Expression* expr) {

@@ -99,11 +99,16 @@ public:
 
 public:
     /**
+     * @brief the node kind.
+     */
+    static inline constexpr NameKind tag = NameKind::SIMPLE_NAME;
+
+    /**
      * @brief Returns the node kind.
      * @return the node kind
-     */
-    NameKind kind() const override {
-        return NameKind::SIMPLE_NAME;
+     * @see tag
+     */NameKind kind() const override {
+        return tag;
     }
 
 };

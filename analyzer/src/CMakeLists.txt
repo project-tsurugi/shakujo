@@ -1,7 +1,8 @@
 file(GLOB SOURCES
     "*.cpp"
     "binding/*.cpp"
-    "impl/*.cpp"
+    "analyze/*.cpp"
+    "optimize/*.cpp"
 )
 
 add_library(analyzer STATIC

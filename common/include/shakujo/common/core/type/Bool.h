@@ -32,6 +32,11 @@ private:
 
 public:
     /**
+     * @brief the kind of this type.
+     */
+    static inline constexpr Kind tag = Kind::BOOL;
+
+    /**
      * @brief the corresponded value type.
      */
     using value_type = value::Bool;
@@ -76,7 +81,7 @@ public:
     Bool& operator=(Bool&& other) noexcept = default;
 
     Type::Kind kind() const override {
-        return Type::Kind::BOOL;
+        return tag;
     }
 
     Nullity nullity() const override {

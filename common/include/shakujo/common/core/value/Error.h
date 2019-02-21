@@ -28,6 +28,11 @@ namespace shakujo::common::core::value {
 class Error final : public Value {
 public:
     /**
+     * @brief the kind of this value.
+     */
+    static inline constexpr auto tag = Kind::ERROR;
+
+    /**
      * @brief Constructs a new erroneous object.
      */
     constexpr Error() noexcept = default;
@@ -63,8 +68,8 @@ public:
      */
     Error& operator=(Error&& other) noexcept = default;
 
-    Value::Kind kind() const override {
-        return Value::Kind::ERROR;
+    Kind kind() const override {
+        return tag;
     }
 
     Error* clone() const & override {

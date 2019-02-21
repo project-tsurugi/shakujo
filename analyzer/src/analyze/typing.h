@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SHAKUJO_ANALYZER_IMPL_TYPING_H_
-#define SHAKUJO_ANALYZER_IMPL_TYPING_H_
+#ifndef SHAKUJO_ANALYZER_ANALYZE_TYPING_H_
+#define SHAKUJO_ANALYZER_ANALYZE_TYPING_H_
 
 #include <memory>
 #include <string>
@@ -24,7 +24,7 @@
 #include "shakujo/model/type/ConstTypeVisitor.h"
 #include "shakujo/analyzer/binding/ExpressionBinding.h"
 
-namespace shakujo::analyzer::impl::typing {
+namespace shakujo::analyzer::analyze::typing {
 
 using Type = common::core::Type;
 using Value = common::core::Value;
@@ -276,6 +276,6 @@ inline std::unique_ptr<common::core::Type> convert(model::type::Type const* type
     return Converter {}.dispatch(type);
 }
 
-}  // namespace shakujo::analyzer::impl::typing
+}  // namespace shakujo::analyzer::analyze::typing
 
-#endif  //SHAKUJO_ANALYZER_IMPL_TYPING_H_
+#endif  //SHAKUJO_ANALYZER_ANALYZE_TYPING_H_

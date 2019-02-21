@@ -28,6 +28,11 @@ namespace shakujo::common::core::type {
 class Error final : public Type {
 public:
     /**
+     * @brief the kind of this type.
+     */
+    static inline constexpr Kind tag = Kind::ERROR;
+
+    /**
      * @brief Constructs a new object.
      */
     constexpr Error() noexcept = default;
@@ -64,7 +69,7 @@ public:
     Error& operator=(Error&& other) noexcept = default;
 
     Type::Kind kind() const override {
-        return Type::Kind::ERROR;
+        return tag;
     }
 
     Nullity nullity() const override {

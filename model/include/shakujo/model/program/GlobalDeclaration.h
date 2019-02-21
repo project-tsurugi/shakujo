@@ -80,8 +80,8 @@ public:
     /**
      * @brief Returns the node kind.
      * @return the node kind
-     */
-    virtual GlobalDeclarationKind kind() const = 0;
+     * @see tag
+     */virtual GlobalDeclarationKind kind() const = 0;
 
 };
 }  // namespace shakujo::model::program

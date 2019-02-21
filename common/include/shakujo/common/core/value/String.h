@@ -34,6 +34,11 @@ public:
      */
     using type = std::string;
 
+    /**
+     * @brief the kind of this value.
+     */
+    static inline constexpr auto tag = Kind::STRING;
+
 private:
     type value_;
 
@@ -75,8 +80,8 @@ public:
      */
     String& operator=(String&& other) noexcept = default;
 
-    Value::Kind kind() const override {
-        return Value::Kind::STRING;
+    Kind kind() const override {
+        return tag;
     }
 
     String* clone() const & override {

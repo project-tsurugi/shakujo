@@ -189,11 +189,16 @@ public:
 
 public:
     /**
+     * @brief the node kind.
+     */
+    static inline constexpr ExpressionKind tag = ExpressionKind::ARRAY_ELEMENT_STORE_EXPRESSION;
+
+    /**
      * @brief Returns the node kind.
      * @return the node kind
-     */
-    ExpressionKind kind() const override {
-        return ExpressionKind::ARRAY_ELEMENT_STORE_EXPRESSION;
+     * @see tag
+     */ExpressionKind kind() const override {
+        return tag;
     }
 
 };

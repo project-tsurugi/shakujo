@@ -20,9 +20,11 @@ import com.ashigeru.lang.codegen.ir.reflect.Extends;
 import com.ashigeru.lang.codegen.ir.reflect.MetaClass;
 import com.ashigeru.lang.codegen.spec.sql.builtin.Size;
 import com.ashigeru.lang.codegen.spec.sql.expression.Expression;
+import com.ashigeru.lang.codegen.spec.sql.key.RelationKey;
 
 @Description("limitting the number of records")
 @Extends(Expression.class)
+@Extends(RelationKey.Provider.class)
 @SuppressWarnings("javadoc")
 public class LimitExpression extends MetaClass {
 

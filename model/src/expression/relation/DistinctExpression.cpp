@@ -22,6 +22,7 @@
 #include "shakujo/common/util/utility.h"
 #include "shakujo/model/expression/Expression.h"
 #include "shakujo/model/key/ExpressionKey.h"
+#include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/name/Index.h"
 #include "shakujo/model/util/NodeList.h"
 
@@ -32,6 +33,7 @@ public:
     common::util::ManagedPtr<Expression> operand_;
     util::NodeList<name::Index> subsets_;
     std::unique_ptr<key::ExpressionKey> expression_key_;
+    std::unique_ptr<key::RelationKey> relation_key_;
 
     Impl() = default;
     ~Impl() noexcept = default;
@@ -86,6 +88,15 @@ key::ExpressionKey* DistinctExpression::expression_key() {
 
 DistinctExpression& DistinctExpression::expression_key(std::unique_ptr<key::ExpressionKey> expression_key) {
     impl_->expression_key_ = std::move(expression_key);
+    return *this;
+}
+
+key::RelationKey* DistinctExpression::relation_key() {
+    return impl_->relation_key_.get();
+}
+
+DistinctExpression& DistinctExpression::relation_key(std::unique_ptr<key::RelationKey> relation_key) {
+    impl_->relation_key_ = std::move(relation_key);
     return *this;
 }
 

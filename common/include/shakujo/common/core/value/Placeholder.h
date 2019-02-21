@@ -34,6 +34,11 @@ public:
      */
     using type = std::string;
 
+    /**
+     * @brief the kind of this value.
+     */
+    static inline constexpr auto tag = Kind::PLACEHOLDER;
+
 private:
     type value_;
 
@@ -75,8 +80,8 @@ public:
      */
     Placeholder& operator=(Placeholder&& other) noexcept = default;
 
-    Value::Kind kind() const override {
-        return Value::Kind::PLACEHOLDER;
+    Kind kind() const override {
+        return tag;
     }
 
     Placeholder* clone() const & override {

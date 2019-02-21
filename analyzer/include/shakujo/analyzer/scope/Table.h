@@ -115,9 +115,9 @@ private:
             }
             model::name::Name const* qualifier = current->qualifier();
             switch (qualifier->kind()) {
-                case model::name::NameKind::SIMPLE_NAME:
+                case model::name::SimpleName::tag:
                     return find_simple(dynamic_pointer_cast<model::name::SimpleName>(qualifier));
-                case model::name::NameKind::QUALIFIED_NAME:
+                case model::name::QualifiedName::tag:
                     current = dynamic_pointer_cast<model::name::QualifiedName>(qualifier);
                     break;
                 default:
@@ -176,9 +176,9 @@ public:
      */
     Result<T> find(model::name::Name const* name) const {
         switch (name->kind()) {
-        case model::name::NameKind::SIMPLE_NAME:
+        case model::name::SimpleName::tag:
             return find_simple(dynamic_pointer_cast<model::name::SimpleName>(name));
-        case model::name::NameKind::QUALIFIED_NAME:
+        case model::name::QualifiedName::tag:
             return find_qualified(dynamic_pointer_cast<model::name::QualifiedName>(name));
         default:
             return {};
@@ -193,9 +193,9 @@ public:
      */
     bool contains(model::name::Name const* name) const {
         switch (name->kind()) {
-        case model::name::NameKind::SIMPLE_NAME:
+        case model::name::SimpleName::tag:
             return contains(dynamic_pointer_cast<model::name::SimpleName>(name)->token());
-        case model::name::NameKind::QUALIFIED_NAME:
+        case model::name::QualifiedName::tag:
             return contains(name->segments());
         default:
             return {};

@@ -57,7 +57,7 @@ public:
      * @see GlobalFunctionDeclaration
      */
     virtual Return visit(GlobalFunctionDeclaration* node, Args... args) {  // NOLINT
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -68,7 +68,7 @@ public:
      * @see GlobalVariableDeclaration
      */
     virtual Return visit(GlobalVariableDeclaration* node, Args... args) {  // NOLINT
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -80,12 +80,12 @@ public:
     Return dispatch(GlobalDeclaration* node, Args... args) {  // NOLINT
         switch (node->kind()) {
         case GlobalDeclarationKind::GLOBAL_FUNCTION_DECLARATION:
-            return visit(dynamic_cast<GlobalFunctionDeclaration*>(node), args...);
+            return visit(dynamic_cast<GlobalFunctionDeclaration*>(node), std::forward<Args>(args)...);
         case GlobalDeclarationKind::GLOBAL_VARIABLE_DECLARATION:
-            return visit(dynamic_cast<GlobalVariableDeclaration*>(node), args...);
+            return visit(dynamic_cast<GlobalVariableDeclaration*>(node), std::forward<Args>(args)...);
         }
         // may not occur
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
 };

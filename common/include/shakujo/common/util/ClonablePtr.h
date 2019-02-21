@@ -30,7 +30,9 @@ namespace shakujo::common::util {
  * @see Cloneable
  */
 template<typename E>
-class ClonablePtr final : private Equivalent<ClonablePtr<E>> {
+class ClonablePtr final
+        : private Equivalent<ClonablePtr<E>>
+        , private Equivalent2<ClonablePtr<E>, std::nullptr_t> {
 private:
     template<typename T>
     friend class ClonablePtr;
@@ -197,6 +199,16 @@ public:
      */
     bool operator==(ClonablePtr const& other) const {
         return element_ == other.element_;
+    }
+
+    /**
+     * @brief returns whether or not the container holds nothing.
+     * @param container the target container
+     * @return true if the container holds nothing
+     * @return false otherwise
+     */
+    friend bool operator==(ClonablePtr const& container, std::nullptr_t) {
+        return container.get() == nullptr;
     }
 };
 }  // namespace shakujo::common::util

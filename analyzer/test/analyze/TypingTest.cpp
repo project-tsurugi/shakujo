@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "impl/typing.h"
+#include "analyze/typing.h"
 
 #include <gtest/gtest.h>
 
@@ -34,7 +34,7 @@
 
 #include "shakujo/model/IRFactory.h"
 
-namespace shakujo::analyzer::impl {
+namespace shakujo::analyzer::analyze {
 
 using IRFactory = model::IRFactory;
 
@@ -393,4 +393,4 @@ TEST_F(TypingTest, convert_string) {
             t::String(NULLABLE),
             *convert(*f.StringType()));
 }
-}  // namespace shakujo::analyzer::impl
+}  // namespace shakujo::analyzer::analyze

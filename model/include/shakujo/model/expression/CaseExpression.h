@@ -264,11 +264,16 @@ public:
 
 public:
     /**
+     * @brief the node kind.
+     */
+    static inline constexpr ExpressionKind tag = ExpressionKind::CASE_EXPRESSION;
+
+    /**
      * @brief Returns the node kind.
      * @return the node kind
-     */
-    ExpressionKind kind() const override {
-        return ExpressionKind::CASE_EXPRESSION;
+     * @see tag
+     */ExpressionKind kind() const override {
+        return tag;
     }
 
 };

@@ -22,10 +22,12 @@ import com.ashigeru.lang.codegen.ir.reflect.Extends;
 import com.ashigeru.lang.codegen.ir.reflect.MetaClass;
 import com.ashigeru.lang.codegen.ir.reflect.Opt;
 import com.ashigeru.lang.codegen.spec.sql.expression.Expression;
+import com.ashigeru.lang.codegen.spec.sql.key.RelationKey;
 import com.ashigeru.lang.codegen.spec.sql.name.Index;
 
 @Description("removing duplicated rows from relations")
 @Extends(Expression.class)
+@Extends(RelationKey.Provider.class)
 @SuppressWarnings("javadoc")
 public class DistinctExpression extends MetaClass {
 

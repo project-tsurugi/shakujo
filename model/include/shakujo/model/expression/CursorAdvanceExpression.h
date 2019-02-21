@@ -135,11 +135,16 @@ public:
 
 public:
     /**
+     * @brief the node kind.
+     */
+    static inline constexpr ExpressionKind tag = ExpressionKind::CURSOR_ADVANCE_EXPRESSION;
+
+    /**
      * @brief Returns the node kind.
      * @return the node kind
-     */
-    ExpressionKind kind() const override {
-        return ExpressionKind::CURSOR_ADVANCE_EXPRESSION;
+     * @see tag
+     */ExpressionKind kind() const override {
+        return tag;
     }
 
 };

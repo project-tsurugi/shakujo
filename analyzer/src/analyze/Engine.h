@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SHAKUJO_ANALYZER_IMPL_ENGINE_H_
-#define SHAKUJO_ANALYZER_IMPL_ENGINE_H_
+#ifndef SHAKUJO_ANALYZER_ANALYZE_ENGINE_H_
+#define SHAKUJO_ANALYZER_ANALYZE_ENGINE_H_
 
 #include <cassert>
 #include <memory>
@@ -49,7 +49,7 @@
 
 #include "shakujo/common/util/utility.h"
 
-namespace shakujo::analyzer::impl {
+namespace shakujo::analyzer::analyze {
 
 class Engine final  // NOLINT
         : protected model::program::GlobalDeclarationVisitor<void, ScopeContext&>
@@ -259,6 +259,6 @@ private:
     }
 };
 
-}  // namespace shakujo::analyzer::impl
+}  // namespace shakujo::analyzer::analyze
 
-#endif  //SHAKUJO_ANALYZER_IMPL_ENGINE_H_
+#endif  //SHAKUJO_ANALYZER_ANALYZE_ENGINE_H_

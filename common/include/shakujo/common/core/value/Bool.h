@@ -32,6 +32,11 @@ public:
      */
     using type = bool;
 
+    /**
+     * @brief the kind of this value.
+     */
+    static inline constexpr auto tag = Kind::BOOL;
+
 private:
     type value_;
 
@@ -73,8 +78,8 @@ public:
      */
     Bool& operator=(Bool&& other) noexcept = default;
 
-    Value::Kind kind() const override {
-        return Value::Kind::BOOL;
+    Kind kind() const override {
+        return tag;
     }
 
     Bool* clone() const & override {

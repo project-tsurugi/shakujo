@@ -206,6 +206,15 @@ public:
     virtual Nullity nullity() const = 0;
 
     /**
+     * @brief returns whether or not this is a nullable type.
+     * @return true if this is a nullable type
+     * @return false otherwise
+     */
+    bool nullable() const {
+        return nullity() == Nullity::NULLABLE;
+    }
+
+    /**
      * @brief Appends the object information into the given output stream.
      * @param out the target output stream
      * @param value the target object

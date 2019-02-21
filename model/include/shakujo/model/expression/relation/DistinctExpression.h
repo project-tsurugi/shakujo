@@ -23,6 +23,7 @@
 #include "shakujo/model/expression/Expression.h"
 #include "shakujo/model/expression/ExpressionKind.h"
 #include "shakujo/model/key/ExpressionKey.h"
+#include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/name/Index.h"
 #include "shakujo/model/util/NodeList.h"
 
@@ -31,7 +32,8 @@ namespace shakujo::model::expression::relation {
  * @brief Represents removing duplicated rows from relations.
  */
 class DistinctExpression
-        : public Expression {
+        : public Expression
+        , public key::RelationKey::Provider {
 private:
     class Impl;
     std::unique_ptr<Impl> impl_;
@@ -137,6 +139,27 @@ public:
     DistinctExpression& expression_key(std::unique_ptr<key::ExpressionKey> expression_key) override;
 
     /**
+     * @brief Returns relation key.
+     * @return relation key.
+     */
+    key::RelationKey* relation_key() override;
+
+    /**
+     * @brief Returns relation key.
+     * @return relation key.
+     */
+    inline key::RelationKey const* relation_key() const override {
+        return const_cast<DistinctExpression*>(this)->relation_key();
+    }
+
+    /**
+     * @brief Sets relation key.
+     * @param relation_key relation key
+     * @return this
+     */
+    DistinctExpression& relation_key(std::unique_ptr<key::RelationKey> relation_key) override;
+
+    /**
      * @brief Returns a copy of this object.
      * @return a clone of this
      */
@@ -150,11 +173,16 @@ public:
 
 public:
     /**
+     * @brief the node kind.
+     */
+    static inline constexpr ExpressionKind tag = ExpressionKind::DISTINCT_EXPRESSION;
+
+    /**
      * @brief Returns the node kind.
      * @return the node kind
-     */
-    ExpressionKind kind() const override {
-        return ExpressionKind::DISTINCT_EXPRESSION;
+     * @see tag
+     */ExpressionKind kind() const override {
+        return tag;
     }
 
 };

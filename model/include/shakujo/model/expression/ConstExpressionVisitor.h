@@ -88,7 +88,7 @@ public:
      * @see ArrayCreationExpression
      */
     virtual Return visit(ArrayCreationExpression const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -99,7 +99,7 @@ public:
      * @see ArrayElementLoadExpression
      */
     virtual Return visit(ArrayElementLoadExpression const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -110,7 +110,7 @@ public:
      * @see ArrayElementStoreExpression
      */
     virtual Return visit(ArrayElementStoreExpression const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -121,7 +121,7 @@ public:
      * @see AssignExpression
      */
     virtual Return visit(AssignExpression const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -132,7 +132,7 @@ public:
      * @see BinaryOperator
      */
     virtual Return visit(BinaryOperator const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -143,7 +143,7 @@ public:
      * @see BlockExpression
      */
     virtual Return visit(BlockExpression const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -154,7 +154,7 @@ public:
      * @see CaseExpression
      */
     virtual Return visit(CaseExpression const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -165,7 +165,7 @@ public:
      * @see CursorAdvanceExpression
      */
     virtual Return visit(CursorAdvanceExpression const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -176,7 +176,7 @@ public:
      * @see CursorCreationExpression
      */
     virtual Return visit(CursorCreationExpression const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -187,7 +187,7 @@ public:
      * @see CursorElementLoadExpression
      */
     virtual Return visit(CursorElementLoadExpression const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -198,7 +198,7 @@ public:
      * @see FunctionCall
      */
     virtual Return visit(FunctionCall const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -209,7 +209,7 @@ public:
      * @see ImplicitCast
      */
     virtual Return visit(ImplicitCast const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -220,7 +220,7 @@ public:
      * @see Literal
      */
     virtual Return visit(Literal const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -231,7 +231,7 @@ public:
      * @see Placeholder
      */
     virtual Return visit(Placeholder const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -242,7 +242,7 @@ public:
      * @see StringOperator
      */
     virtual Return visit(StringOperator const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -253,7 +253,7 @@ public:
      * @see TupleCreationExpression
      */
     virtual Return visit(TupleCreationExpression const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -264,7 +264,7 @@ public:
      * @see TupleElementLoadExpression
      */
     virtual Return visit(TupleElementLoadExpression const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -275,7 +275,7 @@ public:
      * @see TupleElementStoreExpression
      */
     virtual Return visit(TupleElementStoreExpression const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -286,7 +286,7 @@ public:
      * @see TypeOperator
      */
     virtual Return visit(TypeOperator const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -297,7 +297,7 @@ public:
      * @see UnaryOperator
      */
     virtual Return visit(UnaryOperator const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -308,7 +308,7 @@ public:
      * @see VariableReference
      */
     virtual Return visit(VariableReference const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -319,7 +319,7 @@ public:
      * @see VectorCreationExpression
      */
     virtual Return visit(VectorCreationExpression const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -330,7 +330,7 @@ public:
      * @see VectorElementLoadExpression
      */
     virtual Return visit(VectorElementLoadExpression const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -341,7 +341,7 @@ public:
      * @see VectorElementStoreExpression
      */
     virtual Return visit(VectorElementStoreExpression const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -352,7 +352,7 @@ public:
      * @see VectorLengthExpression
      */
     virtual Return visit(VectorLengthExpression const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -363,7 +363,7 @@ public:
      * @see relation::AggregationExpression
      */
     virtual Return visit(relation::AggregationExpression const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -374,7 +374,7 @@ public:
      * @see relation::DistinctExpression
      */
     virtual Return visit(relation::DistinctExpression const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -385,7 +385,7 @@ public:
      * @see relation::JoinExpression
      */
     virtual Return visit(relation::JoinExpression const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -396,7 +396,7 @@ public:
      * @see relation::LimitExpression
      */
     virtual Return visit(relation::LimitExpression const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -407,7 +407,7 @@ public:
      * @see relation::OrderExpression
      */
     virtual Return visit(relation::OrderExpression const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -418,7 +418,7 @@ public:
      * @see relation::ProjectionExpression
      */
     virtual Return visit(relation::ProjectionExpression const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -429,7 +429,7 @@ public:
      * @see relation::ScanExpression
      */
     virtual Return visit(relation::ScanExpression const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -440,7 +440,7 @@ public:
      * @see relation::SelectionExpression
      */
     virtual Return visit(relation::SelectionExpression const* node, Args... args) {
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -452,74 +452,74 @@ public:
     Return dispatch(Expression const* node, Args... args) {
         switch (node->kind()) {
         case ExpressionKind::ARRAY_CREATION_EXPRESSION:
-            return visit(dynamic_cast<ArrayCreationExpression const*>(node), args...);
+            return visit(dynamic_cast<ArrayCreationExpression const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::ARRAY_ELEMENT_LOAD_EXPRESSION:
-            return visit(dynamic_cast<ArrayElementLoadExpression const*>(node), args...);
+            return visit(dynamic_cast<ArrayElementLoadExpression const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::ARRAY_ELEMENT_STORE_EXPRESSION:
-            return visit(dynamic_cast<ArrayElementStoreExpression const*>(node), args...);
+            return visit(dynamic_cast<ArrayElementStoreExpression const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::ASSIGN_EXPRESSION:
-            return visit(dynamic_cast<AssignExpression const*>(node), args...);
+            return visit(dynamic_cast<AssignExpression const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::BINARY_OPERATOR:
-            return visit(dynamic_cast<BinaryOperator const*>(node), args...);
+            return visit(dynamic_cast<BinaryOperator const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::BLOCK_EXPRESSION:
-            return visit(dynamic_cast<BlockExpression const*>(node), args...);
+            return visit(dynamic_cast<BlockExpression const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::CASE_EXPRESSION:
-            return visit(dynamic_cast<CaseExpression const*>(node), args...);
+            return visit(dynamic_cast<CaseExpression const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::CURSOR_ADVANCE_EXPRESSION:
-            return visit(dynamic_cast<CursorAdvanceExpression const*>(node), args...);
+            return visit(dynamic_cast<CursorAdvanceExpression const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::CURSOR_CREATION_EXPRESSION:
-            return visit(dynamic_cast<CursorCreationExpression const*>(node), args...);
+            return visit(dynamic_cast<CursorCreationExpression const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::CURSOR_ELEMENT_LOAD_EXPRESSION:
-            return visit(dynamic_cast<CursorElementLoadExpression const*>(node), args...);
+            return visit(dynamic_cast<CursorElementLoadExpression const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::FUNCTION_CALL:
-            return visit(dynamic_cast<FunctionCall const*>(node), args...);
+            return visit(dynamic_cast<FunctionCall const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::IMPLICIT_CAST:
-            return visit(dynamic_cast<ImplicitCast const*>(node), args...);
+            return visit(dynamic_cast<ImplicitCast const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::LITERAL:
-            return visit(dynamic_cast<Literal const*>(node), args...);
+            return visit(dynamic_cast<Literal const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::PLACEHOLDER:
-            return visit(dynamic_cast<Placeholder const*>(node), args...);
+            return visit(dynamic_cast<Placeholder const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::STRING_OPERATOR:
-            return visit(dynamic_cast<StringOperator const*>(node), args...);
+            return visit(dynamic_cast<StringOperator const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::TUPLE_CREATION_EXPRESSION:
-            return visit(dynamic_cast<TupleCreationExpression const*>(node), args...);
+            return visit(dynamic_cast<TupleCreationExpression const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::TUPLE_ELEMENT_LOAD_EXPRESSION:
-            return visit(dynamic_cast<TupleElementLoadExpression const*>(node), args...);
+            return visit(dynamic_cast<TupleElementLoadExpression const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::TUPLE_ELEMENT_STORE_EXPRESSION:
-            return visit(dynamic_cast<TupleElementStoreExpression const*>(node), args...);
+            return visit(dynamic_cast<TupleElementStoreExpression const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::TYPE_OPERATOR:
-            return visit(dynamic_cast<TypeOperator const*>(node), args...);
+            return visit(dynamic_cast<TypeOperator const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::UNARY_OPERATOR:
-            return visit(dynamic_cast<UnaryOperator const*>(node), args...);
+            return visit(dynamic_cast<UnaryOperator const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::VARIABLE_REFERENCE:
-            return visit(dynamic_cast<VariableReference const*>(node), args...);
+            return visit(dynamic_cast<VariableReference const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::VECTOR_CREATION_EXPRESSION:
-            return visit(dynamic_cast<VectorCreationExpression const*>(node), args...);
+            return visit(dynamic_cast<VectorCreationExpression const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::VECTOR_ELEMENT_LOAD_EXPRESSION:
-            return visit(dynamic_cast<VectorElementLoadExpression const*>(node), args...);
+            return visit(dynamic_cast<VectorElementLoadExpression const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::VECTOR_ELEMENT_STORE_EXPRESSION:
-            return visit(dynamic_cast<VectorElementStoreExpression const*>(node), args...);
+            return visit(dynamic_cast<VectorElementStoreExpression const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::VECTOR_LENGTH_EXPRESSION:
-            return visit(dynamic_cast<VectorLengthExpression const*>(node), args...);
+            return visit(dynamic_cast<VectorLengthExpression const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::AGGREGATION_EXPRESSION:
-            return visit(dynamic_cast<relation::AggregationExpression const*>(node), args...);
+            return visit(dynamic_cast<relation::AggregationExpression const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::DISTINCT_EXPRESSION:
-            return visit(dynamic_cast<relation::DistinctExpression const*>(node), args...);
+            return visit(dynamic_cast<relation::DistinctExpression const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::JOIN_EXPRESSION:
-            return visit(dynamic_cast<relation::JoinExpression const*>(node), args...);
+            return visit(dynamic_cast<relation::JoinExpression const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::LIMIT_EXPRESSION:
-            return visit(dynamic_cast<relation::LimitExpression const*>(node), args...);
+            return visit(dynamic_cast<relation::LimitExpression const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::ORDER_EXPRESSION:
-            return visit(dynamic_cast<relation::OrderExpression const*>(node), args...);
+            return visit(dynamic_cast<relation::OrderExpression const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::PROJECTION_EXPRESSION:
-            return visit(dynamic_cast<relation::ProjectionExpression const*>(node), args...);
+            return visit(dynamic_cast<relation::ProjectionExpression const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::SCAN_EXPRESSION:
-            return visit(dynamic_cast<relation::ScanExpression const*>(node), args...);
+            return visit(dynamic_cast<relation::ScanExpression const*>(node), std::forward<Args>(args)...);
         case ExpressionKind::SELECTION_EXPRESSION:
-            return visit(dynamic_cast<relation::SelectionExpression const*>(node), args...);
+            return visit(dynamic_cast<relation::SelectionExpression const*>(node), std::forward<Args>(args)...);
         }
         // may not occur
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
 };

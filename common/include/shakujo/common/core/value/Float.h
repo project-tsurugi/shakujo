@@ -34,6 +34,11 @@ public:
      */
     using type = std::double_t;
 
+    /**
+     * @brief the kind of this value.
+     */
+    static inline constexpr auto tag = Kind::FLOAT;
+
 private:
     type value_;
 
@@ -75,8 +80,8 @@ public:
      */
     Float& operator=(Float&& other) noexcept = default;
 
-    Value::Kind kind() const override {
-        return Value::Kind::FLOAT;
+    Kind kind() const override {
+        return tag;
     }
 
     Float* clone() const & override {

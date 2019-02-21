@@ -49,8 +49,7 @@ public:
      * @return the result
      * @see Value
      */
-    virtual Return visitDefault(Value* node, Args... args) {  // NOLINT
-        (void) sizeof...(args); // ignore unused
+    virtual Return visitDefault(Value* node, [[maybe_unused]] Args... args) {  // NOLINT
         std::ostringstream ss;
         ss << "visit for " << node->kind() << " is not implemented.";
         throw std::runtime_error(ss.str());
@@ -64,7 +63,7 @@ public:
      * @see Bool
      */
     virtual Return visit(Bool* node, Args... args) {  // NOLINT
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -75,7 +74,7 @@ public:
      * @see Int
      */
     virtual Return visit(Int* node, Args... args) {  // NOLINT
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -86,7 +85,7 @@ public:
      * @see Float
      */
     virtual Return visit(Float* node, Args... args) {  // NOLINT
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -97,7 +96,7 @@ public:
      * @see Null
      */
     virtual Return visit(Placeholder* node, Args... args) {  // NOLINT
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -108,7 +107,7 @@ public:
      * @see String
      */
     virtual Return visit(String* node, Args... args) {  // NOLINT
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -119,7 +118,7 @@ public:
      * @see Tuple
      */
     virtual Return visit(Tuple* node, Args... args) {  // NOLINT
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -130,7 +129,7 @@ public:
      * @see Null
      */
     virtual Return visit(Null* node, Args... args) {  // NOLINT
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -141,7 +140,7 @@ public:
      * @see Error
      */
     virtual Return visit(Error* node, Args... args) {  // NOLINT
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -153,24 +152,24 @@ public:
     Return dispatch(Value* node, Args... args) {  // NOLINT
         switch (node->kind()) {
         case Value::Kind::BOOL:
-            return visit(dynamic_cast<Bool*>(node), args...);
+            return visit(dynamic_cast<Bool*>(node), std::forward<Args>(args)...);
         case Value::Kind::INT:
-            return visit(dynamic_cast<Int*>(node), args...);
+            return visit(dynamic_cast<Int*>(node), std::forward<Args>(args)...);
         case Value::Kind::FLOAT:
-            return visit(dynamic_cast<Float*>(node), args...);
+            return visit(dynamic_cast<Float*>(node), std::forward<Args>(args)...);
         case Value::Kind::PLACEHOLDER:
-            return visit(dynamic_cast<Placeholder*>(node), args...);
+            return visit(dynamic_cast<Placeholder*>(node), std::forward<Args>(args)...);
         case Value::Kind::STRING:
-            return visit(dynamic_cast<String*>(node), args...);
+            return visit(dynamic_cast<String*>(node), std::forward<Args>(args)...);
         case Value::Kind::TUPLE:
-            return visit(dynamic_cast<Tuple*>(node), args...);
+            return visit(dynamic_cast<Tuple*>(node), std::forward<Args>(args)...);
         case Value::Kind::NULL_:
-            return visit(dynamic_cast<Null*>(node), args...);
+            return visit(dynamic_cast<Null*>(node), std::forward<Args>(args)...);
         case Value::Kind::ERROR:
-            return visit(dynamic_cast<Error*>(node), args...);
+            return visit(dynamic_cast<Error*>(node), std::forward<Args>(args)...);
         }
         // may not occur
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 };
 

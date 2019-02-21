@@ -29,6 +29,11 @@ namespace shakujo::common::core::type {
 class String final : public Textual {
 public:
     /**
+     * @brief the kind of this type.
+     */
+    static inline constexpr Kind tag = Kind::STRING;
+
+    /**
      * @brief the corresponded value type.
      */
     using value_type = value::String;
@@ -79,7 +84,7 @@ public:
     }
 
     Type::Kind kind() const override {
-        return Type::Kind::STRING;
+        return tag;
     }
 };
 

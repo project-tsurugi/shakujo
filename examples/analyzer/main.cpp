@@ -22,6 +22,7 @@
 #include "shakujo/parser/Parser.h"
 #include "shakujo/analyzer/Analyzer.h"
 #include "shakujo/analyzer/AnalyzerContext.h"
+#include "shakujo/analyzer/Optimizer.h"
 #include "shakujo/analyzer/binding/BindingSerializer.h"
 #include "shakujo/common/schema/ConfigurableStorageInfoProvider.h"
 #include "shakujo/common/util/JsonSerializer.h"
@@ -66,9 +67,26 @@ static int run(std::vector<char*> const& args) {
             },
         }
     });
+    tables->add(common::schema::TableInfo {
+        "side",
+        {
+            { // K INT64 NOT NULL
+                "K",
+                common::core::type::Int(64U, common::core::Type::Nullity::NEVER_NULL),
+            },
+            { // C2 FLOAT64 NOT NULL
+                "VALUE",
+                common::core::type::Float(64U),
+                common::core::value::Float(0.0),
+            },
+        }
+    });
     shakujo::analyzer::AnalyzerContext context { tables };
     shakujo::analyzer::Analyzer analyzer;
     analyzer.analyze(context, program.get());
+
+    shakujo::analyzer::Optimizer optimizer { context.binding_context() };
+    optimizer(program.get());
 
     // show diagnostics
     std::cout << "diagnostics:" << std::endl;

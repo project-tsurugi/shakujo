@@ -132,33 +132,6 @@ public:
     std::unique_ptr<name::SimpleName> release_alias();
 
     /**
-     * @brief Returns record filter predicate expression.
-     * @return record filter predicate expression.
-     */
-    Expression* condition();
-
-    /**
-     * @brief Returns record filter predicate expression.
-     * @return record filter predicate expression.
-     */
-    inline Expression const* condition() const {
-        return const_cast<ScanExpression*>(this)->condition();
-    }
-
-    /**
-     * @brief Sets record filter predicate expression.
-     * @param condition record filter predicate expression
-     * @return this
-     */
-    ScanExpression& condition(std::unique_ptr<Expression> condition);
-
-    /**
-     * @brief Releases record filter predicate expression from this node.
-     * @return the released node
-     */
-    std::unique_ptr<Expression> release_condition();
-
-    /**
      * @brief Returns expression key.
      * @return expression key.
      */
@@ -214,11 +187,16 @@ public:
 
 public:
     /**
+     * @brief the node kind.
+     */
+    static inline constexpr ExpressionKind tag = ExpressionKind::SCAN_EXPRESSION;
+
+    /**
      * @brief Returns the node kind.
      * @return the node kind
-     */
-    ExpressionKind kind() const override {
-        return ExpressionKind::SCAN_EXPRESSION;
+     * @see tag
+     */ExpressionKind kind() const override {
+        return tag;
     }
 
 };

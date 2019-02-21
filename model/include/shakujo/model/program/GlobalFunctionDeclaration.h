@@ -398,11 +398,16 @@ public:
 
 public:
     /**
+     * @brief the node kind.
+     */
+    static inline constexpr GlobalDeclarationKind tag = GlobalDeclarationKind::GLOBAL_FUNCTION_DECLARATION;
+
+    /**
      * @brief Returns the node kind.
      * @return the node kind
-     */
-    GlobalDeclarationKind kind() const override {
-        return GlobalDeclarationKind::GLOBAL_FUNCTION_DECLARATION;
+     * @see tag
+     */GlobalDeclarationKind kind() const override {
+        return tag;
     }
 
 };

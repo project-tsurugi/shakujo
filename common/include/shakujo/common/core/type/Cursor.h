@@ -34,6 +34,11 @@ private:
 
 public:
     /**
+     * @brief the kind of this type.
+     */
+    static inline constexpr Kind tag = Kind::CURSOR;
+
+    /**
      * @brief Constructs a new object.
      * @param element_type the element type
      */
@@ -83,7 +88,7 @@ public:
     Cursor& operator=(Cursor&& other) noexcept = default;
 
     Type::Kind kind() const override {
-        return Type::Kind::CURSOR;
+        return tag;
     }
 
     bool is_valid() const override {

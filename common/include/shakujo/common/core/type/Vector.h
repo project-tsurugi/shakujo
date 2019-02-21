@@ -33,6 +33,11 @@ private:
 
 public:
     /**
+     * @brief the kind of this type.
+     */
+    static inline constexpr Kind tag = Kind::VECTOR;
+
+    /**
      * @brief Constructs a new object.
      * @param element_type the element type
      * @param nullity nullity of the type
@@ -98,7 +103,7 @@ public:
     Vector& operator=(Vector&& other) noexcept = default;
 
     Type::Kind kind() const override {
-        return Type::Kind::VECTOR;
+        return tag;
     }
 
     bool is_valid() const override {

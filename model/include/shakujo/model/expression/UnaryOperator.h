@@ -243,11 +243,16 @@ public:
 
 public:
     /**
+     * @brief the node kind.
+     */
+    static inline constexpr ExpressionKind tag = ExpressionKind::UNARY_OPERATOR;
+
+    /**
      * @brief Returns the node kind.
      * @return the node kind
-     */
-    ExpressionKind kind() const override {
-        return ExpressionKind::UNARY_OPERATOR;
+     * @see tag
+     */ExpressionKind kind() const override {
+        return tag;
     }
 
 };

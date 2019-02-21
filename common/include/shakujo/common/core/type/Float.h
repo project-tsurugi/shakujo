@@ -30,6 +30,11 @@ namespace shakujo::common::core::type {
 class Float final : public Numeric {
 public:
     /**
+     * @brief the kind of this type.
+     */
+    static inline constexpr Kind tag = Kind::FLOAT;
+
+    /**
      * @brief the corresponded value type.
      */
     using value_type = value::Float;
@@ -87,7 +92,7 @@ public:
     }
 
     Type::Kind kind() const override {
-        return Type::Kind::FLOAT;
+        return tag;
     }
 };
 

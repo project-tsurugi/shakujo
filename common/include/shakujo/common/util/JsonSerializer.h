@@ -45,7 +45,7 @@ public:
      */
     explicit JsonSerializer(
             std::ostream& output,
-            std::string_view kind_property = "kind",
+            std::string_view kind_property = "class",
             bool pretty_print = true);
 
     ~JsonSerializer() noexcept override;

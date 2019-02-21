@@ -36,8 +36,4 @@ public class ScanExpression extends MetaClass {
     @Description("alias name")
     @Opt
     Property<SimpleName> alias = property();
-
-    @Description("record filter predicate expression")
-    @Opt
-    Property<Expression> condition = property();
 }

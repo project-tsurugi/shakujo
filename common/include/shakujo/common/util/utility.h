@@ -146,6 +146,41 @@ dynamic_pointer_cast(std::unique_ptr<U> ptr) {
 }
 
 /**
+ * @brief apply dynamic_cast to raw pointer only if the actual type is the specified.
+ * @tparam T the destination object type
+ * @tparam U the source object type
+ * @param ptr the source pointer
+ * @return the applied pointer
+ * @return nullptr if failed to cast
+ */
+template<class T, class U>
+inline std::add_pointer_t<std::conditional_t<std::is_const_v<U>, std::add_const_t<T>, T>>
+dynamic_pointer_cast_if(U* ptr) {
+    using ret_t = std::add_pointer_t<std::conditional_t<std::is_const_v<U>, std::add_const_t<T>, T>>;
+    return dynamic_cast<ret_t>(ptr);
+}
+
+/**
+ * @brief apply dynamic_cast to unique_ptr only if the actual type is the specified.
+ * @tparam T the destination object type
+ * @tparam U the source object type
+ * @param ptr the source pointer
+ * @return the applied pointer
+ * @throws empty if failed to cast
+ */
+template<class T, class U>
+inline std::unique_ptr<std::conditional_t<std::is_const_v<U>, std::add_const_t<T>, T>>
+dynamic_pointer_cast_if(std::unique_ptr<U>& ptr) {
+    using object_t = std::conditional_t<std::is_const_v<U>, std::add_const_t<T>, T>;
+    if (auto* raw = dynamic_cast<object_t*>(ptr.get())) {
+        std::unique_ptr<object_t> result { raw };
+        ptr.release();
+        return result;
+    }
+    return {};
+}
+
+/**
  * @brief constructs a new clone of the given object.
  * @tparam T the element pointer type
  * @param ptr the source object pointer

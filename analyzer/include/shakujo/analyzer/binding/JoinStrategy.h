@@ -342,7 +342,7 @@ inline constexpr std::string_view to_string_view(JoinStrategy::Kind value) {
 }
 
 /**
- * @brief append textual representation of Diagnostic::Code.
+ * @brief append textual representation of the given value.
  * @param out the target output stream
  * @param value the target value
  * @return the output stream

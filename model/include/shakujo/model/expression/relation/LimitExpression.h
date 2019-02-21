@@ -24,13 +24,15 @@
 #include "shakujo/model/expression/Expression.h"
 #include "shakujo/model/expression/ExpressionKind.h"
 #include "shakujo/model/key/ExpressionKey.h"
+#include "shakujo/model/key/RelationKey.h"
 
 namespace shakujo::model::expression::relation {
 /**
  * @brief Represents limitting the number of records.
  */
 class LimitExpression
-        : public Expression {
+        : public Expression
+        , public key::RelationKey::Provider {
 private:
     class Impl;
     std::unique_ptr<Impl> impl_;
@@ -136,6 +138,27 @@ public:
     LimitExpression& expression_key(std::unique_ptr<key::ExpressionKey> expression_key) override;
 
     /**
+     * @brief Returns relation key.
+     * @return relation key.
+     */
+    key::RelationKey* relation_key() override;
+
+    /**
+     * @brief Returns relation key.
+     * @return relation key.
+     */
+    inline key::RelationKey const* relation_key() const override {
+        return const_cast<LimitExpression*>(this)->relation_key();
+    }
+
+    /**
+     * @brief Sets relation key.
+     * @param relation_key relation key
+     * @return this
+     */
+    LimitExpression& relation_key(std::unique_ptr<key::RelationKey> relation_key) override;
+
+    /**
      * @brief Returns a copy of this object.
      * @return a clone of this
      */
@@ -149,11 +172,16 @@ public:
 
 public:
     /**
+     * @brief the node kind.
+     */
+    static inline constexpr ExpressionKind tag = ExpressionKind::LIMIT_EXPRESSION;
+
+    /**
      * @brief Returns the node kind.
      * @return the node kind
-     */
-    ExpressionKind kind() const override {
-        return ExpressionKind::LIMIT_EXPRESSION;
+     * @see tag
+     */ExpressionKind kind() const override {
+        return tag;
     }
 
 };

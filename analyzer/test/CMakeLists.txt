@@ -2,7 +2,8 @@ file(GLOB TEST_SOURCES
     "*.cpp"
     "binding/*.cpp"
     "scope/*.cpp"
-    "impl/*.cpp"
+    "analyze/*.cpp"
+    "optimize/*.cpp"
 )
 
 register_tests(

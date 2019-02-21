@@ -222,11 +222,16 @@ public:
 
 public:
     /**
+     * @brief the node kind.
+     */
+    static inline constexpr StatementKind tag = StatementKind::LOCAL_VARIABLE_DECLARATION;
+
+    /**
      * @brief Returns the node kind.
      * @return the node kind
-     */
-    StatementKind kind() const override {
-        return StatementKind::LOCAL_VARIABLE_DECLARATION;
+     * @see tag
+     */StatementKind kind() const override {
+        return tag;
     }
 
 };

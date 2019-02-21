@@ -29,6 +29,11 @@ namespace shakujo::common::core::type {
 class Null final : public Type {
 public:
     /**
+     * @brief the kind of this type.
+     */
+    static inline constexpr Kind tag = Kind::NULL_;
+
+    /**
      * @brief the corresponded value type.
      */
     using value_type = value::Null;
@@ -70,7 +75,7 @@ public:
     Null& operator=(Null&& other) noexcept = default;
 
     Type::Kind kind() const override {
-        return Type::Kind::NULL_;
+        return tag;
     }
 
     Nullity nullity() const override {

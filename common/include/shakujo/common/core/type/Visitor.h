@@ -53,8 +53,7 @@ public:
      * @return the result
      * @see Type
      */
-    virtual Return visitDefault(Type* node, Args... args) {  // NOLINT
-        (void) sizeof...(args); // ignore unused
+    virtual Return visitDefault(Type* node, [[maybe_unused]] Args... args) {  // NOLINT
         std::ostringstream ss;
         ss << "visit for " << node->kind() << " is not implemented.";
         throw std::runtime_error(ss.str());
@@ -68,7 +67,7 @@ public:
      * @see Int
      */
     virtual Return visit(Int* node, Args... args) {  // NOLINT
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -79,7 +78,7 @@ public:
      * @see Float
      */
     virtual Return visit(Float* node, Args... args) {  // NOLINT
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -90,7 +89,7 @@ public:
      * @see Char
      */
     virtual Return visit(Char* node, Args... args) {  // NOLINT
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -101,7 +100,7 @@ public:
      * @see String
      */
     virtual Return visit(String* node, Args... args) {  // NOLINT
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -112,7 +111,7 @@ public:
      * @see Bool
      */
     virtual Return visit(Bool* node, Args... args) {  // NOLINT
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -123,7 +122,7 @@ public:
      * @see Null
      */
     virtual Return visit(Null* node, Args... args) {  // NOLINT
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -134,7 +133,7 @@ public:
      * @see Tuple
      */
     virtual Return visit(Tuple* node, Args... args) {  // NOLINT
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -145,7 +144,7 @@ public:
      * @see Array
      */
     virtual Return visit(Array* node, Args... args) {  // NOLINT
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -156,7 +155,7 @@ public:
      * @see Vector
      */
     virtual Return visit(Vector* node, Args... args) {  // NOLINT
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -167,7 +166,7 @@ public:
      * @see Relation
      */
     virtual Return visit(Relation* node, Args... args) {  // NOLINT
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -178,7 +177,7 @@ public:
      * @see Cursor
      */
     virtual Return visit(Cursor* node, Args... args) {  // NOLINT
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -189,7 +188,7 @@ public:
      * @see Error
      */
     virtual Return visit(Error* node, Args... args) {  // NOLINT
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 
     /**
@@ -201,32 +200,32 @@ public:
     Return dispatch(Type* node, Args... args) {  // NOLINT
         switch (node->kind()) {
         case Type::Kind::INT:
-            return visit(dynamic_cast<Int*>(node), args...);
+            return visit(dynamic_cast<Int*>(node), std::forward<Args>(args)...);
         case Type::Kind::FLOAT:
-            return visit(dynamic_cast<Float*>(node), args...);
+            return visit(dynamic_cast<Float*>(node), std::forward<Args>(args)...);
         case Type::Kind::CHAR:
-            return visit(dynamic_cast<Char*>(node), args...);
+            return visit(dynamic_cast<Char*>(node), std::forward<Args>(args)...);
         case Type::Kind::STRING:
-            return visit(dynamic_cast<String*>(node), args...);
+            return visit(dynamic_cast<String*>(node), std::forward<Args>(args)...);
         case Type::Kind::BOOL:
-            return visit(dynamic_cast<Bool*>(node), args...);
+            return visit(dynamic_cast<Bool*>(node), std::forward<Args>(args)...);
         case Type::Kind::NULL_:
-            return visit(dynamic_cast<Null*>(node), args...);
+            return visit(dynamic_cast<Null*>(node), std::forward<Args>(args)...);
         case Type::Kind::TUPLE:
-            return visit(dynamic_cast<Tuple*>(node), args...);
+            return visit(dynamic_cast<Tuple*>(node), std::forward<Args>(args)...);
         case Type::Kind::ARRAY:
-            return visit(dynamic_cast<Array*>(node), args...);
+            return visit(dynamic_cast<Array*>(node), std::forward<Args>(args)...);
         case Type::Kind::VECTOR:
-            return visit(dynamic_cast<Vector*>(node), args...);
+            return visit(dynamic_cast<Vector*>(node), std::forward<Args>(args)...);
         case Type::Kind::RELATION:
-            return visit(dynamic_cast<Relation*>(node), args...);
+            return visit(dynamic_cast<Relation*>(node), std::forward<Args>(args)...);
         case Type::Kind::CURSOR:
-            return visit(dynamic_cast<Cursor*>(node), args...);
+            return visit(dynamic_cast<Cursor*>(node), std::forward<Args>(args)...);
         case Type::Kind::ERROR:
-            return visit(dynamic_cast<Error*>(node), args...);
+            return visit(dynamic_cast<Error*>(node), std::forward<Args>(args)...);
         }
         // may not occur
-        return visitDefault(node, args...);
+        return visitDefault(node, std::forward<Args>(args)...);
     }
 };
 

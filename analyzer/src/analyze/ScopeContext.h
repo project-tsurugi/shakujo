@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SHAKUJO_ANALYZER_IMPL_SCOPE_CONTEXT_H_
-#define SHAKUJO_ANALYZER_IMPL_SCOPE_CONTEXT_H_
+#ifndef SHAKUJO_ANALYZER_ANALYZE_SCOPE_CONTEXT_H_
+#define SHAKUJO_ANALYZER_ANALYZE_SCOPE_CONTEXT_H_
 
 #include <stdexcept>
 
@@ -22,7 +22,7 @@
 #include "shakujo/analyzer/binding/VariableBinding.h"
 #include "shakujo/analyzer/binding/FunctionBinding.h"
 
-namespace shakujo::analyzer::impl {
+namespace shakujo::analyzer::analyze {
 
 class ScopeContext {
 private:
@@ -116,6 +116,6 @@ public:
         return *functions_;
     }
 };
-}  // namespace shakujo::analyzer::impl
+}  // namespace shakujo::analyzer::analyze
 
-#endif  //SHAKUJO_ANALYZER_IMPL_SCOPE_CONTEXT_H_
+#endif  //SHAKUJO_ANALYZER_ANALYZE_SCOPE_CONTEXT_H_

@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SHAKUJO_ANALYZER_IMPL_AGGREGATION_ANALYZER_H_
-#define SHAKUJO_ANALYZER_IMPL_AGGREGATION_ANALYZER_H_
+#ifndef SHAKUJO_ANALYZER_ANALYZE_AGGREGATION_ANALYZER_H_
+#define SHAKUJO_ANALYZER_ANALYZE_AGGREGATION_ANALYZER_H_
 
 #include <vector>
 
@@ -26,7 +26,7 @@
 
 #include "shakujo/model/IRFactory.h"
 
-namespace shakujo::analyzer::impl {
+namespace shakujo::analyzer::analyze {
 
 class AggregationAnalyzer {
 public:
@@ -46,6 +46,6 @@ private:
     std::unique_ptr<Impl> impl_;
 };
 
-}  // namespace shakujo::analyzer::impl
+}  // namespace shakujo::analyzer::analyze
 
-#endif  //SHAKUJO_ANALYZER_IMPL_AGGREGATION_ANALYZER_H_
+#endif  //SHAKUJO_ANALYZER_ANALYZE_AGGREGATION_ANALYZER_H_

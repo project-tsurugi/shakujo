@@ -36,6 +36,11 @@ private:
 
 public:
     /**
+     * @brief the kind of this type.
+     */
+    static inline constexpr Kind tag = Kind::ARRAY;
+
+    /**
      * @brief Constructs a new object.
      * @param element_type the element type
      * @param size the element count
@@ -108,7 +113,7 @@ public:
     Array& operator=(Array&& other) noexcept = default;
 
     Type::Kind kind() const override {
-        return Type::Kind::ARRAY;
+        return tag;
     }
 
     bool is_valid() const override {

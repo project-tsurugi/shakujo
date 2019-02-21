@@ -111,29 +111,6 @@ TEST_F(AnalyzerRelationTest, scan_alias) {
     EXPECT_EQ(strategy.kind(), binding::ScanStrategy::Kind::FULL);
 }
 
-TEST_F(AnalyzerRelationTest, scan_select) {
-    add(schema::TableInfo { "testing", {
-        { "C1", t::Int(32U, NON_NULL), },
-    }});
-    auto expr = analyze(f.ScanExpression(f.Name("testing"), {}, literal(true, NON_NULL)));
-    success();
-
-    auto* relation = extract_relation_type(expr.get());
-    auto& cols = relation->columns();
-    ASSERT_EQ(1U, cols.size());
-
-    EXPECT_EQ("C1", cols[0].name());
-    EXPECT_EQ(t::Int(32, NON_NULL), *cols[0].type());
-    EXPECT_EQ(names({"testing"}), cols[0].qualifiers());
-
-    auto binding = extract_relation(expr.get());
-    auto&& strategy = binding->scan_strategy();
-    ASSERT_TRUE(strategy.is_valid());
-    EXPECT_EQ(strategy.table().name(), "testing");
-    EXPECT_FALSE(strategy.index());
-    EXPECT_EQ(strategy.kind(), binding::ScanStrategy::Kind::FULL);
-}
-
 TEST_F(AnalyzerRelationTest, scan_not_found) {
     auto expr = analyze(f.ScanExpression(f.Name("testing")));
     success(false);

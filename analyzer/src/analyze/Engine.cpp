@@ -32,7 +32,7 @@
 #include "shakujo/common/core/type/Relation.h"
 #include "shakujo/common/core/value/Null.h"
 
-namespace shakujo::analyzer::impl {
+namespace shakujo::analyzer::analyze {
 
 using common::util::dynamic_pointer_cast;
 using common::util::make_clone;
@@ -972,23 +972,9 @@ void Engine::visit(model::expression::relation::ScanExpression* node, ScopeConte
 
     auto profile = vars.profile();
     enrich_relation_profile(node, profile, table_info, table_info.primary_index());
-    auto relation = std::make_shared<binding::RelationBinding>(profile, profile);
+    auto relation = std::make_shared<binding::RelationBinding>(binding::RelationBinding::Profile {}, std::move(profile));
     relation->scan_strategy({ table_info, binding::ScanStrategy::Kind::FULL, });
     bless(node, std::move(relation));
-    if (is_defined(node->condition())) {
-        ScopeContext scope { vars, prev.functions() };
-
-        dispatch(node->condition(), scope);
-        auto cond_expr = extract_binding(node->condition());
-        if (!is_valid(cond_expr)) {
-            bless_undefined<binding::ExpressionBinding>(node);
-            return;
-        }
-        if (!require_boolean(node->condition())) {
-            bless_undefined<binding::ExpressionBinding>(node);
-            return;
-        }
-    }
     bless(node, std::move(relation_type));
 }
 
@@ -1977,4 +1963,4 @@ bool Engine::require_type(model::expression::Expression* node, common::core::Typ
     return true;
 }
 
-}  // namespace shakujo::analyzer::impl
+}  // namespace shakujo::analyzer::analyze

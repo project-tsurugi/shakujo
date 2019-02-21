@@ -100,6 +100,10 @@ private:
     List elements_;
 
 public:
+    /**
+     * @brief the kind of this value.
+     */
+    static inline constexpr auto tag = Kind::TUPLE;
 
     /**
      * @brief constructs a new object.
@@ -151,8 +155,8 @@ public:
      */
     Tuple& operator=(Tuple&& other) = default;
 
-    Value::Kind kind() const override {
-        return Value::Kind::TUPLE;
+    Kind kind() const override {
+        return tag;
     }
 
     Tuple* clone() const & override {

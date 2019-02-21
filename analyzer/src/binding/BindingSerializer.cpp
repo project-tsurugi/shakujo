@@ -374,7 +374,7 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, common:
 }
 
 void BindingSerializer::serialize(common::util::DataSerializer& printer, ScanStrategy const* value) {
-    if (value == nullptr) {
+    if (!is_valid(value)) {
         printer.value(nullptr);
         return;
     }
@@ -472,7 +472,7 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, ScanStr
 }
 
 void BindingSerializer::serialize(common::util::DataSerializer& printer, JoinStrategy const* value) {
-    if (value == nullptr) {
+    if (!is_valid(value)) {
         printer.value(nullptr);
         return;
     }

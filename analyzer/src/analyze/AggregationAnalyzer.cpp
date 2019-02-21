@@ -24,7 +24,7 @@
 
 #include "shakujo/common/util/utility.h"
 
-namespace shakujo::analyzer::impl {
+namespace shakujo::analyzer::analyze {
 
 using common::util::dynamic_pointer_cast;
 using common::util::make_clone;
@@ -138,4 +138,4 @@ void AggregationAnalyzer::process(model::expression::Expression* node) {
 model::expression::relation::AggregationExpression* AggregationAnalyzer::build() {
     return impl_->build();
 }
-}  // namespace shakujo::analyzer::impl
+}  // namespace shakujo::analyzer::analyze

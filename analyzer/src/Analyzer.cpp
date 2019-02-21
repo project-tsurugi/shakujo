@@ -18,8 +18,8 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "impl/Engine.h"
-#include "impl/ScopeContext.h"
+#include "analyze/Engine.h"
+#include "analyze/ScopeContext.h"
 
 #include "shakujo/analyzer/SyntaxValidator.h"
 #include "shakujo/analyzer/scope/UnitScope.h"
@@ -34,10 +34,10 @@ static void do_analyze(AnalyzerContext& context, T node) {
     if (!SyntaxValidator {}.analyze(context.reporter(), node)) {
         return;
     }
-    impl::Engine engine { context };
+    analyze::Engine engine { context };
     auto vars = engine.unit_scope(context.variable_scope());
     auto funcs = engine.unit_scope(context.function_scope());
-    impl::ScopeContext scope { vars, funcs };
+    analyze::ScopeContext scope { vars, funcs };
     engine.process(node, scope);
 }
 

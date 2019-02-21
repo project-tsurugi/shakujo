@@ -20,7 +20,6 @@
 #include <memory>
 
 #include "shakujo/common/util/utility.h"
-#include "shakujo/model/expression/Expression.h"
 #include "shakujo/model/key/ExpressionKey.h"
 #include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/name/Name.h"
@@ -32,7 +31,6 @@ class ScanExpression::Impl {
 public:
     std::unique_ptr<name::Name> table_;
     std::unique_ptr<name::SimpleName> alias_;
-    common::util::ManagedPtr<Expression> condition_;
     std::unique_ptr<key::ExpressionKey> expression_key_;
     std::unique_ptr<key::RelationKey> relation_key_;
 
@@ -47,7 +45,6 @@ public:
         auto other = std::make_unique<Impl>();
         other->table_ = common::util::make_clone(table_);
         other->alias_ = common::util::make_clone(alias_);
-        other->condition_ = common::util::make_clone(condition_);
         return other;
     }
 };
@@ -90,19 +87,6 @@ std::unique_ptr<name::SimpleName> ScanExpression::release_alias() {
     std::unique_ptr<name::SimpleName> ret { std::move(impl_->alias_) };
     impl_->alias_ = {};
     return ret;
-}
-
-Expression* ScanExpression::condition() {
-    return impl_->condition_.get();
-}
-
-ScanExpression& ScanExpression::condition(std::unique_ptr<Expression> condition) {
-    impl_->condition_ = std::move(condition);
-    return *this;
-}
-
-std::unique_ptr<Expression> ScanExpression::release_condition() {
-    return impl_->condition_.release();
 }
 
 key::ExpressionKey* ScanExpression::expression_key() {

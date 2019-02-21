@@ -148,7 +148,7 @@ public class VisitorGenerator {
                 TYPE_PARAMETERS,
                 isConst ? "" : "  // NOLINT");
         printer.indent(() -> {
-            printer.put("return visitDefault(node, args...);");
+            printer.put("return visitDefault(node, std::forward<%s>(args)...);", TYPE_PARAMETERS);
         });
         printer.put("}");
         printer.put();
@@ -179,14 +179,16 @@ public class VisitorGenerator {
                         printer.getContextName(KindGenerator.getTypeName(baseClass)),
                         KindGenerator.getConstantName(target));
                 printer.indent(() -> {
-                    printer.put("return visit(dynamic_cast<%s%s*>(node), args...);",
+                    printer.put("return visit(dynamic_cast<%s%s*>(node), std::forward<%s>(args)...);",
                             printer.getContextName(target),
-                            isConst ? " const" : "");
+                            isConst ? " const" : "",
+                            TYPE_PARAMETERS);
                 });
             }
             printer.put("}");
             printer.put("// may not occur");
-            printer.put("return visitDefault(node, args...);");
+            printer.put("return visitDefault(node, std::forward<%s>(args)...);",
+                    TYPE_PARAMETERS);
         });
         printer.put("}");
         printer.put();

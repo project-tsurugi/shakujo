@@ -157,11 +157,16 @@ public:
 
 public:
     /**
+     * @brief the node kind.
+     */
+    static inline constexpr ExpressionKind tag = ExpressionKind::IMPLICIT_CAST;
+
+    /**
      * @brief Returns the node kind.
      * @return the node kind
-     */
-    ExpressionKind kind() const override {
-        return ExpressionKind::IMPLICIT_CAST;
+     * @see tag
+     */ExpressionKind kind() const override {
+        return tag;
     }
 
 };

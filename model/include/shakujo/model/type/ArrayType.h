@@ -127,11 +127,16 @@ public:
 
 public:
     /**
+     * @brief the node kind.
+     */
+    static inline constexpr TypeKind tag = TypeKind::ARRAY_TYPE;
+
+    /**
      * @brief Returns the node kind.
      * @return the node kind
-     */
-    TypeKind kind() const override {
-        return TypeKind::ARRAY_TYPE;
+     * @see tag
+     */TypeKind kind() const override {
+        return tag;
     }
 
 };
