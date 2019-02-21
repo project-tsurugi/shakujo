@@ -15,6 +15,7 @@ target_include_directories(analyzer
 target_link_libraries(analyzer
     PUBLIC analyzer-interface
     PUBLIC model
+    PRIVATE glog::glog
 )
 
 set_compile_options(analyzer)
