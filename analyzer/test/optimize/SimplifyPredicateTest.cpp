@@ -81,17 +81,20 @@ TEST_F(SimplifyPredicateTest, var) {
 TEST_F(SimplifyPredicateTest, not_t) {
     auto [expr, result] = apply(f.UnaryOperator(UOp::CONDITIONAL_NOT, literal(true)));
     ASSERT_EQ(result, Ternary::FALSE);
+    EXPECT_TRUE(is_instance<model::expression::Literal>(expr.get()));
 }
 
 TEST_F(SimplifyPredicateTest, not_f) {
     auto [expr, result] = apply(f.UnaryOperator(UOp::CONDITIONAL_NOT, literal(false)));
     ASSERT_EQ(result, Ternary::TRUE);
+    EXPECT_TRUE(is_instance<model::expression::Literal>(expr.get()));
 }
 
 TEST_F(SimplifyPredicateTest, not_x) {
     add_variable("v", t::Bool());
     auto [expr, result] = apply(f.UnaryOperator(UOp::CONDITIONAL_NOT, var("v")));
     ASSERT_EQ(result, Ternary::UNKNOWN);
+    EXPECT_TRUE(is_instance<model::expression::UnaryOperator>(expr.get()));
 }
 
 TEST_F(SimplifyPredicateTest, and_tt) {
