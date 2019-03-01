@@ -15,6 +15,8 @@
  */
 #include "PredicatePushDown.h"
 
+#include <cassert>
+
 #include "VariableRewriter.h"
 #include "SimplifyPredicate.h"
 
