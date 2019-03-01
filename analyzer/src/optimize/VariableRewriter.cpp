@@ -74,7 +74,7 @@ void VariableRewriter::deny(std::vector<std::shared_ptr<binding::VariableBinding
 
 VariableRewriter& VariableRewriter::merge(VariableRewriter const& other) {
     for (auto&& [k, v] : mapping_) {
-        // TODO: review transitive conversion
+        (void) k;  // NOTE: avoid compile error on GCC
         if (auto it = other.mapping_.find(v); it != other.mapping_.end()) {
             v = it->second;
         } else {
