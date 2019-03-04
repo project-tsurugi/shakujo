@@ -687,4 +687,85 @@ TEST_F(SelectScanTest, select) {
     EXPECT_EQ(*strategy.prefix()[1], v::Int(100));
 }
 
+TEST_F(SelectScanTest, nulls_asc) {
+    auto&& table = add({
+        "testing",
+        {
+            { "C1", t::Int(64U, NULLABLE), },
+        },
+        { // PK
+            {
+                { "C1" },
+            },
+        }
+    });
+    auto expr = apply(f.SelectionExpression(
+        f.ScanExpression(f.Name("testing")),
+        f.BinaryOperator(BOp::LESS_THAN, var("C1"), literal(0))
+    ));
+    auto scan = cast<model::expression::relation::ScanExpression>(expr.get());
+
+    auto relation = extract_relation(scan);
+    auto&& strategy = relation->scan_strategy();
+
+    ASSERT_EQ(strategy.kind(), ScanOp::RANGE);
+    EXPECT_EQ(&strategy.table(), &table);
+    EXPECT_EQ(&strategy.index(), &table.primary_index());
+    ASSERT_EQ(strategy.key_columns().size(), 1U);
+    EXPECT_EQ(strategy.key_columns()[0], relation->output().columns()[0]);
+
+    ASSERT_EQ(strategy.prefix().size(), 0U);
+
+    ASSERT_TRUE(strategy.lower_suffix());
+    EXPECT_EQ(*strategy.lower_suffix().value(), v::Null());
+    EXPECT_EQ(strategy.lower_suffix().inclusive(), false);
+
+    ASSERT_TRUE(strategy.upper_suffix());
+    EXPECT_EQ(*strategy.upper_suffix().value(), v::Int(0));
+    EXPECT_EQ(strategy.upper_suffix().inclusive(), false);
+}
+
+TEST_F(SelectScanTest, nulls_desc) {
+    auto&& table = add({
+        "testing",
+        {
+            { "C1", t::Int(64U, NULLABLE), },
+        },
+        { // PK
+        },
+        { // SKs
+            {
+                "S",
+                {
+                    { "C1", Dir::DESCENDANT },
+                },
+            },
+        }
+    });
+    auto expr = apply(f.SelectionExpression(
+        f.ScanExpression(f.Name("testing")),
+        f.BinaryOperator(BOp::LESS_THAN, var("C1"), literal(0))
+    ));
+    auto scan = cast<model::expression::relation::ScanExpression>(expr.get());
+
+    auto relation = extract_relation(scan);
+    auto&& strategy = relation->scan_strategy();
+
+    ASSERT_EQ(strategy.kind(), ScanOp::RANGE);
+    EXPECT_EQ(&strategy.table(), &table);
+    EXPECT_EQ(&strategy.index(), &table.find_secondary_index("S"));
+    ASSERT_EQ(strategy.key_columns().size(), 1U);
+    EXPECT_EQ(strategy.key_columns()[0], relation->output().columns()[0]);
+
+    ASSERT_EQ(strategy.prefix().size(), 0U);
+
+    ASSERT_TRUE(strategy.lower_suffix());
+    EXPECT_EQ(*strategy.lower_suffix().value(), v::Int(0));
+    EXPECT_EQ(strategy.lower_suffix().inclusive(), false);
+
+    ASSERT_TRUE(strategy.upper_suffix());
+    EXPECT_EQ(*strategy.upper_suffix().value(), v::Null());
+    EXPECT_EQ(strategy.upper_suffix().inclusive(), false);
+}
+
 }  // namespace shakujo::analyzer::optimize

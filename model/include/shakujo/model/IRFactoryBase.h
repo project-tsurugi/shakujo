@@ -601,7 +601,7 @@ public:
      */
     std::unique_ptr<expression::relation::AggregationExpression> AggregationExpression(
             std::unique_ptr<expression::Expression> operand,
-            common::util::MoveInitializerList<std::unique_ptr<name::Index>> keys,
+            common::util::MoveInitializerList<std::unique_ptr<expression::Expression>> keys,
             common::util::MoveInitializerList<std::unique_ptr<expression::relation::AggregationExpression::Column>> columns,
             std::unique_ptr<name::SimpleName> alias = {});
 
@@ -637,13 +637,11 @@ public:
     /**
      * @brief returns a new expression::relation::DistinctExpression.
      * @param operand source relation
-     * @param subsets grouping column indices
      * @return a created node
      * @see expression::relation::DistinctExpression
      */
     std::unique_ptr<expression::relation::DistinctExpression> DistinctExpression(
-            std::unique_ptr<expression::Expression> operand,
-            common::util::MoveInitializerList<std::unique_ptr<name::Index>> subsets = {});
+            std::unique_ptr<expression::Expression> operand);
 
     /**
      * @brief returns a new empty expression::relation::JoinExpression.

@@ -468,7 +468,7 @@ protected:
             report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "aggregation expression must have a valid operand");
         }
         for (auto* key : node->keys()) {
-            if (!is_valid(key)) {
+            if (!is_defined(key)) {
                 report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "aggregation expression must have a valid grouping key");
             }
         }

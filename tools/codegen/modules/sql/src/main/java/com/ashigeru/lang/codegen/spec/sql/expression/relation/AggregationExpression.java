@@ -26,7 +26,6 @@ import com.ashigeru.lang.codegen.spec.sql.expression.FunctionCall.Quantifier;
 import com.ashigeru.lang.codegen.spec.sql.key.FunctionKey;
 import com.ashigeru.lang.codegen.spec.sql.key.RelationKey;
 import com.ashigeru.lang.codegen.spec.sql.key.VariableKey;
-import com.ashigeru.lang.codegen.spec.sql.name.Index;
 import com.ashigeru.lang.codegen.spec.sql.name.Name;
 import com.ashigeru.lang.codegen.spec.sql.name.SimpleName;
 
@@ -40,7 +39,7 @@ public class AggregationExpression extends MetaClass {
     Property<Expression> operand = property();
 
     @Description("group keys")
-    Property<List<Index>> keys = property();
+    Property<List<Expression>> keys = property();
 
     @Description("aggregation columns")
     Property<List<Column>> columns = property();

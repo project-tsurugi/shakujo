@@ -167,6 +167,17 @@ public:
 
         binding::ScanStrategy::Suffix lower = create_suffix(info.lower);
         binding::ScanStrategy::Suffix upper = create_suffix(info.upper);
+
+        // remove nulls
+        if (prefix.size() < key_columns.size() && (lower.is_valid() || upper.is_valid())) {
+            bool asc = info.index.columns()[prefix.size()].direction() == common::core::Direction::ASCENDANT;
+            auto&& suffix = asc ? lower : upper;
+            auto&& var = key_columns[prefix.size()];
+            if (!suffix.is_valid() && var->type()->nullable()) {
+                suffix = { std::make_unique<common::core::value::Null>(), false };
+            }
+        }
+
         return {
             table,
             info.index,
@@ -292,6 +303,7 @@ public:
         assert(itt != term_map.end());  // NOLINT
 
         auto&& terms = itt->second;
+        bool asc = column.direction() == common::core::Direction::ASCENDANT;
         for (auto* term : terms) {
             bool lower;
             bool inclusive;
@@ -317,7 +329,7 @@ public:
                     inclusive = true;
                     break;
             }
-            if (column.direction() == common::core::Direction::DESCENDANT) {
+            if (!asc) {
                 lower = !lower;
             }
             auto&& suffix = results[lower ? 0 : 1];  // NOLINT

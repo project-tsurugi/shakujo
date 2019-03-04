@@ -23,15 +23,12 @@
 #include "shakujo/model/expression/Expression.h"
 #include "shakujo/model/key/ExpressionKey.h"
 #include "shakujo/model/key/RelationKey.h"
-#include "shakujo/model/name/Index.h"
-#include "shakujo/model/util/NodeList.h"
 
 namespace shakujo::model::expression::relation {
 
 class DistinctExpression::Impl {
 public:
     common::util::ManagedPtr<Expression> operand_;
-    util::NodeList<name::Index> subsets_;
     std::unique_ptr<key::ExpressionKey> expression_key_;
     std::unique_ptr<key::RelationKey> relation_key_;
 
@@ -45,12 +42,6 @@ public:
     std::unique_ptr<Impl> clone() const {
         auto other = std::make_unique<Impl>();
         other->operand_ = common::util::make_clone(operand_);
-        if (!subsets_.empty()) {
-            other->subsets_.reserve(subsets_.size());
-            for (auto e : subsets_) {
-                other->subsets_.push_back(common::util::make_clone(e));
-            }
-        }
         return other;
     }
 };
@@ -76,10 +67,6 @@ DistinctExpression& DistinctExpression::operand(std::unique_ptr<Expression> oper
 
 std::unique_ptr<Expression> DistinctExpression::release_operand() {
     return impl_->operand_.release();
-}
-
-util::NodeList<name::Index>& DistinctExpression::subsets() {
-    return impl_->subsets_;
 }
 
 key::ExpressionKey* DistinctExpression::expression_key() {

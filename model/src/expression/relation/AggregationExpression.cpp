@@ -26,18 +26,17 @@
 #include "shakujo/model/key/FunctionKey.h"
 #include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/key/VariableKey.h"
-#include "shakujo/model/name/Index.h"
 #include "shakujo/model/name/Name.h"
 #include "shakujo/model/name/SimpleName.h"
 #include "shakujo/model/util/FragmentList.h"
-#include "shakujo/model/util/NodeList.h"
+#include "shakujo/model/util/ManagedNodeList.h"
 
 namespace shakujo::model::expression::relation {
 
 class AggregationExpression::Impl {
 public:
     common::util::ManagedPtr<Expression> operand_;
-    util::NodeList<name::Index> keys_;
+    util::ManagedNodeList<Expression> keys_;
     util::FragmentList<AggregationExpression::Column> columns_;
     std::unique_ptr<name::SimpleName> alias_;
     std::unique_ptr<key::ExpressionKey> expression_key_;
@@ -119,7 +118,7 @@ std::unique_ptr<Expression> AggregationExpression::release_operand() {
     return impl_->operand_.release();
 }
 
-util::NodeList<name::Index>& AggregationExpression::keys() {
+util::ManagedNodeList<Expression>& AggregationExpression::keys() {
     return impl_->keys_;
 }
 

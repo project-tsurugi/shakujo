@@ -22,6 +22,7 @@
 #include <memory>
 #include <optional>
 #include <stdexcept>
+#include <set>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -181,22 +182,30 @@ public:
         }
 
         /**
+         * @brief returns the unique keys of the corresponded relation.
+         * @return the list of unique keys
+         * @return empty if the relation may contain any duplicated rows
+         */
+        std::set<std::set<std::shared_ptr<VariableBinding>>>& unique_keys() {
+            return unique_keys_;
+        }
+
+        /**
+         * @brief returns the unique keys of the corresponded relation.
+         * @return the list of unique keys
+         * @return empty if the relation may contain any duplicated rows
+         */
+        std::set<std::set<std::shared_ptr<VariableBinding>>> const& unique_keys() const {
+            return unique_keys_;
+        }
+
+        /**
          * @brief returns whether or not the the corresponded relation only consists of distinct rows.
          * @return true if the relation does not have any duplicated rows
          * @return false if the relation may have duplicated rows
          */
         bool distinct() const {
-            return distinct_;
-        }
-
-        /**
-         * @brief sets whether or not the the corresponded relation only consists of distinct rows.
-         * @param distinct true if the relation dows not have any duplicated rows, otherwise false
-         * @return this
-         */
-        Profile& distinct(bool distinct) {
-            distinct_ = distinct;
-            return *this;
+            return !unique_keys_.empty();
         }
 
         /**
@@ -221,8 +230,7 @@ public:
         std::vector<std::shared_ptr<VariableBinding>> columns_ {};
         common::schema::TableInfo const* source_table_ {};
         std::vector<Order> order_ {};
-        // FIXME: unique keys
-        bool distinct_ { false };
+        std::set<std::set<std::shared_ptr<VariableBinding>>> unique_keys_ {};
     };
 
     /**

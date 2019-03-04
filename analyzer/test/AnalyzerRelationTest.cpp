@@ -679,6 +679,8 @@ TEST_F(AnalyzerRelationTest, join_natural) {
     success();
 
     auto relation = extract_relation(expr.get());
+    ASSERT_EQ(relation->process().columns().size(), 4);
+
     auto&& left = extract_relation(expr->left())->output();
     auto&& right = extract_relation(expr->right())->output();
     auto&& output = relation->output();
@@ -977,7 +979,6 @@ TEST_F(AnalyzerRelationTest, aggregation) {
 
 TEST_F(AnalyzerRelationTest, order) {
     // using IDir = model::expression::relation::OrderExpression::Direction;
-    using BDir = binding::RelationBinding::Order::Direction;
 
     add(schema::TableInfo { "testing", {
         { "C1", t::Int(32U, NON_NULL), },
@@ -1001,19 +1002,10 @@ TEST_F(AnalyzerRelationTest, order) {
         auto var = extract_var(c);
         EXPECT_EQ(var, cols[1]);
     }
-
-    auto&& order = relation->output().order();
-    ASSERT_EQ(1U, order.size());
-    {
-        auto&& c = order[0];
-        EXPECT_EQ(c.column(), cols[1]);
-        EXPECT_EQ(c.direction(), BDir::ASCENDANT);
-    }
 }
 
 TEST_F(AnalyzerRelationTest, order_complex) {
     using IDir = model::expression::relation::OrderExpression::Direction;
-    using BDir = binding::RelationBinding::Order::Direction;
 
     add(schema::TableInfo { "testing", {
         { "C1", t::Int(32U, NON_NULL), },
@@ -1050,14 +1042,6 @@ TEST_F(AnalyzerRelationTest, order_complex) {
         auto var = extract_var(c);
         EXPECT_FALSE(var->value());
         EXPECT_FALSE(relation->process().index_of(*var).has_value());
-    }
-
-    auto&& order = relation->output().order();
-    ASSERT_EQ(1U, order.size());
-    {
-        auto&& c = order[0];
-        EXPECT_EQ(c.column(), cols[0]);
-        EXPECT_EQ(c.direction(), BDir::DESCENDANT);
     }
 }
 

@@ -1047,7 +1047,7 @@ void Engine::visit(model::expression::relation::ProjectionExpression* node, Scop
             std::move(name),
             make_clone(column_expr->type()));
         columns.emplace_back(qualifiers, std::move(simple_name), make_clone(column_expr->type()));
-        output.columns().push_back(var);
+        output.columns().emplace_back(var);
         bless(c, var);
 
         // FIXME: restricts non first order types like relations
@@ -1294,14 +1294,14 @@ void Engine::visit(model::expression::relation::JoinExpression* node, ScopeConte
     }
 
     std::vector<std::shared_ptr<binding::VariableBinding>> process_columns;
+    process_columns.reserve(left_relation->output().columns().size() + right_relation->output().columns().size());
+    for (auto& column : left_relation->output().columns()) {
+        process_columns.emplace_back(column);
+    }
+    for (auto& column : right_relation->output().columns()) {
+        process_columns.emplace_back(column);
+    }
     if (is_defined(node->condition())) {
-        process_columns.reserve(left_relation->output().columns().size() + right_relation->output().columns().size());
-        for (auto& column : left_relation->output().columns()) {
-            process_columns.push_back(column);
-        }
-        for (auto& column : right_relation->output().columns()) {
-            process_columns.push_back(column);
-        }
         RelationScope r { bindings(), &prev.variables(), { left_type, right_type }, process_columns };
         auto vars = block_scope(r);
         ScopeContext scope { vars, prev.functions() };
@@ -1341,6 +1341,31 @@ void Engine::visit(model::expression::relation::JoinExpression* node, ScopeConte
     });
     bless(node, std::move(relation));
     bless(node, std::move(result_type));
+}
+
+void Engine::visit(model::expression::relation::DistinctExpression* node, ScopeContext& prev) {
+    dispatch(node->operand(), prev);
+    auto source_expr = extract_binding(node->operand());
+    if (!is_valid(source_expr)) {
+        bless_undefined<binding::ExpressionBinding>(node);
+        bless_undefined<binding::RelationBinding>(node);
+        return;
+    }
+    if (!require_relation(node->operand())) {
+        bless_erroneous_expression(node);
+        bless_undefined<binding::RelationBinding>(node);
+        return;
+    }
+    auto source_relation = extract_relation(node->operand());
+    if (!source_relation->output().is_valid()) {
+        bless_undefined<binding::ExpressionBinding>(node);
+        bless_undefined<binding::RelationBinding>(node);
+        return;
+    }
+
+    auto relation = dynamic_pointer_cast<common::core::type::Relation>(source_expr->type());
+    bless(node, make_clone(relation));
+    bless(node, std::make_shared<binding::RelationBinding>(source_relation->output(), source_relation->output()));
 }
 
 void Engine::visit(model::expression::relation::OrderExpression* node, ScopeContext& prev) {
@@ -1398,34 +1423,7 @@ void Engine::visit(model::expression::relation::OrderExpression* node, ScopeCont
     }
 
     bless(node, make_clone(relation));
-
-    // copy for this output
-    auto output = source_relation->output();
-    output.order().clear();
-    for (auto* element : node->elements()) {
-        auto expr = extract(element->key()->expression_key());
-        auto var = extract(element->variable_key());
-
-        // just a column reference
-        if (source_relation->output().index_of(*var).has_value()) {
-            output.order().emplace_back(
-                std::move(var),
-                element->direction() == model::expression::relation::OrderExpression::Direction::ASCENDANT
-                    ? common::core::Direction::ASCENDANT
-                    : common::core::Direction::DESCENDANT);
-            continue;
-        }
-
-        // skip constant values
-        if (expr->constant()) {
-            continue;
-        }
-
-        // no more sort info
-        break;
-    }
-
-    bless(node, std::make_shared<binding::RelationBinding>(source_relation->output(), std::move(output)));
+    bless(node, std::make_shared<binding::RelationBinding>(source_relation->output(), source_relation->output()));
 }
 
 void Engine::visit(model::statement::dml::EmitStatement* node, ScopeContext& scope) {

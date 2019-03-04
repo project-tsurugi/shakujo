@@ -15,15 +15,11 @@
  */
 package com.ashigeru.lang.codegen.spec.sql.expression.relation;
 
-import java.util.List;
-
 import com.ashigeru.lang.codegen.ir.reflect.Description;
 import com.ashigeru.lang.codegen.ir.reflect.Extends;
 import com.ashigeru.lang.codegen.ir.reflect.MetaClass;
-import com.ashigeru.lang.codegen.ir.reflect.Opt;
 import com.ashigeru.lang.codegen.spec.sql.expression.Expression;
 import com.ashigeru.lang.codegen.spec.sql.key.RelationKey;
-import com.ashigeru.lang.codegen.spec.sql.name.Index;
 
 @Description("removing duplicated rows from relations")
 @Extends(Expression.class)
@@ -33,8 +29,4 @@ public class DistinctExpression extends MetaClass {
 
     @Description("source relation")
     Property<Expression> operand = property();
-
-    @Description("grouping column indices")
-    @Opt
-    Property<List<Index>> subsets = property();
 }

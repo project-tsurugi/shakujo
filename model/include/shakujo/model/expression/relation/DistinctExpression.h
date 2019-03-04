@@ -24,8 +24,6 @@
 #include "shakujo/model/expression/ExpressionKind.h"
 #include "shakujo/model/key/ExpressionKey.h"
 #include "shakujo/model/key/RelationKey.h"
-#include "shakujo/model/name/Index.h"
-#include "shakujo/model/util/NodeList.h"
 
 namespace shakujo::model::expression::relation {
 /**
@@ -104,19 +102,6 @@ public:
      */
     std::unique_ptr<Expression> release_operand();
 
-    /**
-     * @brief Returns grouping column indices.
-     * @return grouping column indices.
-     */
-    util::NodeList<name::Index>& subsets();
-
-    /**
-     * @brief Returns grouping column indices.
-     * @return grouping column indices.
-     */
-    inline util::NodeList<name::Index> const& subsets() const {
-        return const_cast<DistinctExpression*>(this)->subsets();
-    }
     /**
      * @brief Returns expression key.
      * @return expression key.

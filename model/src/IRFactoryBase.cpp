@@ -399,7 +399,7 @@ std::unique_ptr<expression::relation::AggregationExpression> IRFactoryBase::Aggr
 
 std::unique_ptr<expression::relation::AggregationExpression> IRFactoryBase::AggregationExpression(
         std::unique_ptr<expression::Expression> operand,
-        common::util::MoveInitializerList<std::unique_ptr<name::Index>> keys,
+        common::util::MoveInitializerList<std::unique_ptr<expression::Expression>> keys,
         common::util::MoveInitializerList<std::unique_ptr<expression::relation::AggregationExpression::Column>> columns,
         std::unique_ptr<name::SimpleName> alias) {
     auto ret = AggregationExpression();
@@ -432,11 +432,9 @@ std::unique_ptr<expression::relation::DistinctExpression> IRFactoryBase::Distinc
 }
 
 std::unique_ptr<expression::relation::DistinctExpression> IRFactoryBase::DistinctExpression(
-        std::unique_ptr<expression::Expression> operand,
-        common::util::MoveInitializerList<std::unique_ptr<name::Index>> subsets) {
+        std::unique_ptr<expression::Expression> operand) {
     auto ret = DistinctExpression();
     ret->operand(std::move(operand));
-    ret->subsets() = std::move(subsets).build();
     return ret;
 }
 

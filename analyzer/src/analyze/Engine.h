@@ -127,6 +127,7 @@ protected:
     void visit(model::expression::relation::ProjectionExpression*, ScopeContext&) override;
     void visit(model::expression::relation::JoinExpression*, ScopeContext&) override;
     void visit(model::expression::relation::OrderExpression*, ScopeContext&) override;
+    void visit(model::expression::relation::DistinctExpression*, ScopeContext&) override;
 
     void visit(model::statement::dml::InsertValuesStatement*, ScopeContext&) override;
     void visit(model::statement::dml::UpdateStatement*, ScopeContext&) override;
