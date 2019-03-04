@@ -230,10 +230,6 @@ private:
 
     std::unique_ptr<common::core::Type> resolve_index(model::name::Index*, common::core::type::Tuple const*);
 
-    void enrich_relation_profile(
-            model::Node*, binding::RelationBinding::Profile&,
-            common::schema::TableInfo const&, common::schema::IndexInfo const&);
-
     std::vector<std::shared_ptr<binding::VariableBinding>> create_column_variables(common::schema::TableInfo const&);
 
     std::vector<binding::JoinStrategy::Column> compute_join_columns(

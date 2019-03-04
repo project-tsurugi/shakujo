@@ -28,6 +28,7 @@
 namespace shakujo::analyzer::optimize {
 
 using common::util::is_valid;
+using common::util::make_clone;
 
 namespace {
 class Collector : public model::expression::ExpressionVisitor<ComparisonTerm::Factor> {
@@ -36,7 +37,12 @@ public:
 
     ComparisonTerm::Factor visit(model::expression::VariableReference* node) override {
         if (auto variable = bindings_.find(node->variable_key()); is_valid(variable)) {
-            return ComparisonTerm::Factor { std::move(variable) };
+            ComparisonTerm::Factor result { std::move(variable) };
+            auto expr = bindings_.get(node->expression_key());
+            if (expr->constant()) {
+                result.constant(make_clone(expr->value()));
+            }
+            return result;
         }
         return {};
     }
@@ -47,7 +53,7 @@ public:
             case Kind::INT:
             case Kind::FLOAT:
             case Kind::STRING:
-                return ComparisonTerm::Factor { node->value() };
+                return ComparisonTerm::Factor { make_clone(node->value()) };
             default:
                 return {};
         }
@@ -63,19 +69,19 @@ public:
             case Op::SIGN_INVERSION: {
                 auto factor = dispatch(node->operand());
                 // FIXME: -var ?
-                if (!factor || !factor.is_value()) {
+                if (!factor || !factor.is_constant()) {
                     return {};
                 }
-                auto value = factor.value();
+                auto value = factor.constant();
                 using Kind = common::core::Value::Kind;
                 switch (value->kind()) {
                     case Kind::INT:
                         // FIXME: MIN_VALUE
-                        return factor.value(std::make_unique<common::core::value::Int>(
-                            -dynamic_cast<common::core::value::Int const*>(value)->get()));
+                        return factor.constant(std::make_unique<common::core::value::Int>(
+                            -dynamic_cast<common::core::value::Int const *>(value)->get()));
                     case Kind::FLOAT:
-                        return factor.value(std::make_unique<common::core::value::Float>(
-                            -dynamic_cast<common::core::value::Float const*>(value)->get()));
+                        return factor.constant(std::make_unique<common::core::value::Float>(
+                            -dynamic_cast<common::core::value::Float const *>(value)->get()));
                     default:
                         return {};
                 }

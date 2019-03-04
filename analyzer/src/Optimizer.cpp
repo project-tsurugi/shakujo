@@ -19,6 +19,7 @@
 
 #include "optimize/Context.h"
 #include "optimize/PredicatePushDown.h"
+#include "optimize/SelectScan.h"
 #include "optimize/SimplifyCast.h"
 
 namespace shakujo::analyzer {
@@ -32,6 +33,8 @@ public:
     template<class Node>
     void operator()(Node* node) {
         apply_engine<optimize::PredicatePushDown>(node);
+        apply_engine<optimize::SimplifyCast>(node);
+        apply_engine<optimize::SelectScan>(node);
         apply_engine<optimize::SimplifyCast>(node);
     }
 

@@ -47,8 +47,7 @@ public:
     public:
         Factor() = default;
         explicit Factor(std::shared_ptr<binding::VariableBinding> variable) : variable_(std::move(variable)) {}
-        explicit Factor(std::unique_ptr<common::core::Value> value) : value_(std::move(value)) {}
-        explicit Factor(common::core::Value const* value) : value_(common::util::make_clone(value)) {}
+        explicit Factor(std::unique_ptr<common::core::Value> constant) : constant_(std::move(constant)) {}
 
         std::shared_ptr<binding::VariableBinding>& variable() {
             return variable_;
@@ -63,12 +62,12 @@ public:
             return *this;
         }
 
-        common::core::Value const* value() const {
-            return value_.get();
+        common::core::Value const* constant() const {
+            return constant_.get();
         }
 
-        Factor& value(std::unique_ptr<common::core::Value> value) {
-            value_ = std::move(value);
+        Factor& constant(std::unique_ptr<common::core::Value> constant) {
+            constant_ = std::move(constant);
             return *this;
         }
 
@@ -76,17 +75,17 @@ public:
             return variable_ != nullptr;
         }
 
-        bool is_value() const {
-            return value_ != nullptr;
+        bool is_constant() const {
+            return constant_ != nullptr;
         }
 
         explicit operator bool() const {
-            return is_variable() || is_value();
+            return is_variable() || is_constant();
         }
 
     private:
         std::shared_ptr<binding::VariableBinding> variable_ {};
-        common::util::ClonablePtr<common::core::Value> value_ {};
+        common::util::ClonablePtr<common::core::Value> constant_ {};
     };
 
 public:
@@ -126,7 +125,7 @@ public:
      * @brief collects comparison terms in the given expression.
      * Invariant of each term [t]:
      * - t.left().is_variable()
-     * - t.right().is_variable() or t.right().is_value()
+     * - t.right().is_variable() or t.right().is_constant()
      * @param context the current context
      * @param expression the target expression
      * @return the found terms

@@ -920,31 +920,6 @@ void Engine::visit(model::expression::BinaryOperator* node, ScopeContext& scope)
     }
 }
 
-void Engine::enrich_relation_profile(
-        model::Node* node, binding::RelationBinding::Profile& profile,
-        common::schema::TableInfo const& table, common::schema::IndexInfo const& index) {
-    profile.source_table(table);
-    if (table.primary_index().is_valid()) {
-        // FIXME: or index was unique
-        profile.distinct(true);
-    }
-    if (index.is_valid()) {
-        auto& order = profile.order();
-        order.reserve(index.columns().size());
-        for (auto& column: index.columns()) {
-            auto column_at = table.index_of(column.name());
-            std::shared_ptr<binding::VariableBinding> column_binding;
-            if (!column_at.has_value()) {
-                report(node, Diagnostic::Code::COLUMN_NOT_FOUND, to_string(column.name()));
-                column_binding = std::make_shared<binding::VariableBinding>();
-            } else {
-                column_binding = profile.columns()[column_at.value()];
-            }
-            order.emplace_back(std::move(column_binding), column.direction());
-        }
-    }
-}
-
 void Engine::visit(model::expression::relation::ScanExpression* node, ScopeContext& prev) {
     auto& storage = env_.storage_info_provider();
     auto& table_info = storage.find_table(common::core::Name(node->table()->segments()));
@@ -971,7 +946,7 @@ void Engine::visit(model::expression::relation::ScanExpression* node, ScopeConte
     RelationScope vars { bindings(), &prev.variables(), relation_type.get(), {} }; // compute columns from type
 
     auto profile = vars.profile();
-    enrich_relation_profile(node, profile, table_info, table_info.primary_index());
+    profile.source_table(table_info);
     auto relation = std::make_shared<binding::RelationBinding>(binding::RelationBinding::Profile {}, std::move(profile));
     relation->scan_strategy({ table_info, binding::ScanStrategy::Kind::FULL, });
     bless(node, std::move(relation));

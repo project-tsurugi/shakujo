@@ -250,6 +250,38 @@ public:
     }
 
     /**
+     * @brief returns the secondary index of the given name.
+     * @param name the index name
+     * @return the related secondary index
+     * @return invalid index if it does not exist
+     */
+    IndexInfo const& find_secondary_index(std::string_view name) const {
+        for (auto&& index : secondary_indices_) {
+            if (index.name() == name) {
+                return index;
+            }
+        }
+        static IndexInfo const INVALID {};
+        return INVALID;
+    }
+
+    /**
+     * @brief returns the secondary index of the given name.
+     * @param name the index name
+     * @return the related secondary index
+     * @return invalid index if it does not exist
+     */
+    IndexInfo const& find_secondary_index(common::core::Name const& name) const {
+        for (auto&& index : secondary_indices_) {
+            if (index.name() == name) {
+                return index;
+            }
+        }
+        static IndexInfo const INVALID {};
+        return INVALID;
+    }
+
+    /**
      * @brief returns whether or not this table information is valid.
      * @return true if this is valid
      * @return false otherwise
