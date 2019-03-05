@@ -920,31 +920,6 @@ void Engine::visit(model::expression::BinaryOperator* node, ScopeContext& scope)
     }
 }
 
-void Engine::enrich_relation_profile(
-        model::Node* node, binding::RelationBinding::Profile& profile,
-        common::schema::TableInfo const& table, common::schema::IndexInfo const& index) {
-    profile.source_table(table);
-    if (table.primary_index().is_valid()) {
-        // FIXME: or index was unique
-        profile.distinct(true);
-    }
-    if (index.is_valid()) {
-        auto& order = profile.order();
-        order.reserve(index.columns().size());
-        for (auto& column: index.columns()) {
-            auto column_at = table.index_of(column.name());
-            std::shared_ptr<binding::VariableBinding> column_binding;
-            if (!column_at.has_value()) {
-                report(node, Diagnostic::Code::COLUMN_NOT_FOUND, to_string(column.name()));
-                column_binding = std::make_shared<binding::VariableBinding>();
-            } else {
-                column_binding = profile.columns()[column_at.value()];
-            }
-            order.emplace_back(std::move(column_binding), column.direction());
-        }
-    }
-}
-
 void Engine::visit(model::expression::relation::ScanExpression* node, ScopeContext& prev) {
     auto& storage = env_.storage_info_provider();
     auto& table_info = storage.find_table(common::core::Name(node->table()->segments()));
@@ -971,7 +946,7 @@ void Engine::visit(model::expression::relation::ScanExpression* node, ScopeConte
     RelationScope vars { bindings(), &prev.variables(), relation_type.get(), {} }; // compute columns from type
 
     auto profile = vars.profile();
-    enrich_relation_profile(node, profile, table_info, table_info.primary_index());
+    profile.source_table(table_info);
     auto relation = std::make_shared<binding::RelationBinding>(binding::RelationBinding::Profile {}, std::move(profile));
     relation->scan_strategy({ table_info, binding::ScanStrategy::Kind::FULL, });
     bless(node, std::move(relation));
@@ -1072,7 +1047,7 @@ void Engine::visit(model::expression::relation::ProjectionExpression* node, Scop
             std::move(name),
             make_clone(column_expr->type()));
         columns.emplace_back(qualifiers, std::move(simple_name), make_clone(column_expr->type()));
-        output.columns().push_back(var);
+        output.columns().emplace_back(var);
         bless(c, var);
 
         // FIXME: restricts non first order types like relations
@@ -1319,14 +1294,14 @@ void Engine::visit(model::expression::relation::JoinExpression* node, ScopeConte
     }
 
     std::vector<std::shared_ptr<binding::VariableBinding>> process_columns;
+    process_columns.reserve(left_relation->output().columns().size() + right_relation->output().columns().size());
+    for (auto& column : left_relation->output().columns()) {
+        process_columns.emplace_back(column);
+    }
+    for (auto& column : right_relation->output().columns()) {
+        process_columns.emplace_back(column);
+    }
     if (is_defined(node->condition())) {
-        process_columns.reserve(left_relation->output().columns().size() + right_relation->output().columns().size());
-        for (auto& column : left_relation->output().columns()) {
-            process_columns.push_back(column);
-        }
-        for (auto& column : right_relation->output().columns()) {
-            process_columns.push_back(column);
-        }
         RelationScope r { bindings(), &prev.variables(), { left_type, right_type }, process_columns };
         auto vars = block_scope(r);
         ScopeContext scope { vars, prev.functions() };
@@ -1368,6 +1343,31 @@ void Engine::visit(model::expression::relation::JoinExpression* node, ScopeConte
     bless(node, std::move(result_type));
 }
 
+void Engine::visit(model::expression::relation::DistinctExpression* node, ScopeContext& prev) {
+    dispatch(node->operand(), prev);
+    auto source_expr = extract_binding(node->operand());
+    if (!is_valid(source_expr)) {
+        bless_undefined<binding::ExpressionBinding>(node);
+        bless_undefined<binding::RelationBinding>(node);
+        return;
+    }
+    if (!require_relation(node->operand())) {
+        bless_erroneous_expression(node);
+        bless_undefined<binding::RelationBinding>(node);
+        return;
+    }
+    auto source_relation = extract_relation(node->operand());
+    if (!source_relation->output().is_valid()) {
+        bless_undefined<binding::ExpressionBinding>(node);
+        bless_undefined<binding::RelationBinding>(node);
+        return;
+    }
+
+    auto relation = dynamic_pointer_cast<common::core::type::Relation>(source_expr->type());
+    bless(node, make_clone(relation));
+    bless(node, std::make_shared<binding::RelationBinding>(source_relation->output(), source_relation->output()));
+}
+
 void Engine::visit(model::expression::relation::OrderExpression* node, ScopeContext& prev) {
     dispatch(node->operand(), prev);
     auto source_expr = extract_binding(node->operand());
@@ -1403,8 +1403,9 @@ void Engine::visit(model::expression::relation::OrderExpression* node, ScopeCont
             bless_undefined<binding::VariableBinding>(element);
             saw_error = true;
         } else {
-            if (auto inherited = find_variable(element->key()); is_valid(inherited)) {
-                bless(element, inherited);
+            if (auto column_ref = find_variable(element->key()); is_valid(column_ref)
+                    && source_relation->output().index_of(*column_ref).has_value()) {
+                bless(element, column_ref);
             } else {
                 auto id = bindings().next_variable_id();
                 auto name = to_string('#', id.get());
@@ -1423,34 +1424,7 @@ void Engine::visit(model::expression::relation::OrderExpression* node, ScopeCont
     }
 
     bless(node, make_clone(relation));
-
-    // copy for this output
-    auto output = source_relation->output();
-    output.order().clear();
-    for (auto* element : node->elements()) {
-        auto expr = extract(element->key()->expression_key());
-        auto var = extract(element->variable_key());
-
-        // just a column reference
-        if (source_relation->output().index_of(*var).has_value()) {
-            output.order().emplace_back(
-                std::move(var),
-                element->direction() == model::expression::relation::OrderExpression::Direction::ASCENDANT
-                    ? common::core::Direction::ASCENDANT
-                    : common::core::Direction::DESCENDANT);
-            continue;
-        }
-
-        // skip constant values
-        if (expr->constant()) {
-            continue;
-        }
-
-        // no more sort info
-        break;
-    }
-
-    bless(node, std::make_shared<binding::RelationBinding>(source_relation->output(), std::move(output)));
+    bless(node, std::make_shared<binding::RelationBinding>(source_relation->output(), source_relation->output()));
 }
 
 void Engine::visit(model::statement::dml::EmitStatement* node, ScopeContext& scope) {

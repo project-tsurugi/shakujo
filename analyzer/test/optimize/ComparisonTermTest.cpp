@@ -44,12 +44,12 @@ TEST_F(ComparisonTermTest, simple) {
     {
         auto& t = results[0];
         ASSERT_TRUE(t.left().is_variable());
-        ASSERT_TRUE(t.right().is_value());
+        ASSERT_TRUE(t.right().is_constant());
 
         EXPECT_EQ(t.source(), expr.get());
         EXPECT_EQ(t.op(), ComparisonTerm::Operator::EQ);
         EXPECT_EQ(t.left().variable()->id(), vid);
-        EXPECT_EQ(*t.right().value(), v::Int(1));
+        EXPECT_EQ(*t.right().constant(), v::Int(1));
     }
 }
 
@@ -62,12 +62,12 @@ TEST_F(ComparisonTermTest, commute) {
     {
         auto& t = results[0];
         ASSERT_TRUE(t.left().is_variable());
-        ASSERT_TRUE(t.right().is_value());
+        ASSERT_TRUE(t.right().is_constant());
 
         EXPECT_EQ(t.source(), expr.get());
         EXPECT_EQ(t.op(), ComparisonTerm::Operator::EQ);
         EXPECT_EQ(t.left().variable()->id(), vid);
-        EXPECT_EQ(*t.right().value(), v::Int(1));
+        EXPECT_EQ(*t.right().constant(), v::Int(1));
     }
 }
 
@@ -80,12 +80,12 @@ TEST_F(ComparisonTermTest, relation) {
     {
         auto& t = results[0];
         ASSERT_TRUE(t.left().is_variable());
-        ASSERT_TRUE(t.right().is_value());
+        ASSERT_TRUE(t.right().is_constant());
 
         EXPECT_EQ(t.source(), expr.get());
         EXPECT_EQ(t.op(), ComparisonTerm::Operator::LT);
         EXPECT_EQ(t.left().variable()->id(), vid);
-        EXPECT_EQ(*t.right().value(), v::Int(1));
+        EXPECT_EQ(*t.right().constant(), v::Int(1));
     }
 }
 
@@ -98,12 +98,12 @@ TEST_F(ComparisonTermTest, relation_commute) {
     {
         auto& t = results[0];
         ASSERT_TRUE(t.left().is_variable());
-        ASSERT_TRUE(t.right().is_value());
+        ASSERT_TRUE(t.right().is_constant());
 
         EXPECT_EQ(t.source(), expr.get());
         EXPECT_EQ(t.op(), ComparisonTerm::Operator::GT);
         EXPECT_EQ(t.left().variable()->id(), vid);
-        EXPECT_EQ(*t.right().value(), v::Int(1));
+        EXPECT_EQ(*t.right().constant(), v::Int(1));
     }
 }
 
@@ -116,12 +116,12 @@ TEST_F(ComparisonTermTest, cast) {
     {
         auto& t = results[0];
         ASSERT_TRUE(t.left().is_variable());
-        ASSERT_TRUE(t.right().is_value());
+        ASSERT_TRUE(t.right().is_constant());
 
         EXPECT_EQ(t.source(), expr.get());
         EXPECT_EQ(t.op(), ComparisonTerm::Operator::EQ);
         EXPECT_EQ(t.left().variable()->id(), vid);
-        EXPECT_EQ(*t.right().value(), v::Int(1));
+        EXPECT_EQ(*t.right().constant(), v::Int(1));
     }
 }
 
@@ -138,22 +138,22 @@ TEST_F(ComparisonTermTest, and) {
     {
         auto& t = results[0];
         ASSERT_TRUE(t.left().is_variable());
-        ASSERT_TRUE(t.right().is_value());
+        ASSERT_TRUE(t.right().is_constant());
 
         EXPECT_EQ(t.source(), cand->left());
         EXPECT_EQ(t.op(), ComparisonTerm::Operator::LT);
         EXPECT_EQ(t.left().variable()->id(), aid);
-        EXPECT_EQ(*t.right().value(), v::Int(1));
+        EXPECT_EQ(*t.right().constant(), v::Int(1));
     }
     {
         auto& t = results[1];
         ASSERT_TRUE(t.left().is_variable());
-        ASSERT_TRUE(t.right().is_value());
+        ASSERT_TRUE(t.right().is_constant());
 
         EXPECT_EQ(t.source(), cand->right());
         EXPECT_EQ(t.op(), ComparisonTerm::Operator::GT);
         EXPECT_EQ(t.left().variable()->id(), bid);
-        EXPECT_EQ(*t.right().value(), v::Int(2));
+        EXPECT_EQ(*t.right().constant(), v::Int(2));
     }
 }
 

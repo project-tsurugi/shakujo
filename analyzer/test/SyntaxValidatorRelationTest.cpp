@@ -146,7 +146,7 @@ TEST_F(SyntaxValidatorRelationTest, AggregationExpression) {
     validate(f.AggregationExpression(
         literal(),
         {
-            f.Index(f.Name("c")),
+            f.VariableReference(f.Name("c")),
         },
         {
             f.AggregationExpressionColumn(f.Name("f"), Quantifier::ABSENT, literal()),
@@ -154,9 +154,9 @@ TEST_F(SyntaxValidatorRelationTest, AggregationExpression) {
     validate(f.AggregationExpression(
         literal(),
         {
-            f.Index(f.Name("c1")),
-            f.Index(f.Name("c2")),
-            f.Index(f.Name("c3")),
+            f.VariableReference(f.Name("c1")),
+            f.VariableReference(f.Name("c2")),
+            f.VariableReference(f.Name("c3")),
         },
         {
             f.AggregationExpressionColumn(f.Name("f"), Quantifier::ABSENT, literal()),
@@ -191,7 +191,7 @@ TEST_F(SyntaxValidatorRelationTest, AggregationExpression) {
     should_error(f.AggregationExpression(
         literal(),
         {
-            f.Index(),
+            nullptr,
         },
         {
             f.AggregationExpressionColumn(f.Name("f"), Quantifier::ABSENT, literal()),
@@ -246,5 +246,10 @@ TEST_F(SyntaxValidatorRelationTest, OrderExpression) {
         {
             f.OrderExpressionElement({}),
         }));
+}
+
+TEST_F(SyntaxValidatorRelationTest, DistinctExpression) {
+    validate(f.DistinctExpression(literal()));
+    should_error(f.DistinctExpression());
 }
 }  // namespace shakujo::analyzer

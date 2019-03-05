@@ -65,6 +65,19 @@ static int run(std::vector<char*> const& args) {
                 common::core::type::Char(20U, common::core::Type::Nullity::NEVER_NULL),
                 common::core::value::String("Hello, shakujo!"),
             },
+        },
+        {  // primary key
+            {
+                { "C1" }
+            }
+        },
+        {  // secondary keys
+            {
+                "example_C2",
+                {
+                    { "C2" }
+                },
+            },
         }
     });
     tables->add(common::schema::TableInfo {
@@ -78,6 +91,19 @@ static int run(std::vector<char*> const& args) {
                 "VALUE",
                 common::core::type::Float(64U),
                 common::core::value::Float(0.0),
+            },
+        },
+        {  // primary key
+            {
+                { "K" }
+            }
+        },
+        {  // secondary keys
+            {
+                "side_VALUE",
+                {
+                    { "VALUE" }
+                },
             },
         }
     });

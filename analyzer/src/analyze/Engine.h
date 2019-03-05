@@ -127,6 +127,7 @@ protected:
     void visit(model::expression::relation::ProjectionExpression*, ScopeContext&) override;
     void visit(model::expression::relation::JoinExpression*, ScopeContext&) override;
     void visit(model::expression::relation::OrderExpression*, ScopeContext&) override;
+    void visit(model::expression::relation::DistinctExpression*, ScopeContext&) override;
 
     void visit(model::statement::dml::InsertValuesStatement*, ScopeContext&) override;
     void visit(model::statement::dml::UpdateStatement*, ScopeContext&) override;
@@ -229,10 +230,6 @@ private:
     void process_tuple_element(model::expression::TupleElementLoadExpression*);
 
     std::unique_ptr<common::core::Type> resolve_index(model::name::Index*, common::core::type::Tuple const*);
-
-    void enrich_relation_profile(
-            model::Node*, binding::RelationBinding::Profile&,
-            common::schema::TableInfo const&, common::schema::IndexInfo const&);
 
     std::vector<std::shared_ptr<binding::VariableBinding>> create_column_variables(common::schema::TableInfo const&);
 

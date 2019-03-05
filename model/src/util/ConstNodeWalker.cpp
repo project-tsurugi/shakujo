@@ -423,9 +423,6 @@ void ConstNodeWalker::walk(expression::relation::AggregationExpression const* no
 void ConstNodeWalker::walk(expression::relation::DistinctExpression const* node) {
     if (!enter(node)) return;
     if (node->operand()) walk(node->operand());
-    for (auto child : node->subsets()) {
-        if (child) walk(child);
-    }
     exit(node);
 }
 

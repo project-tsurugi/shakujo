@@ -406,38 +406,6 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, ScanStr
         printer.exit_property("key_columns");
     }
     {
-        printer.enter_property("lower_limit");
-        auto& list = value->lower_limit();
-        auto size = list.size();
-        printer.enter_array(size);
-        for (auto& element : list) {
-            serialize(printer, element.get());
-        }
-        printer.exit_array(size);
-        printer.exit_property("lower_limit");
-    }
-    {
-        printer.enter_property("lower_inclusive");
-        printer.value(value->lower_inclusive());
-        printer.exit_property("lower_inclusive");
-    }
-    {
-        printer.enter_property("upper_limit");
-        auto& list = value->upper_limit();
-        auto size = list.size();
-        printer.enter_array(size);
-        for (auto& element : list) {
-            serialize(printer, element.get());
-        }
-        printer.exit_array(size);
-        printer.exit_property("upper_limit");
-    }
-    {
-        printer.enter_property("upper_inclusive");
-        printer.value(value->upper_inclusive());
-        printer.exit_property("upper_inclusive");
-    }
-    {
         printer.enter_property("prefix");
         auto& list = value->prefix();
         auto size = list.size();
@@ -447,6 +415,16 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, ScanStr
         }
         printer.exit_array(size);
         printer.exit_property("prefix");
+    }
+    {
+        printer.enter_property("lower_suffix");
+        serialize(printer, &value->lower_suffix());
+        printer.exit_property("lower_suffix");
+    }
+    {
+        printer.enter_property("upper_suffix");
+        serialize(printer, &value->upper_suffix());
+        printer.exit_property("upper_suffix");
     }
     printer.exit_object("ScanStrategy");
 }
@@ -468,6 +446,33 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, ScanStr
         }
     } else {
         printer.value(to_string_view(value));
+    }
+}
+
+void BindingSerializer::serialize(common::util::DataSerializer& printer, ScanStrategy::Suffix const* value) {
+    if (value == nullptr || value->value() == nullptr) {
+        printer.value(nullptr);
+        return;
+    }
+    if (show_qualified_kind()) {
+        printer.enter_object("Suffix");
+    } else {
+        printer.enter_object("ScanStrategy::Suffix");
+    }
+    {
+        printer.enter_property("value");
+        serialize(printer, value->value());
+        printer.exit_property("value");
+    }
+    {
+        printer.enter_property("inclusive");
+        printer.value(value->inclusive());
+        printer.exit_property("inclusive");
+    }
+    if (show_qualified_kind()) {
+        printer.exit_object("Suffix");
+    } else {
+        printer.exit_object("ScanStrategy::Suffix");
     }
 }
 

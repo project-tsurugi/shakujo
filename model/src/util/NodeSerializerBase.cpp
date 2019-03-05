@@ -1199,17 +1199,6 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         printer.exit_property("operand");
     }
     {
-        printer.enter_property("subsets");
-        auto& list = value->subsets();
-        auto size = list.size();
-        printer.enter_array(size);
-        for (auto element : list) {
-            serialize(printer, element);
-        }
-        printer.exit_array(size);
-        printer.exit_property("subsets");
-    }
-    {
         printer.enter_property("expression_key");
         serialize(printer, value->expression_key());
         printer.exit_property("expression_key");

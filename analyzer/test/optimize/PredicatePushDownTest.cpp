@@ -149,6 +149,27 @@ TEST_F(PredicatePushDownTest, scan_sort_select) {
     EXPECT_EQ(val_of<v::Int>(right(cond)), 1);
 }
 
+TEST_F(PredicatePushDownTest, scan_distinct_select) {
+    add(common::schema::TableInfo { "testing", {
+        { "C1", t::Int(64U, NON_NULL), },
+    }});
+    // select - distinct - scan
+    auto expr = apply(f.SelectionExpression(
+        f.DistinctExpression(f.ScanExpression(f.Name("testing"))),
+        f.BinaryOperator(BOp::EQUAL, var("C1"), literal(1))));
+
+    // distinct - select - scan
+    auto node = cast<model::expression::relation::DistinctExpression>(expr.get());
+    auto select = cast<model::expression::relation::SelectionExpression>(node->operand());
+    cast<model::expression::relation::ScanExpression>(select->operand());
+    auto relation = extract_relation(select);
+
+    auto cond = select->condition();
+    ASSERT_TRUE(cond);
+    EXPECT_EQ(var_of(left(cond)), relation->process().columns()[0]);
+    EXPECT_EQ(val_of<v::Int>(right(cond)), 1);
+}
+
 TEST_F(PredicatePushDownTest, complex_predicate) {
     add(common::schema::TableInfo { "testing", {
         { "C1", t::Int(64U, NON_NULL), },

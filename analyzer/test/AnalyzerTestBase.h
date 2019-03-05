@@ -73,8 +73,10 @@ public:
         return false;
     }
 
-    void add(common::schema::TableInfo table) {
+    common::schema::TableInfo const& add(common::schema::TableInfo table) {
+        auto name = table.name();
         tables->add(std::move(table));
+        return tables->find_table(name);
     }
 
     std::vector<common::core::Name> names(std::initializer_list<const char*> ss) {

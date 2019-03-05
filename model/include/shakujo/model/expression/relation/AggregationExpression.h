@@ -27,11 +27,10 @@
 #include "shakujo/model/key/FunctionKey.h"
 #include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/key/VariableKey.h"
-#include "shakujo/model/name/Index.h"
 #include "shakujo/model/name/Name.h"
 #include "shakujo/model/name/SimpleName.h"
 #include "shakujo/model/util/FragmentList.h"
-#include "shakujo/model/util/NodeList.h"
+#include "shakujo/model/util/ManagedNodeList.h"
 
 namespace shakujo::model::expression::relation {
 /**
@@ -313,13 +312,13 @@ public:
      * @brief Returns group keys.
      * @return group keys.
      */
-    util::NodeList<name::Index>& keys();
+    util::ManagedNodeList<Expression>& keys();
 
     /**
      * @brief Returns group keys.
      * @return group keys.
      */
-    inline util::NodeList<name::Index> const& keys() const {
+    inline util::ManagedNodeList<Expression> const& keys() const {
         return const_cast<AggregationExpression*>(this)->keys();
     }
     /**

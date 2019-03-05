@@ -78,13 +78,4 @@ TEST_F(DiagnosticTest, region) {
     EXPECT_EQ(Code::UNKNOWN_INFORMATION, d.code());
     EXPECT_EQ("OK", d.message());
 }
-
-TEST_F(DiagnosticTest, code_all) {
-    for (Code c = Code::UNKNOWN_INFORMATION;
-            c <= Code::NOT_IMPLEMENTED;
-            c = static_cast<Code>(static_cast<std::underlying_type_t<Code>>(c) + 1U)) {
-        Diagnostic d { c, "OK" };
-        output_test(d);
-    }
-}
 }  // namespace shakujo::analyzer

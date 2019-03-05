@@ -16,11 +16,13 @@
 #ifndef SHAKUJO_ANALYZER_DIAGNOSTIC_H_
 #define SHAKUJO_ANALYZER_DIAGNOSTIC_H_
 
-#include <cstdint>
 #include <iostream>
 #include <string>
 #include <string_view>
 #include <utility>
+
+#include <cstdint>
+#include <cstdlib>
 
 #include "shakujo/common/core/DocumentRegion.h"
 
@@ -210,6 +212,11 @@ public:
          * @brief each table does not have any common columns.
          */
         MISSING_NATURAL_JOIN_PAIR,
+
+        /**
+         * @brief target expression must be a column reference.
+         */
+        INVALID_COLUMN_REFERENCE,
 
         /**
          * @brief mandatory column is not specified.
@@ -405,6 +412,8 @@ inline constexpr std::string_view to_string_view(Diagnostic::Code value) {
             return "target column is not found";
         case Code::MISSING_NATURAL_JOIN_PAIR:
             return "no natural join pairs";
+        case Code::INVALID_COLUMN_REFERENCE:
+            return "invalid column referernce";
         case Code::MISSING_MANDATORY_COLUMN:
             return "missing mandatory column";
         case Code::INVALID_COLUMN_TYPE:
@@ -416,7 +425,7 @@ inline constexpr std::string_view to_string_view(Diagnostic::Code value) {
         case Code::NOT_IMPLEMENTED:
             return "YET NOT IMPLEMENTED";
     }
-    return "(unknown)";
+    std::abort();
 }
 
 /**
@@ -436,7 +445,7 @@ inline constexpr std::string_view to_string_view(Diagnostic::Severity value) {
         case Severity::CRITICAL:
             return "CRITICAL";
     }
-    return "(unknown)";
+    std::abort();
 }
 
 /**

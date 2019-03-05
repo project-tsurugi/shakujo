@@ -275,7 +275,7 @@ void JsonSerializer::value(std::size_t value) {
 
 void JsonSerializer::value(core::value::Bool::type value) {
     impl_->next_value();
-    impl_->put_raw(value);
+    impl_->put_string(value ? "true" : "false");
 }
 
 void JsonSerializer::value(core::value::Int::type value) {

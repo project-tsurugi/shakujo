@@ -301,7 +301,7 @@ std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::SelectStatem
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::QuerySpecificationContext *c) {
     check(c);
     if (auto table = c->tableExpression(); is_defined(table)) {
-        auto result = visit(table);
+        std::unique_ptr<model::expression::Expression> result { visit(table) };
         // FIXME: check lexical scope of order-by clause
         if (auto o = c->orderByClause(); is_defined(o)) {
             result = visit(o, std::move(result));
@@ -310,17 +310,24 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::QuerySpeci
             result = visit(select, std::move(result));
         }
         if (auto q = c->setQuantifier(); is_defined(q)) {
-            // FIXME: impl
-            visit(q);
+            auto quantifier = visit(q);
+            if (quantifier == SetQuantifier::DISTINCT) {
+                result = f.DistinctExpression(std::move(result)) << region(c->setQuantifier());
+            }
         }
         return result;
     }
     rule_error(c);
 }
 
-void Engine::visit(Grammar::SetQuantifierContext *c) {
+Engine::SetQuantifier Engine::visit(Grammar::SetQuantifierContext *c) {
     check(c);
-    // FIXME: impl
+    if (is_defined(c->K_ALL())) {
+        return SetQuantifier::ALL;
+    }
+    if (is_defined(c->K_DISTINCT())) {
+        return SetQuantifier::DISTINCT;
+    }
     rule_error(c);
 }
 
