@@ -110,6 +110,8 @@ public:
 
     void exit(model::expression::relation::DistinctExpression* node) override {
         auto parent = extract(node->operand());
+
+        // redundant distinct elision
         if (parent->output().distinct()) {
             node->replace_with(node->release_operand());
             return;
@@ -118,14 +120,9 @@ public:
         auto relation = extract(node);
         relation->process() = parent->output();
         relation->output() = parent->output();
-        assert(!relation->output().unique_keys().empty());  // NOLINT
 
-        std::set<std::shared_ptr<binding::VariableBinding>> key {};
-        for (auto&& column : relation->output().columns()) {
-            // FIXME: use only subset
-            key.emplace(column);
-        }
-        relation->output().unique_keys().emplace(std::move(key));
+        assert(relation->output().unique_keys().empty());  // NOLINT
+        relation->output().unique_keys().emplace(relation->output().columns().begin(), relation->output().columns().end());
         rebuild_type(node, *relation);
     }
 
@@ -161,6 +158,37 @@ public:
                     iomap.emplace(column.right_source(), column.output());
                 }
             }
+            std::map<std::shared_ptr<binding::VariableBinding>, std::shared_ptr<binding::VariableBinding>> eqmap {};
+            if (is_defined(node->condition()) && (!strategy.left_outer() || !strategy.right_outer())) {
+                // NOTE: build equivalent pairs from condition, like T1.a = T2.b
+                // the eqmap replaces key with value, so that we put bidirectional in the case of INNER join
+                // natural join is already merged such equivalent pairs
+                auto terms = ComparisonTerm::collect(context_.bindings(), node->condition());
+                for (auto&& term : terms) {
+                    if (term.op() == ComparisonTerm::Operator::EQ
+                            && term.left().is_variable() && term.right().is_variable()) {
+                        auto itl = iomap.find(term.left().variable());
+                        if (itl == iomap.end()) {
+                            continue;
+                        }
+                        auto itr = iomap.find(term.right().variable());
+                        if (itr == iomap.end()) {
+                            continue;
+                        }
+                        if (itl->second == itr->second) {
+                            continue;
+                        }
+                        // if LEFT OUTER JOIN, the replacement must be come from left operand
+                        if (!strategy.left_outer() || left->output().index_of(*itr->first).has_value()) {
+                            eqmap.emplace(itl->second, itr->second);
+                        }
+                        // if RIGHT OUTER JOIN, the replacement must be come from right operand
+                        if (!strategy.right_outer() || right->output().index_of(*itl->first).has_value()) {
+                            eqmap.emplace(itr->second, itl->second);
+                        }
+                    }
+                }
+            }
             for (auto&& left_key : left->output().unique_keys()) {
                 bool left_diff = false;
                 std::set<std::shared_ptr<binding::VariableBinding>> left_output_key {};
@@ -192,6 +220,55 @@ public:
                     output.unique_keys().emplace(std::move(output_key));
                 }
             }
+            if (!output.unique_keys().empty() && !eqmap.empty()) {
+                // reduces unique key factors using equivalent relations
+
+                // first, we remove each element from eqmap which does not appear in unique keys
+                for (auto it = eqmap.begin(); it != eqmap.end();) {
+                    bool found = false;
+                    for (auto&& key : output.unique_keys()) {
+                        if (key.find(it->first) != key.end()) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        it = eqmap.erase(it);
+                    } else {
+                        ++it;
+                    }
+                }
+                // then, we replace unique key elements with equivalent pairs
+                for (auto&& [k, v] : eqmap) {
+                    std::vector<std::set<std::shared_ptr<binding::VariableBinding>>> increased {};
+                    auto&& current = output.unique_keys();
+                    for (auto it = current.begin(); it != current.end();) {
+                        auto&& key = *it;
+                        bool erased = false;
+                        if (key.find(k) != key.end()) {
+                            auto copy = key;
+                            if (auto itc = copy.find(k); itc != copy.end()) {
+                                copy.erase(itc);
+                                copy.emplace(v);
+                                if (current.find(copy) == current.end()) {
+                                    increased.emplace_back(std::move(copy));
+                                }
+                            }
+                            if (key.find(v) != key.end()) {
+                                // both pair exists
+                                it = current.erase(it);
+                                erased = true;
+                            }
+                        }
+                        if (!erased) {
+                            ++it;
+                        }
+                    }
+                    for (auto&& key : increased) {
+                        current.emplace(std::move(key));
+                    }
+                }
+            }
         }
         rebuild_type(node, *relation);
     }
@@ -203,9 +280,11 @@ public:
         relation->output() = parent->output();
         auto&& output = relation->output();
         output.order().clear();
+        bool saw_unresolved = false;
         for (auto* element : node->elements()) {
             auto expr = extract_from_key(element->key()->expression_key());
             auto var = extract_from_key(element->variable_key());
+
             // just a column reference
             if (parent->output().index_of(*var).has_value()) {
                 output.order().emplace_back(
@@ -219,15 +298,16 @@ public:
             if (expr->constant()) {
                 continue;
             }
-            // no more sort info
+            // cannot resolve in compile time..
+            saw_unresolved = true;
             break;
         }
-        if (auto&& input = parent->output(); input.order().size() >= output.order().size()) {
+        if (auto&& input = parent->output(); input.order().size() >= output.order().size() && !saw_unresolved) {
             bool diff = false;
             for (std::size_t i = 0, n = output.order().size(); i < n; ++i) {
                 auto&& in = input.order()[i];
                 auto&& out = output.order()[i];
-                if (in.column() != out.column() || in.direction() == out.direction()) {
+                if (in.column() != out.column() || in.direction() != out.direction()) {
                     diff = true;
                     break;
                 }

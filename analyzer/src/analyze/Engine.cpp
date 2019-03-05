@@ -1403,8 +1403,9 @@ void Engine::visit(model::expression::relation::OrderExpression* node, ScopeCont
             bless_undefined<binding::VariableBinding>(element);
             saw_error = true;
         } else {
-            if (auto inherited = find_variable(element->key()); is_valid(inherited)) {
-                bless(element, inherited);
+            if (auto column_ref = find_variable(element->key()); is_valid(column_ref)
+                    && source_relation->output().index_of(*column_ref).has_value()) {
+                bless(element, column_ref);
             } else {
                 auto id = bindings().next_variable_id();
                 auto name = to_string('#', id.get());

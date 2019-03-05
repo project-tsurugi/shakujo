@@ -330,4 +330,19 @@ TEST_F(ParserQueryTest, order_by_complex) {
     }
 }
 
+TEST_F(ParserQueryTest, all) {
+    auto select = parse_select("SELECT ALL * FROM TBL");
+    auto scan = dynamic_pointer_cast<ScanExpression>(select->source());
+    EXPECT_TRUE(equals(f.Name("TBL"), scan->table()));
+    EXPECT_FALSE(scan->alias());
+}
+
+TEST_F(ParserQueryTest, distinct) {
+    auto select = parse_select("SELECT DISTINCT * FROM TBL");
+    auto distinct = dynamic_pointer_cast<DistinctExpression>(select->source());
+    auto scan = dynamic_pointer_cast<ScanExpression>(distinct->operand());
+    EXPECT_TRUE(equals(f.Name("TBL"), scan->table()));
+    EXPECT_FALSE(scan->alias());
+}
+
 }  // namespace shakujo::parser

@@ -240,6 +240,63 @@ TEST_F(FixRelationInfoTest, select) {
     ASSERT_EQ(output.unique_keys().size(), 1U);
 }
 
+TEST_F(FixRelationInfoTest, distinct) {
+    add({
+        "testing",
+        {
+            { "C1", t::Int(64U, NON_NULL), },
+            { "C2", t::Int(64U, NON_NULL), },
+            { "C3", t::Int(64U, NON_NULL), },
+        },
+        {}});
+    auto expr = apply(f.DistinctExpression(f.ScanExpression(f.Name("testing"))));
+    auto node = cast<model::expression::relation::DistinctExpression>(expr.get());
+    cast<model::expression::relation::ScanExpression>(node->operand());
+
+    auto relation = extract_relation(node);
+    auto&& output = relation->output();
+    ASSERT_EQ(output.order().size(), 0U);
+    ASSERT_EQ(output.unique_keys().size(), 1U);
+    {
+        std::set<std::shared_ptr<binding::VariableBinding>> key {};
+        key.emplace(output.columns()[0]);
+        key.emplace(output.columns()[1]);
+        key.emplace(output.columns()[2]);
+        EXPECT_NE(output.unique_keys().find(key), output.unique_keys().end());
+    }
+}
+
+TEST_F(FixRelationInfoTest, distinct_elision) {
+    add({
+        "testing",
+        {
+            { "C1", t::Int(64U, NON_NULL), },
+            { "C2", t::Int(64U, NON_NULL), },
+            { "C3", t::Int(64U, NON_NULL), },
+        },
+        {
+            {
+                { "C2" }
+            }
+        }});
+    auto expr = apply(f.DistinctExpression(
+        f.SelectionExpression(
+            f.ScanExpression(f.Name("testing")),
+            f.BinaryOperator(BOp::EQUAL, var("C2"), literal(1))
+            )));
+    auto node = cast<model::expression::relation::ScanExpression>(expr.get());
+
+    auto relation = extract_relation(node);
+    auto&& output = relation->output();
+    ASSERT_EQ(output.order().size(), 1U);
+    ASSERT_EQ(output.unique_keys().size(), 1U);
+    {
+        std::set<std::shared_ptr<binding::VariableBinding>> key {};
+        key.emplace(output.columns()[1]);
+        EXPECT_NE(output.unique_keys().find(key), output.unique_keys().end());
+    }
+}
+
 TEST_F(FixRelationInfoTest, join) {
     add({
         "T1",
@@ -297,14 +354,13 @@ TEST_F(FixRelationInfoTest, join_pk) {
             }
         }});
     auto expr = apply(f.JoinExpression(
-        JoinKind::INNER,
+        JoinKind::CROSS,
         f.SelectionExpression(
             f.ScanExpression(f.Name("T1")),
             f.BinaryOperator(BOp::LESS_THAN, var("C1"), literal(1))),
         f.SelectionExpression(
             f.ScanExpression(f.Name("T2")),
-            f.BinaryOperator(BOp::LESS_THAN, var("C1"), literal(1))),
-        f.BinaryOperator(BOp::EQUAL, var("T1", "C1"), var("T2", "C1"))
+            f.BinaryOperator(BOp::LESS_THAN, var("C1"), literal(1)))
     ));
     auto node = cast<model::expression::relation::JoinExpression>(expr.get());
     cast<model::expression::relation::ScanExpression>(node->left());
@@ -402,6 +458,204 @@ TEST_F(FixRelationInfoTest, join_right_pk) {
     ASSERT_EQ(output.unique_keys().size(), 0U);
 }
 
+TEST_F(FixRelationInfoTest, join_inner_eq) {
+    add({
+        "T1",
+        {
+            { "C1", t::Int(64U, NON_NULL), },
+            { "C2", t::Int(64U, NON_NULL), },
+        },
+        {
+            {
+                { "C1" }
+            }
+        }});
+    add({
+        "T2",
+        {
+            { "C1", t::Int(64U, NON_NULL), },
+            { "C2", t::Int(64U, NON_NULL), },
+        },
+        {
+            {
+                { "C1" }
+            }
+        }});
+    auto expr = apply(f.JoinExpression(
+        JoinKind::INNER,
+        f.SelectionExpression(
+            f.ScanExpression(f.Name("T1")),
+            f.BinaryOperator(BOp::LESS_THAN, var("C1"), literal(1))),
+        f.SelectionExpression(
+            f.ScanExpression(f.Name("T2")),
+            f.BinaryOperator(BOp::LESS_THAN, var("C1"), literal(1))),
+        f.BinaryOperator(BOp::EQUAL, var("T1", "C1"), var("T2", "C1"))
+    ));
+    auto node = cast<model::expression::relation::JoinExpression>(expr.get());
+    cast<model::expression::relation::ScanExpression>(node->left());
+    cast<model::expression::relation::ScanExpression>(node->right());
+
+    auto relation = extract_relation(node);
+    auto&& output = relation->output();
+    ASSERT_EQ(output.order().size(), 0U);
+    ASSERT_EQ(output.unique_keys().size(), 2U);
+    {
+        std::set<std::shared_ptr<binding::VariableBinding>> key {};
+        key.emplace(output.columns()[0]);
+        EXPECT_NE(output.unique_keys().find(key), output.unique_keys().end());
+    }
+    {
+        std::set<std::shared_ptr<binding::VariableBinding>> key {};
+        key.emplace(output.columns()[2]);
+        EXPECT_NE(output.unique_keys().find(key), output.unique_keys().end());
+    }
+}
+
+TEST_F(FixRelationInfoTest, join_left_outer_eq) {
+    add({
+        "T1",
+        {
+            { "C1", t::Int(64U, NON_NULL), },
+            { "C2", t::Int(64U, NON_NULL), },
+        },
+        {
+            {
+                { "C1" }
+            }
+        }});
+    add({
+        "T2",
+        {
+            { "C1", t::Int(64U, NON_NULL), },
+            { "C2", t::Int(64U, NON_NULL), },
+        },
+        {
+            {
+                { "C1" }
+            }
+        }});
+    auto expr = apply(f.JoinExpression(
+        JoinKind::LEFT_OUTER,
+        f.SelectionExpression(
+            f.ScanExpression(f.Name("T1")),
+            f.BinaryOperator(BOp::LESS_THAN, var("C1"), literal(1))),
+        f.SelectionExpression(
+            f.ScanExpression(f.Name("T2")),
+            f.BinaryOperator(BOp::LESS_THAN, var("C1"), literal(1))),
+        f.BinaryOperator(BOp::EQUAL, var("T1", "C1"), var("T2", "C1"))
+    ));
+    auto node = cast<model::expression::relation::JoinExpression>(expr.get());
+    cast<model::expression::relation::ScanExpression>(node->left());
+    cast<model::expression::relation::ScanExpression>(node->right());
+
+    auto relation = extract_relation(node);
+    auto&& output = relation->output();
+    ASSERT_EQ(output.order().size(), 0U);
+    ASSERT_EQ(output.unique_keys().size(), 1U);
+    {
+        std::set<std::shared_ptr<binding::VariableBinding>> key {};
+        key.emplace(output.columns()[0]);
+        EXPECT_NE(output.unique_keys().find(key), output.unique_keys().end());
+    }
+}
+
+TEST_F(FixRelationInfoTest, join_right_outer_eq) {
+    add({
+        "T1",
+        {
+            { "C1", t::Int(64U, NON_NULL), },
+            { "C2", t::Int(64U, NON_NULL), },
+        },
+        {
+            {
+                { "C1" }
+            }
+        }});
+    add({
+        "T2",
+        {
+            { "C1", t::Int(64U, NON_NULL), },
+            { "C2", t::Int(64U, NON_NULL), },
+        },
+        {
+            {
+                { "C1" }
+            }
+        }});
+    auto expr = apply(f.JoinExpression(
+        JoinKind::RIGHT_OUTER,
+        f.SelectionExpression(
+            f.ScanExpression(f.Name("T1")),
+            f.BinaryOperator(BOp::LESS_THAN, var("C1"), literal(1))),
+        f.SelectionExpression(
+            f.ScanExpression(f.Name("T2")),
+            f.BinaryOperator(BOp::LESS_THAN, var("C1"), literal(1))),
+        f.BinaryOperator(BOp::EQUAL, var("T1", "C1"), var("T2", "C1"))
+    ));
+    auto node = cast<model::expression::relation::JoinExpression>(expr.get());
+    cast<model::expression::relation::ScanExpression>(node->left());
+    cast<model::expression::relation::ScanExpression>(node->right());
+
+    auto relation = extract_relation(node);
+    auto&& output = relation->output();
+    ASSERT_EQ(output.order().size(), 0U);
+    ASSERT_EQ(output.unique_keys().size(), 1U);
+    {
+        std::set<std::shared_ptr<binding::VariableBinding>> key {};
+        key.emplace(output.columns()[2]);
+        EXPECT_NE(output.unique_keys().find(key), output.unique_keys().end());
+    }
+}
+
+TEST_F(FixRelationInfoTest, join_full_outer_eq) {
+    add({
+        "T1",
+        {
+            { "C1", t::Int(64U, NON_NULL), },
+            { "C2", t::Int(64U, NON_NULL), },
+        },
+        {
+            {
+                { "C1" }
+            }
+        }});
+    add({
+        "T2",
+        {
+            { "C1", t::Int(64U, NON_NULL), },
+            { "C2", t::Int(64U, NON_NULL), },
+        },
+        {
+            {
+                { "C1" }
+            }
+        }});
+    auto expr = apply(f.JoinExpression(
+        JoinKind::FULL_OUTER,
+        f.SelectionExpression(
+            f.ScanExpression(f.Name("T1")),
+            f.BinaryOperator(BOp::LESS_THAN, var("C1"), literal(1))),
+        f.SelectionExpression(
+            f.ScanExpression(f.Name("T2")),
+            f.BinaryOperator(BOp::LESS_THAN, var("C1"), literal(1))),
+        f.BinaryOperator(BOp::EQUAL, var("T1", "C1"), var("T2", "C1"))
+    ));
+    auto node = cast<model::expression::relation::JoinExpression>(expr.get());
+    cast<model::expression::relation::ScanExpression>(node->left());
+    cast<model::expression::relation::ScanExpression>(node->right());
+
+    auto relation = extract_relation(node);
+    auto&& output = relation->output();
+    ASSERT_EQ(output.order().size(), 0U);
+    ASSERT_EQ(output.unique_keys().size(), 1U);
+    {
+        std::set<std::shared_ptr<binding::VariableBinding>> key {};
+        key.emplace(output.columns()[0]);
+        key.emplace(output.columns()[2]);
+        EXPECT_NE(output.unique_keys().find(key), output.unique_keys().end());
+    }
+}
+
 TEST_F(FixRelationInfoTest, order) {
     add({
         "testing",
@@ -482,6 +736,126 @@ TEST_F(FixRelationInfoTest, order_desc) {
         key.emplace(output.columns()[0]);
         EXPECT_NE(output.unique_keys().find(key), output.unique_keys().end());
     }
+}
+
+TEST_F(FixRelationInfoTest, order_elision) {
+    add({
+        "testing",
+        {
+            { "C1", t::Int(64U, NON_NULL), },
+            { "C2", t::Int(64U, NON_NULL), },
+            { "C3", t::Int(64U, NON_NULL), },
+        },
+        {
+            {
+                { "C1" }
+            }
+        }});
+    auto expr = apply(f.OrderExpression(
+        f.SelectionExpression(
+            f.ScanExpression(f.Name("testing")),
+            f.BinaryOperator(BOp::LESS_THAN, var("C1"), literal(1))),
+        {
+            f.OrderExpressionElement(var("C1")),
+        }
+    ));
+    auto node = cast<model::expression::relation::ScanExpression>(expr.get());
+
+    auto relation = extract_relation(node);
+    auto&& output = relation->output();
+    ASSERT_EQ(output.order().size(), 1U);
+    {
+        auto&& o = output.order()[0];
+        EXPECT_EQ(o.column(), output.columns()[0]);
+        EXPECT_EQ(o.direction(), Dir::ASCENDANT);
+    }
+
+    ASSERT_EQ(output.unique_keys().size(), 1U);
+    {
+        std::set<std::shared_ptr<binding::VariableBinding>> key {};
+        key.emplace(output.columns()[0]);
+        EXPECT_NE(output.unique_keys().find(key), output.unique_keys().end());
+    }
+}
+
+TEST_F(FixRelationInfoTest, order_elision_partial) {
+    add({
+        "testing",
+        {
+            { "C1", t::Int(64U, NON_NULL), },
+            { "C2", t::Int(64U, NON_NULL), },
+            { "C3", t::Int(64U, NON_NULL), },
+        },
+        {
+            {
+                { "C1" },
+                { "C2" },
+            }
+        }});
+    auto expr = apply(f.OrderExpression(
+        f.SelectionExpression(
+            f.ScanExpression(f.Name("testing")),
+            f.BinaryOperator(BOp::EQUAL, var("C1"), literal(1))),
+        {
+            f.OrderExpressionElement(var("C1")),
+        }
+    ));
+    auto node = cast<model::expression::relation::ScanExpression>(expr.get());
+
+    auto relation = extract_relation(node);
+    auto&& output = relation->output();
+    ASSERT_EQ(output.order().size(), 2U);
+    {
+        auto&& o = output.order()[0];
+        EXPECT_EQ(o.column(), output.columns()[0]);
+        EXPECT_EQ(o.direction(), Dir::ASCENDANT);
+    }
+    {
+        auto&& o = output.order()[1];
+        EXPECT_EQ(o.column(), output.columns()[1]);
+        EXPECT_EQ(o.direction(), Dir::ASCENDANT);
+    }
+
+    ASSERT_EQ(output.unique_keys().size(), 1U);
+    {
+        std::set<std::shared_ptr<binding::VariableBinding>> key {};
+        key.emplace(output.columns()[0]);
+        key.emplace(output.columns()[1]);
+        EXPECT_NE(output.unique_keys().find(key), output.unique_keys().end());
+    }
+}
+
+TEST_F(FixRelationInfoTest, order_complex) {
+    add({
+        "testing",
+        {
+            { "C1", t::Int(64U, NON_NULL), },
+            { "C2", t::Int(64U, NON_NULL), },
+            { "C3", t::Int(64U, NON_NULL), },
+        },
+        {
+        }});
+    auto expr = apply(f.OrderExpression(
+        f.ScanExpression(f.Name("testing")),
+        {
+            f.OrderExpressionElement(literal(100)),
+            f.OrderExpressionElement(var("C1"), model::expression::relation::OrderExpression::Direction::DESCENDANT),
+            f.OrderExpressionElement(f.UnaryOperator(model::expression::UnaryOperator::Kind::SIGN_INVERSION, var("C3"))),
+        }
+    ));
+    auto node = cast<model::expression::relation::OrderExpression>(expr.get());
+    cast<model::expression::relation::ScanExpression>(node->operand());
+
+    auto relation = extract_relation(node);
+    auto&& output = relation->output();
+    ASSERT_EQ(output.order().size(), 1U);
+    {
+        auto&& o = output.order()[0];
+        EXPECT_EQ(o.column(), output.columns()[0]);
+        EXPECT_EQ(o.direction(), Dir::DESCENDANT);
+    }
+
+    ASSERT_EQ(output.unique_keys().size(), 0U);
 }
 
 TEST_F(FixRelationInfoTest, projection) {
@@ -577,9 +951,7 @@ TEST_F(FixRelationInfoTest, projection_unknown) {
             }
         }});
     auto expr = apply(f.ProjectionExpression(
-        f.SelectionExpression(
-            f.ScanExpression(f.Name("testing")),
-            f.BinaryOperator(BOp::EQUAL, var("C1"), literal(1))),
+        f.ScanExpression(f.Name("testing")),
         {
             f.ProjectionExpressionColumn(literal(1)),
         }
@@ -591,5 +963,37 @@ TEST_F(FixRelationInfoTest, projection_unknown) {
     auto&& output = relation->output();
     ASSERT_EQ(output.order().size(), 0U);
     ASSERT_EQ(output.unique_keys().size(), 0U);
+}
+
+TEST_F(FixRelationInfoTest, projection_name) {
+    add({
+        "testing",
+        {
+            { "C1", t::Int(64U, NON_NULL), },
+            { "C2", t::Int(64U, NON_NULL), },
+            { "C3", t::Int(64U, NON_NULL), },
+        },
+        {
+        }});
+    auto expr = apply(f.ProjectionExpression(
+        f.ScanExpression(f.Name("testing")),
+        {
+            f.ProjectionExpressionColumn(var("C1"), f.Name("A")),
+            f.ProjectionExpressionColumn(literal(1), f.Name("B")),
+        }
+    ));
+    auto node = cast<model::expression::relation::ProjectionExpression>(expr.get());
+    cast<model::expression::relation::ScanExpression>(node->operand());
+
+    auto type = extract_relation_type(node);
+    ASSERT_EQ(type->columns().size(), 2);
+    {
+        auto&& c = type->columns()[0];
+        EXPECT_EQ(c.name(), "A");
+    }
+    {
+        auto&& c = type->columns()[1];
+        EXPECT_EQ(c.name(), "B");
+    }
 }
 }  // namespace shakujo::analyzer::optimize

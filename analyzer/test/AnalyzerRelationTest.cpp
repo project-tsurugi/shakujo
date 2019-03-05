@@ -1045,4 +1045,15 @@ TEST_F(AnalyzerRelationTest, order_complex) {
     }
 }
 
+TEST_F(AnalyzerRelationTest, distinct) {
+    add(schema::TableInfo { "testing", {
+        { "C1", t::Int(32U, NON_NULL), },
+    }});
+    auto expr = analyze(f.DistinctExpression(f.ScanExpression(f.Name("testing"))));
+    success();
+
+    auto relation = extract_relation(expr.get());
+    auto& cols = relation->process().columns();
+    ASSERT_EQ(1U, cols.size());
+}
 }  // namespace shakujo::analyzer

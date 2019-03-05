@@ -247,4 +247,9 @@ TEST_F(SyntaxValidatorRelationTest, OrderExpression) {
             f.OrderExpressionElement({}),
         }));
 }
+
+TEST_F(SyntaxValidatorRelationTest, DistinctExpression) {
+    validate(f.DistinctExpression(literal()));
+    should_error(f.DistinctExpression());
+}
 }  // namespace shakujo::analyzer

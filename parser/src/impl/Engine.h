@@ -162,12 +162,16 @@ public:
     //     ;
     std::unique_ptr<model::expression::Expression> visit(Grammar::QuerySpecificationContext *);
 
+    enum class SetQuantifier {
+        ALL,
+        DISTINCT,
+    };
+
     // setQuantifier
     //     : K_ALL
     //     | K_DISTINCT
     //     ;
-    // FIXME: impl
-    void visit(Grammar::SetQuantifierContext *);
+    SetQuantifier visit(Grammar::SetQuantifierContext *);
 
     // selectList
     //     : '*'

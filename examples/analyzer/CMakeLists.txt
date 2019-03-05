@@ -40,10 +40,16 @@ add_test(
         "SELECT C3 FROM example WHERE C1 = 1"
 )
 add_test(
+    NAME example-analyzer-distinct-elision
+    COMMAND
+        example-analyzer
+        "SELECT DISTINCT C1 FROM example"
+)
+add_test(
     NAME example-analyzer-join
     COMMAND
         example-analyzer
-        "SELECT C2 * VALUE FROM example INNER JOIN side ON C1 = K WHERE C2 > 0.0 AND VALUE > 0.0"
+        "SELECT DISTINCT C1, C2 * VALUE FROM example INNER JOIN side ON C1 = K WHERE C2 > 0.0 AND VALUE > 0.0"
 )
 add_test(
     NAME example-analyzer-insert

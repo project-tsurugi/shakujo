@@ -458,10 +458,12 @@ protected:
         return true;
     }
 
-    //bool enter(model::expression::relation::DistinctExpression const* node) override {
-    //    // FIXME: impl
-    //    return true;
-    //}
+    bool enter(model::expression::relation::DistinctExpression const* node) override {
+        if (!is_defined(node->operand())) {
+            report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "distinct expression must have a valid operand");
+        }
+        return true;
+    }
 
     bool enter(model::expression::relation::AggregationExpression const* node) override {
         if (!is_defined(node->operand())) {
