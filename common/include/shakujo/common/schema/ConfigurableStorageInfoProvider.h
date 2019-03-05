@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <utility>
 #include <stdexcept>
@@ -48,6 +49,7 @@ public:
 
     /**
      * @brief adds an table.
+     * if the table was overwritten, a reference to existing table will be also changed.
      * @param table the target table information
      * @param overwrite overwrite the existing table
      * @return this
@@ -57,12 +59,13 @@ public:
         std::unique_lock lock { mutex_ };
         if (auto it = entries_.find(table.name()); it != entries_.end()) {
             if (overwrite) {
-                it->second = std::move(table);
+                *it->second = std::move(table);
             } else {
                 throw std::invalid_argument(util::to_string("table \"", table.name(), "\" already exists"));
             }
         } else {
-            entries_.emplace(table.name(), std::move(table));
+            auto name = table.name();
+            entries_.emplace(std::move(name), std::make_unique<TableInfo>(std::move(table)));
         }
         return *this;
     }
@@ -70,7 +73,7 @@ public:
     TableInfo const& find_table(core::Name const& name) const override {
         std::unique_lock lock { mutex_ };
         if (auto it = entries_.find(name); it != entries_.end()) {
-            return it->second;
+            return *it->second;
         }
         return StorageInfoProvider::find_table(name);
     }
@@ -125,7 +128,7 @@ private:
         bool case_sensitive_;
     };
 
-    std::map<common::core::Name, TableInfo, Comparator> entries_;
+    std::map<common::core::Name, std::unique_ptr<TableInfo>, Comparator> entries_;
     mutable std::mutex mutex_ {};
 };
 
