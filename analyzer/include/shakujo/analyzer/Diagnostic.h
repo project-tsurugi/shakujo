@@ -149,7 +149,7 @@ public:
         INCOMPATIBLE_FUNCTION_ARGUMENT_TYPE,
 
         /**
-         * @brief function quantifier is mismatched (may not occur).
+         * @brief function quantifier is mismatched.
          */
         INCOMPATIBLE_FUNCTION_QUANTIFIER,
 

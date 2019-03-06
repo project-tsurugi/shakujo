@@ -81,6 +81,8 @@ public:
 
         /**
          * @brief returns the output column binding.
+         * If the both left_source() and right_source() are invalid, this may return a pseud variable
+         * which always provides nullptr.
          * @return the output column binding
          */
         std::shared_ptr<VariableBinding> output() const {

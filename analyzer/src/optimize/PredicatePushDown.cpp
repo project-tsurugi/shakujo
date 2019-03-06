@@ -108,7 +108,7 @@ public:
         }
 
         // push-down predicate terms
-        auto relation = extract(node);
+        auto relation = relation_of(node);
         VariableRewriter rewriter {};
         rewriter.add_rule(relation->output().columns(), relation->process().columns());
         preds.rewriter.merge(rewriter);
@@ -126,11 +126,11 @@ public:
     }
 
     void visit(model::expression::relation::ProjectionExpression* node, Predicates&& prev) override {
-        auto relation = extract(node);
+        auto relation = relation_of(node);
         VariableRewriter rewriter {};
         for (auto* column : node->columns()) {
             if (auto src = extract_variable_deep(column->value())) {
-                auto dst = extract(column);
+                auto dst = variable_of(column);
                 rewriter.add_rule(dst, src);
             }
         }
@@ -155,7 +155,7 @@ public:
                 node->condition({});
             }
         }
-        auto relation = extract(node);
+        auto relation = relation_of(node);
         auto&& join = relation->join_strategy();
 
         TermCollector collector;
@@ -174,7 +174,7 @@ public:
                     rewriter.add_rule(column.output(), column.left_source());
                 }
             }
-            auto opposite = extract(dynamic_pointer_cast<model::key::RelationKey::Provider>(node->right()));
+            auto opposite = relation_of(dynamic_pointer_cast<model::key::RelationKey::Provider>(node->right()));
             rewriter.deny(opposite->output().columns());
             next.rewriter.merge(rewriter);
             for (auto&& term : collector.terms) {
@@ -194,7 +194,7 @@ public:
                     rewriter.add_rule(column.output(), column.right_source());
                 }
             }
-            auto opposite = extract(dynamic_pointer_cast<model::key::RelationKey::Provider>(node->left()));
+            auto opposite = relation_of(dynamic_pointer_cast<model::key::RelationKey::Provider>(node->left()));
             rewriter.deny(opposite->output().columns());
             next.rewriter.merge(rewriter);
             for (auto&& term : collector.terms) {
@@ -216,7 +216,7 @@ public:
     void visit(model::expression::relation::OrderExpression* node, Predicates&& preds) override {
         // through
         preds.through_heavy = true;
-        auto relation = extract(node);
+        auto relation = relation_of(node);
         VariableRewriter rewriter {};
         rewriter.add_rule(relation->output().columns(), relation->process().columns());
         preds.rewriter.merge(rewriter);
@@ -226,7 +226,7 @@ public:
     void visit(model::expression::relation::DistinctExpression* node, Predicates&& preds) override {
         // through
         preds.through_heavy = true;
-        auto relation = extract(node);
+        auto relation = relation_of(node);
         VariableRewriter rewriter {};
         rewriter.add_rule(relation->output().columns(), relation->process().columns());
         preds.rewriter.merge(rewriter);
@@ -247,7 +247,7 @@ public:
             return;
         }
         {
-            auto relation = extract(dynamic_pointer_cast<model::key::RelationKey::Provider>(node));
+            auto relation = relation_of(dynamic_pointer_cast<model::key::RelationKey::Provider>(node));
             VariableRewriter rewriter {};
             rewriter.add_rule(relation->output().columns(), relation->output().columns());
             preds.rewriter.merge(rewriter);
@@ -281,7 +281,7 @@ public:
 
         bless(selection, type_of(selection->operand()));
 
-        auto parent = extract(dynamic_pointer_cast<model::key::RelationKey::Provider>(selection->operand()));
+        auto parent = relation_of(dynamic_pointer_cast<model::key::RelationKey::Provider>(selection->operand()));
         auto relation = std::make_shared<binding::RelationBinding>(parent->output(), parent->output());
         selection->relation_key(context_.bindings().create_key(std::move(relation)));
     }
@@ -290,13 +290,13 @@ public:
         assert(term);  // NOLINT
         auto variables = VariableRewriter::collect(term.node);
         for (auto* ref : variables) {
-            auto var = extract(ref);
+            auto var = variable_of(ref);
             if (auto rewrite = preds.rewriter.apply(var); !is_valid(rewrite)) {
                 return false;
             }
         }
         for (auto* ref : variables) {
-            auto var = extract(ref);
+            auto var = variable_of(ref);
             auto rewrite = preds.rewriter.apply(var);
             assert(is_valid(rewrite));  // NOLINT
             ref->variable_key(context_.bindings().create_key(rewrite));
@@ -311,11 +311,11 @@ public:
         return context_.bindings().get(node->expression_key())->type();
     }
 
-    std::shared_ptr<binding::RelationBinding> extract(model::key::RelationKey::Provider* node) {
+    std::shared_ptr<binding::RelationBinding> relation_of(model::key::RelationKey::Provider *node) {
         return context_.bindings().get(node->relation_key());
     }
 
-    std::shared_ptr<binding::VariableBinding> extract(model::key::VariableKey::Provider* node) {
+    std::shared_ptr<binding::VariableBinding> variable_of(model::key::VariableKey::Provider *node) {
         return context_.bindings().get(node->variable_key());
     }
 
@@ -330,7 +330,7 @@ public:
 
     std::shared_ptr<binding::VariableBinding> extract_variable_deep(model::expression::Expression* node) {
         if (auto* ref = dynamic_pointer_cast_if<model::expression::VariableReference>(node)) {
-            return extract(ref);
+            return variable_of(ref);
         }
         if (auto* cast = dynamic_pointer_cast_if<model::expression::ImplicitCast>(node)) {
             return extract_variable_deep(cast->operand());

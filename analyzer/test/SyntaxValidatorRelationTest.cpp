@@ -145,6 +145,12 @@ TEST_F(SyntaxValidatorRelationTest, AggregationExpression) {
         }));
     validate(f.AggregationExpression(
         literal(),
+        {},
+        {
+            f.AggregationExpressionColumn({}, Quantifier::ABSENT, literal()),
+        }));
+    validate(f.AggregationExpression(
+        literal(),
         {
             f.VariableReference(f.Name("c")),
         },
@@ -204,7 +210,7 @@ TEST_F(SyntaxValidatorRelationTest, AggregationExpression) {
         literal(),
         {},
         {
-            f.AggregationExpressionColumn({}, Quantifier::ABSENT, literal()),
+            f.AggregationExpressionColumn({}, Quantifier::ASTERISK, literal()),
         }));
     should_error(f.AggregationExpression(
         literal(),
