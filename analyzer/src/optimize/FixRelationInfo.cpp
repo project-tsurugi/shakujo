@@ -19,10 +19,10 @@
 #include <set>
 
 #include <cassert>
-#include <shakujo/common/core/type/Relation.h>
 
 #include "ComparisonTerm.h"
 
+#include "shakujo/common/core/type/Relation.h"
 #include "shakujo/common/util/utility.h"
 
 #include "shakujo/model/util/NodeWalker.h"
@@ -49,6 +49,11 @@ public:
     std::shared_ptr<binding::RelationBinding> extract(T* node) {
         auto* provider = dynamic_pointer_cast<model::key::RelationKey::Provider>(node);
         return context_.bindings().get(provider->relation_key());
+    }
+
+    template<class T = common::core::Type>
+    T const* extract_type(model::expression::Expression* node) {
+        return dynamic_pointer_cast<T>(context_.bindings().get(node->expression_key())->type());
     }
 
     template<class T>
@@ -89,7 +94,7 @@ public:
             }
             profile.order() = std::move(order);
         }
-        rebuild_type(node, *relation);
+        // type information is unchanged
     }
 
     void exit(model::expression::relation::SelectionExpression* node) override {
@@ -97,7 +102,7 @@ public:
         auto relation = extract(node);
         relation->process() = parent->output();
         relation->output() = parent->output();
-        rebuild_type(node, *relation);
+        inherit_type(node, extract_type<common::core::type::Relation>(node->operand()));
     }
 
     void exit(model::expression::relation::LimitExpression* node) override {
@@ -105,7 +110,7 @@ public:
         auto relation = extract(node);
         relation->process() = parent->output();
         relation->output() = parent->output();
-        rebuild_type(node, *relation);
+        inherit_type(node, extract_type<common::core::type::Relation>(node->operand()));
     }
 
     void exit(model::expression::relation::DistinctExpression* node) override {
@@ -123,7 +128,7 @@ public:
 
         assert(relation->output().unique_keys().empty());  // NOLINT
         relation->output().unique_keys().emplace(relation->output().columns().begin(), relation->output().columns().end());
-        rebuild_type(node, *relation);
+        inherit_type(node, extract_type<common::core::type::Relation>(node->operand()));
     }
 
     void exit(model::expression::relation::JoinExpression* node) override {
@@ -270,7 +275,18 @@ public:
                 }
             }
         }
-        rebuild_type(node, *relation);
+
+        std::vector<common::core::type::Relation::Column> type_columns {};
+        for (auto&& column : strategy.columns()) {
+            // FIXME: naming rules
+            assert(column.output()->name().segments().size() == 1);  // NOLINT
+            type_columns.emplace_back(
+                column.qualifiers(),
+                column.output()->name().segments()[0],
+                make_clone(column.output()->type()));
+        }
+        node->expression_key(context_.bindings().create_key(std::make_shared<binding::ExpressionBinding>(
+            std::make_unique<common::core::type::Relation>(std::move(type_columns)))));
     }
 
     void exit(model::expression::relation::OrderExpression* node) override {
@@ -317,7 +333,7 @@ public:
                 return;
             }
         }
-        rebuild_type(node, *relation);
+        inherit_type(node, extract_type<common::core::type::Relation>(node->operand()));
     }
 
     void exit(model::expression::relation::ProjectionExpression* node) override {
@@ -388,7 +404,7 @@ public:
         }
         binding::RelationBinding::Profile output { std::move(columns) };
         relation->output() = std::move(output);
-        rebuild_type(node, *relation);
+        rebuild_type(node, extract_type<common::core::type::Relation>(node->operand()), {});
     }
 
     void exit(model::statement::dml::EmitStatement* node) override {
@@ -420,13 +436,25 @@ public:
         relation->process() = parent->output();
     }
 
-    void rebuild_type(model::expression::Expression* node, binding::RelationBinding const& relation) {
+    void rebuild_type(
+            model::expression::Expression* node,
+            common::core::type::Relation const* parent_type,
+            std::map<std::shared_ptr<binding::VariableBinding>, std::size_t> const& column_mapping) {
+        auto relation = extract(node);
         std::vector<common::core::type::Relation::Column> columns {};
-        for (auto&& var : relation.output().columns()) {
+        for (auto&& var : relation->output().columns()) {
+            if (auto it = column_mapping.find(var); it != column_mapping.end()) {
+                auto&& inherited = parent_type->at(it->second);
+                columns.emplace_back(inherited.qualifiers(), inherited.name(), make_clone(var->type()));
+            }
             columns.emplace_back(make_clone(var->type()));
         }
         node->expression_key(context_.bindings().create_key(std::make_shared<binding::ExpressionBinding>(
             std::make_unique<common::core::type::Relation>(std::move(columns)))));
+    }
+
+    void inherit_type(model::expression::Expression* node, common::core::type::Relation const* parent_type) {
+        node->expression_key(context_.bindings().create_key(std::make_shared<binding::ExpressionBinding>(make_clone(parent_type))));
     }
 
     std::shared_ptr<binding::VariableBinding> collect_variable(model::expression::Expression* node, bool ignore_cast = false) {

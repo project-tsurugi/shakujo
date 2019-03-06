@@ -1318,6 +1318,7 @@ void Engine::visit(model::expression::relation::JoinExpression* node, ScopeConte
     result_columns.reserve(result_join_columns.size());
     result_variables.reserve(result_join_columns.size());
     for (auto&& column : result_join_columns) {
+        // FIXME: naming rules
         assert(column.output()->name().segments().size() == 1);  // NOLINT
         result_variables.emplace_back(column.output());
         result_columns.emplace_back(
