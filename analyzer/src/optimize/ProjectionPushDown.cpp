@@ -18,7 +18,6 @@
 #include <map>
 
 #include <cassert>
-#include <ldap.h>
 
 #include "VariableRewriter.h"
 #include "SimplifyPredicate.h"
