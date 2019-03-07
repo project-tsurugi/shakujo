@@ -21,6 +21,7 @@
 #include "optimize/PredicatePushDown.h"
 #include "optimize/SelectScan.h"
 #include "optimize/SimplifyCast.h"
+#include "optimize/ProjectionPushDown.h"
 #include "optimize/FixRelationInfo.h"
 
 namespace shakujo::analyzer {
@@ -37,6 +38,7 @@ public:
         apply_engine<optimize::SimplifyCast>(node);
         apply_engine<optimize::SelectScan>(node);
         apply_engine<optimize::SimplifyCast>(node);
+        apply_engine<optimize::ProjectionPushDown>(node);
         apply_engine<optimize::FixRelationInfo>(node);
     }
 

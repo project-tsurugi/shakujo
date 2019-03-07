@@ -35,6 +35,7 @@
 namespace shakujo::analyzer::analyze {
 
 using common::util::dynamic_pointer_cast;
+using common::util::dynamic_pointer_cast_if;
 using common::util::make_clone;
 using common::util::equals;
 using common::util::is_defined;
@@ -405,54 +406,63 @@ void Engine::visit(model::expression::VariableReference* node, ScopeContext& sco
 }
 
 void Engine::visit(model::expression::FunctionCall* node, ScopeContext& scope) {
+    std::vector<model::expression::Expression*> arguments;
+    arguments.reserve(node->arguments().size());
     for (auto* argument : node->arguments()) {
         dispatch(argument, scope);
+        arguments.emplace_back(argument);
     }
-
-    auto r = scope.functions().find(node->name());
-    if (!r || !equals(r.name(), node->name())) {
-        // target function is not found
-        report(node, Diagnostic::Code::FUNCTION_NOT_FOUND, to_string(node->name()));
+    auto func = resolve_function(node->name(), node->quantifier(), std::move(arguments), scope);
+    if (!is_valid(func)) {
         bless_erroneous_expression(node);
         bless_undefined<binding::FunctionBinding>(node);
-        return;
+    } else {
+        bless(node, func->type());
+        bless(node, std::move(func));
+    }
+}
+
+std::shared_ptr<binding::FunctionBinding> Engine::resolve_function(
+        model::name::Name* name,
+        model::expression::FunctionCall::Quantifier quantifier,
+        std::vector<model::expression::Expression*> arguments,
+        ScopeContext& scope) {
+    auto r = scope.functions().find(name);
+    if (!r || !equals(r.name(), name)) {
+        // target function is not found
+        report(name, Diagnostic::Code::FUNCTION_NOT_FOUND, to_string(name));
+        return std::make_shared<binding::FunctionBinding>();
     }
 
     auto func = r.element();
     assert(is_defined(func));  // NOLINT
     if (!func->has_id()) {
         // target variable is ambiguous
-        report(node, Diagnostic::Code::FUNCTION_NOT_IDENTICAL, to_string(node->name()));
-        bless_erroneous_expression(node);
-        bless_undefined<binding::FunctionBinding>(node);
-        return;
+        report(name, Diagnostic::Code::FUNCTION_NOT_IDENTICAL, to_string(name));
+        return std::make_shared<binding::FunctionBinding>();
     }
 
     if (!is_valid(func)) {
         // target function is identically defined, but it is not valid
-        bless_undefined<binding::ExpressionBinding>(node);
-        bless_undefined<binding::FunctionBinding>(node);
-        return;
+        return std::make_shared<binding::FunctionBinding>();
     }
 
-    std::vector<binding::ExpressionBinding const*> arguments;
-    arguments.reserve(node->arguments().size());
-    for (auto* argument : node->arguments()) {
+    std::vector<binding::ExpressionBinding const*> argument_exprs;
+    argument_exprs.reserve(arguments.size());
+    for (auto* argument : arguments) {
         auto expr = extract_binding(argument);
         if (!is_valid(expr)) {
-            bless_undefined<binding::ExpressionBinding>(node);
-            bless_undefined<binding::FunctionBinding>(node);
-            return;
+            return std::make_shared<binding::FunctionBinding>();
         }
-        arguments.push_back(expr.get());
+        argument_exprs.push_back(expr.get());
     }
 
     if (func->is_overload_stub()) {
         using NQ = model::expression::FunctionCall::Quantifier;
         using BQ = binding::FunctionBinding::Quantifier;
-        switch (node->quantifier()) {
+        switch (quantifier) {
             case NQ::ABSENT:
-                func = func->resolve_overload(arguments);
+                func = func->resolve_overload(argument_exprs);
                 break;
             case NQ::ASTERISK:
                 assert(arguments.size() == 0U);  // NOLINT
@@ -460,33 +470,30 @@ void Engine::visit(model::expression::FunctionCall* node, ScopeContext& scope) {
                 break;
             case NQ::ALL:
                 assert(arguments.size() == 1U);  // NOLINT
-                func = func->resolve_overload(BQ::ALL, arguments[0]);
+                func = func->resolve_overload(BQ::ALL, argument_exprs[0]);
                 break;
             case NQ::DISTINCT:
                 assert(arguments.size() == 1U);  // NOLINT
-                func = func->resolve_overload(BQ::DISTINCT, arguments[0]);
+                func = func->resolve_overload(BQ::DISTINCT, argument_exprs[0]);
                 break;
             default:
                 std::abort();
         }
         if (!is_valid(func) || func->is_overload_stub()) {
             std::vector<common::core::Type const*> types;
-            types.reserve(arguments.size());
-            for (auto* expr : arguments) {
+            types.reserve(argument_exprs.size());
+            for (auto* expr : argument_exprs) {
                 types.push_back(expr->type());
             }
-            report(node, Diagnostic::Code::FUNCTION_NOT_FOUND,
-                to_string("name=", node->name(), ", parameters=", types));
-            bless_erroneous_expression(node);
-            bless_undefined<binding::FunctionBinding>(node);
-            return;
+            report(name, Diagnostic::Code::FUNCTION_NOT_FOUND, to_string("name=", name, ", parameters=", types));
+            return std::make_shared<binding::FunctionBinding>();
         }
     }
     {
         using NQ = model::expression::FunctionCall::Quantifier;
         using BQ = binding::FunctionBinding::Quantifier;
         bool ok;
-        switch (node->quantifier()) {
+        switch (quantifier) {
             case NQ::ABSENT:
                 ok = func->quantifier() == BQ::GROUND || func->quantifier() == BQ::ALL;
                 break;
@@ -503,39 +510,35 @@ void Engine::visit(model::expression::FunctionCall* node, ScopeContext& scope) {
                 std::abort();
         }
         if (!ok) {
-            report(node, Diagnostic::Code::INCOMPATIBLE_FUNCTION_QUANTIFIER, to_string(
-                "name=", node->name(), ", ",
-                "required=", node->quantifier(), ", ",
+            report(name, Diagnostic::Code::INCOMPATIBLE_FUNCTION_QUANTIFIER, to_string(
+                "name=", name, ", ",
+                "required=", quantifier, ", ",
                 "found=", to_string_view(func->quantifier())));
-            bless_erroneous_expression(node);
-            bless_undefined<binding::FunctionBinding>(node);
-            return;
+            return std::make_shared<binding::FunctionBinding>();
         }
     }
     if (arguments.size() != func->parameters().size()) {
-        report(node, Diagnostic::Code::INCOMPATIBLE_FUNCTION_ARGUMENT_COUNT, to_string(
-            node->name(), " requires ", func->parameters().size(), " parameters(s), ",
+        report(name, Diagnostic::Code::INCOMPATIBLE_FUNCTION_ARGUMENT_COUNT, to_string(
+            name, " requires ", func->parameters().size(), " parameters(s), ",
             "but passed ", arguments.size()));
-        bless_erroneous_expression(node);
-        bless_undefined<binding::FunctionBinding>(node);
-        return;
+        return std::make_shared<binding::FunctionBinding>();
     }
 
     for (std::size_t i = 0, n = func->parameters().size(); i < n; ++i) {
         auto&& param = func->parameters()[i];
-        auto expr = arguments[i];
+        auto expr = argument_exprs[i];
         // FIXME: check conversion rule
         if (!typing::is_assignment_convertible(param.type(), *expr, false)) {
-            report(node, Diagnostic::Code::INCOMPATIBLE_FUNCTION_ARGUMENT_TYPE, to_string(
+            report(name, Diagnostic::Code::INCOMPATIBLE_FUNCTION_ARGUMENT_TYPE, to_string(
                 "function: ", func->name(), ", ",
                 "parameter at: ", i, ", ",
                 "parameter type: ", param.type(), ", ",
                 "expression type: ", expr->type()));
         }
-        insert_cast(node->arguments()[i], param.type());
+        insert_cast(arguments[i], param.type());
     }
-    bless(node, func->type());
-    bless(node, std::move(func));
+
+    return func;
 }
 
 void Engine::visit(model::expression::AssignExpression* node, ScopeContext& scope) {
@@ -1025,7 +1028,6 @@ void Engine::visit(model::expression::relation::ProjectionExpression* node, Scop
     }
     std::vector<common::core::type::Relation::Column> columns;
     columns.reserve(node->columns().size());
-    columns.reserve(node->columns().size());
     binding::RelationBinding::Profile output;
     output.columns().reserve(node->columns().size());
     for (auto* c : node->columns()) {
@@ -1318,6 +1320,7 @@ void Engine::visit(model::expression::relation::JoinExpression* node, ScopeConte
     result_columns.reserve(result_join_columns.size());
     result_variables.reserve(result_join_columns.size());
     for (auto&& column : result_join_columns) {
+        // FIXME: naming rules
         assert(column.output()->name().segments().size() == 1);  // NOLINT
         result_variables.emplace_back(column.output());
         result_columns.emplace_back(
@@ -1341,31 +1344,6 @@ void Engine::visit(model::expression::relation::JoinExpression* node, ScopeConte
     });
     bless(node, std::move(relation));
     bless(node, std::move(result_type));
-}
-
-void Engine::visit(model::expression::relation::DistinctExpression* node, ScopeContext& prev) {
-    dispatch(node->operand(), prev);
-    auto source_expr = extract_binding(node->operand());
-    if (!is_valid(source_expr)) {
-        bless_undefined<binding::ExpressionBinding>(node);
-        bless_undefined<binding::RelationBinding>(node);
-        return;
-    }
-    if (!require_relation(node->operand())) {
-        bless_erroneous_expression(node);
-        bless_undefined<binding::RelationBinding>(node);
-        return;
-    }
-    auto source_relation = extract_relation(node->operand());
-    if (!source_relation->output().is_valid()) {
-        bless_undefined<binding::ExpressionBinding>(node);
-        bless_undefined<binding::RelationBinding>(node);
-        return;
-    }
-
-    auto relation = dynamic_pointer_cast<common::core::type::Relation>(source_expr->type());
-    bless(node, make_clone(relation));
-    bless(node, std::make_shared<binding::RelationBinding>(source_relation->output(), source_relation->output()));
 }
 
 void Engine::visit(model::expression::relation::OrderExpression* node, ScopeContext& prev) {
@@ -1404,7 +1382,7 @@ void Engine::visit(model::expression::relation::OrderExpression* node, ScopeCont
             saw_error = true;
         } else {
             if (auto column_ref = find_variable(element->key()); is_valid(column_ref)
-                    && source_relation->output().index_of(*column_ref).has_value()) {
+                && source_relation->output().index_of(*column_ref).has_value()) {
                 bless(element, column_ref);
             } else {
                 auto id = bindings().next_variable_id();
@@ -1425,6 +1403,145 @@ void Engine::visit(model::expression::relation::OrderExpression* node, ScopeCont
 
     bless(node, make_clone(relation));
     bless(node, std::make_shared<binding::RelationBinding>(source_relation->output(), source_relation->output()));
+}
+
+void Engine::visit(model::expression::relation::DistinctExpression* node, ScopeContext& prev) {
+    dispatch(node->operand(), prev);
+    auto source_expr = extract_binding(node->operand());
+    if (!is_valid(source_expr)) {
+        bless_undefined<binding::ExpressionBinding>(node);
+        bless_undefined<binding::RelationBinding>(node);
+        return;
+    }
+    if (!require_relation(node->operand())) {
+        bless_erroneous_expression(node);
+        bless_undefined<binding::RelationBinding>(node);
+        return;
+    }
+    auto source_relation = extract_relation(node->operand());
+    if (!source_relation->output().is_valid()) {
+        bless_undefined<binding::ExpressionBinding>(node);
+        bless_undefined<binding::RelationBinding>(node);
+        return;
+    }
+
+    auto relation = dynamic_pointer_cast<common::core::type::Relation>(source_expr->type());
+    bless(node, make_clone(relation));
+    bless(node, std::make_shared<binding::RelationBinding>(source_relation->output(), source_relation->output()));
+}
+
+void Engine::visit(model::expression::relation::AggregationExpression* node, ScopeContext& prev) {
+    dispatch(node->operand(), prev);
+    auto source_expr = extract_binding(node->operand());
+    if (!is_valid(source_expr)) {
+        bless_undefined<binding::ExpressionBinding>(node);
+        bless_undefined<binding::RelationBinding>(node);
+        bless_undefined_each<binding::VariableBinding>(node->columns());
+        return;
+    }
+    if (!require_relation(node->operand())) {
+        bless_erroneous_expression(node);
+        bless_undefined<binding::RelationBinding>(node);
+        bless_undefined_each<binding::VariableBinding>(node->columns());
+        return;
+    }
+    auto source_relation = extract_relation(node->operand());
+    if (!source_relation->output().is_valid()) {
+        bless_undefined<binding::ExpressionBinding>(node);
+        bless_undefined<binding::RelationBinding>(node);
+        bless_undefined_each<binding::VariableBinding>(node->columns());
+        return;
+    }
+
+    auto relation = dynamic_pointer_cast<common::core::type::Relation>(source_expr->type());
+    RelationScope relation_scope { bindings(), &prev.variables(), relation, source_relation->output().columns() };
+    ScopeContext scope { relation_scope, prev.functions() };
+
+    std::vector<common::core::Name> qualifiers;
+    if (is_defined(node->alias())) {
+        qualifiers.emplace_back(*node->alias());
+    }
+    std::set<std::shared_ptr<binding::VariableBinding>> group_keys {};
+    for (auto* k : node->keys()) {
+        dispatch(k, scope);
+        auto key_expr = extract_binding(k);
+        if (!is_valid(key_expr)) {
+            continue;
+        }
+        if (auto var = find_variable(k); is_valid(var)) {
+            group_keys.emplace(std::move(var));
+        } else {
+            report(k, Diagnostic::Code::INCOMPATIBLE_FUNCTION_QUANTIFIER, to_string(
+                "group key in aggregation expression must be valid column reference"));
+        }
+    }
+
+    std::vector<common::core::type::Relation::Column> columns;
+    columns.reserve(node->columns().size());
+    binding::RelationBinding::Profile output;
+    output.columns().reserve(node->columns().size());
+    for (auto* c : node->columns()) {
+        std::vector<model::expression::Expression*> arguments;
+        if (is_defined(c->operand())) {
+            dispatch(c->operand(), scope);
+            arguments.emplace_back(c->operand());
+        }
+        std::unique_ptr<common::core::Type> column_type {};
+        if (is_defined(c->function())) {
+            auto func = resolve_function(c->function(), c->quantifier(), std::move(arguments), scope);
+            if (!is_valid(func)) {
+                bless_undefined<binding::VariableBinding>(c);
+                bless_undefined<binding::FunctionBinding>(c);
+                continue;
+            }
+            if (!func->is_set_function()) {
+                report(c->function(), Diagnostic::Code::INCOMPATIBLE_FUNCTION_QUANTIFIER, to_string(
+                    "function ", func->name(), " in aggregation expression must be a set function"));
+                bless_undefined<binding::VariableBinding>(c);
+                bless_undefined<binding::FunctionBinding>(c);
+                continue;
+            }
+            column_type = make_clone(func->type());
+            bless(c, std::move(func));
+        } else {
+            // if function name is not defined, the operand must be always defined.
+            assert(is_defined(c->operand()));  // NOLINT
+
+            auto column_expr = extract_binding(c->operand());
+            if (!is_valid(column_expr)) {
+                bless_undefined<binding::VariableBinding>(c);
+                continue;
+            }
+
+            // NOTE: if set function is undefined, the operand must be a group key or just a literal value
+            if (auto* literal = dynamic_pointer_cast_if<model::expression::Literal>(c->operand()); is_defined(literal)) {
+                // ok
+            } else if (auto var = find_variable(c->operand()); is_valid(var) && group_keys.find(var) != group_keys.end()) {
+                // ok
+            } else {
+                report(c->operand(), Diagnostic::Code::INVALID_COLUMN_REFERENCE, to_string(
+                    "bare expression in aggregation expression must be a column reference"));
+                bless_undefined<binding::VariableBinding>(c);
+                continue;
+            }
+            column_type = make_clone(column_expr->type());
+        }
+        std::string simple_name;
+        common::core::Name name;
+        if (is_defined(c->alias())) {
+            simple_name = c->alias()->token();
+            name = { simple_name };
+        }
+        auto var = std::make_shared<binding::VariableBinding>(
+            bindings().next_variable_id(),
+            std::move(name),
+            make_clone(column_type));
+        columns.emplace_back(qualifiers, std::move(simple_name), std::move(column_type));
+        output.columns().emplace_back(var);
+        bless(c, var);
+    }
+    bless(node, std::make_shared<binding::RelationBinding>(source_relation->output(), std::move(output)));
+    bless(node, std::make_unique<common::core::type::Relation>(std::move(columns)));
 }
 
 void Engine::visit(model::statement::dml::EmitStatement* node, ScopeContext& scope) {

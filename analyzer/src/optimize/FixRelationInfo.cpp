@@ -19,10 +19,10 @@
 #include <set>
 
 #include <cassert>
-#include <shakujo/common/core/type/Relation.h>
 
 #include "ComparisonTerm.h"
 
+#include "shakujo/common/core/type/Relation.h"
 #include "shakujo/common/util/utility.h"
 
 #include "shakujo/model/util/NodeWalker.h"
@@ -45,19 +45,61 @@ public:
         (void) context_;
     }
 
+private:
     template<class T>
-    std::shared_ptr<binding::RelationBinding> extract(T* node) {
+    std::shared_ptr<binding::RelationBinding> relation_of(T* node) {
         auto* provider = dynamic_pointer_cast<model::key::RelationKey::Provider>(node);
-        return context_.bindings().get(provider->relation_key());
+        auto binding = context_.bindings().find(provider->relation_key());
+        return binding;
+    }
+
+    template<class T = common::core::Type>
+    T const* type_of(model::expression::Expression* node) {
+        return dynamic_pointer_cast<T>(context_.bindings().get(node->expression_key())->type());
     }
 
     template<class T>
-    auto extract_from_key(T* key) {
+    auto binding_of(T* key) {
         return context_.bindings().get(key);
     }
 
+    void rebuild_type(
+        model::expression::Expression* node,
+        common::core::type::Relation const* parent_type,
+        std::map<std::shared_ptr<binding::VariableBinding>, std::size_t> const& column_mapping) {
+        auto relation = relation_of(node);
+        std::vector<common::core::type::Relation::Column> columns {};
+        for (auto&& var : relation->output().columns()) {
+            if (auto it = column_mapping.find(var); it != column_mapping.end()) {
+                auto&& inherited = parent_type->at(it->second);
+                columns.emplace_back(inherited.qualifiers(), inherited.name(), make_clone(var->type()));
+            }
+            columns.emplace_back(make_clone(var->type()));
+        }
+        node->expression_key(context_.bindings().create_key(std::make_shared<binding::ExpressionBinding>(
+            std::make_unique<common::core::type::Relation>(std::move(columns)))));
+    }
+
+    void inherit_type(model::expression::Expression* node, common::core::type::Relation const* parent_type) {
+        node->expression_key(context_.bindings().create_key(std::make_shared<binding::ExpressionBinding>(make_clone(parent_type))));
+    }
+
+    std::shared_ptr<binding::VariableBinding> collect_variable(model::expression::Expression* node, bool ignore_cast = false) {
+        auto* current = node;
+        if (ignore_cast) {
+            while (auto* cast = dynamic_pointer_cast_if<model::expression::ImplicitCast>(current)) {
+                current = cast->operand();
+            }
+        }
+        if (auto* ref = dynamic_pointer_cast_if<model::expression::VariableReference>(current)) {
+            return binding_of(ref->variable_key());
+        }
+        return {};
+    }
+
+public:
     void exit(model::expression::relation::ScanExpression* node) override {
-        auto relation = extract(node);
+        auto relation = relation_of(node);
         auto&& profile = relation->output();
         auto&& strategy = relation->scan_strategy();
         profile.order().clear();
@@ -89,27 +131,27 @@ public:
             }
             profile.order() = std::move(order);
         }
-        rebuild_type(node, *relation);
+        // type information is unchanged
     }
 
     void exit(model::expression::relation::SelectionExpression* node) override {
-        auto parent = extract(node->operand());
-        auto relation = extract(node);
+        auto parent = relation_of(node->operand());
+        auto relation = relation_of(node);
         relation->process() = parent->output();
         relation->output() = parent->output();
-        rebuild_type(node, *relation);
+        inherit_type(node, type_of<common::core::type::Relation>(node->operand()));
     }
 
     void exit(model::expression::relation::LimitExpression* node) override {
-        auto parent = extract(node->operand());
-        auto relation = extract(node);
+        auto parent = relation_of(node->operand());
+        auto relation = relation_of(node);
         relation->process() = parent->output();
         relation->output() = parent->output();
-        rebuild_type(node, *relation);
+        inherit_type(node, type_of<common::core::type::Relation>(node->operand()));
     }
 
     void exit(model::expression::relation::DistinctExpression* node) override {
-        auto parent = extract(node->operand());
+        auto parent = relation_of(node->operand());
 
         // redundant distinct elision
         if (parent->output().distinct()) {
@@ -117,18 +159,18 @@ public:
             return;
         }
 
-        auto relation = extract(node);
+        auto relation = relation_of(node);
         relation->process() = parent->output();
         relation->output() = parent->output();
 
         assert(relation->output().unique_keys().empty());  // NOLINT
         relation->output().unique_keys().emplace(relation->output().columns().begin(), relation->output().columns().end());
-        rebuild_type(node, *relation);
+        inherit_type(node, type_of<common::core::type::Relation>(node->operand()));
     }
 
     void exit(model::expression::relation::JoinExpression* node) override {
-        auto left = extract(node->left());
-        auto right = extract(node->right());
+        auto left = relation_of(node->left());
+        auto right = relation_of(node->right());
         std::vector<std::shared_ptr<binding::VariableBinding>> input {};
         input.reserve(left->output().columns().size() + right->output().columns().size());
         for (auto&& v : left->output().columns()) {
@@ -138,11 +180,16 @@ public:
             input.emplace_back(v);
         }
 
-        auto relation = extract(node);
+        auto relation = relation_of(node);
         relation->process() = input;
 
         auto&& output = relation->output();
         auto&& strategy = relation->join_strategy();
+
+        output.columns().clear();
+        for (auto&& column : strategy.columns()) {
+            output.columns().emplace_back(column.output());
+        }
 
         // FIXME: ordering?
         output.order().clear();
@@ -270,20 +317,35 @@ public:
                 }
             }
         }
-        rebuild_type(node, *relation);
+
+        std::vector<common::core::type::Relation::Column> type_columns {};
+        for (auto&& column : strategy.columns()) {
+            // FIXME: naming rules
+            auto&& orig = column.output()->name();
+            std::string name;
+            if (!orig.empty()) {
+                name = *orig.segments().rbegin();
+            }
+            type_columns.emplace_back(
+                column.qualifiers(),
+                std::move(name),
+                make_clone(column.output()->type()));
+        }
+        node->expression_key(context_.bindings().create_key(std::make_shared<binding::ExpressionBinding>(
+            std::make_unique<common::core::type::Relation>(std::move(type_columns)))));
     }
 
     void exit(model::expression::relation::OrderExpression* node) override {
-        auto parent = extract(node->operand());
-        auto relation = extract(node);
+        auto parent = relation_of(node->operand());
+        auto relation = relation_of(node);
         relation->process() = parent->output();
         relation->output() = parent->output();
         auto&& output = relation->output();
         output.order().clear();
         bool saw_unresolved = false;
         for (auto* element : node->elements()) {
-            auto expr = extract_from_key(element->key()->expression_key());
-            auto var = extract_from_key(element->variable_key());
+            auto expr = binding_of(element->key()->expression_key());
+            auto var = binding_of(element->variable_key());
 
             // just a column reference
             if (parent->output().index_of(*var).has_value()) {
@@ -317,19 +379,19 @@ public:
                 return;
             }
         }
-        rebuild_type(node, *relation);
+        inherit_type(node, type_of<common::core::type::Relation>(node->operand()));
     }
 
     void exit(model::expression::relation::ProjectionExpression* node) override {
-        auto parent = extract(node->operand());
-        auto relation = extract(node);
+        auto parent = relation_of(node->operand());
+        auto relation = relation_of(node);
         relation->process() = parent->output();
 
         std::vector<std::shared_ptr<binding::VariableBinding>> columns {};
         columns.reserve(node->columns().size());
         std::map<std::shared_ptr<binding::VariableBinding>, std::shared_ptr<binding::VariableBinding>> iomap;
         for (auto* column : node->columns()) {
-            auto out = extract_from_key(column->variable_key());
+            auto out = binding_of(column->variable_key());
             columns.emplace_back(out);
             if (auto in = collect_variable(column->value()); is_valid(in)) {
                 iomap.emplace(in, out);
@@ -363,12 +425,13 @@ public:
         relation->output() = std::move(output);
 
         std::vector<common::core::type::Relation::Column> type_columns {};
+        type_columns.reserve(node->columns().size());
         for (auto* column : node->columns()) {
             std::string_view name {};
             if (column->alias()) {
                 name = column->alias()->token();
             }
-            auto var = extract_from_key(column->variable_key());
+            auto var = binding_of(column->variable_key());
             type_columns.emplace_back(name, make_clone(var->type()));
         }
         node->expression_key(context_.bindings().create_key(std::make_shared<binding::ExpressionBinding>(
@@ -376,24 +439,24 @@ public:
     }
 
     void exit(model::expression::relation::AggregationExpression* node) override {
-        auto parent = extract(node->operand());
-        auto relation = extract(node);
+        auto parent = relation_of(node->operand());
+        auto relation = relation_of(node);
         relation->process() = parent->output();
 
         std::vector<std::shared_ptr<binding::VariableBinding>> columns {};
         columns.reserve(node->columns().size());
         for (auto* column : node->columns()) {
-            auto out = extract_from_key(column->variable_key());
+            auto out = binding_of(column->variable_key());
             columns.emplace_back(out);
         }
         binding::RelationBinding::Profile output { std::move(columns) };
         relation->output() = std::move(output);
-        rebuild_type(node, *relation);
+        rebuild_type(node, type_of<common::core::type::Relation>(node->operand()), {});
     }
 
     void exit(model::statement::dml::EmitStatement* node) override {
-        auto parent = extract(node->source());
-        auto relation = extract(node);
+        auto parent = relation_of(node->source());
+        auto relation = relation_of(node);
         relation->process() = parent->output();
     }
 
@@ -403,43 +466,21 @@ public:
     }
 
     void exit(model::statement::dml::InsertRelationStatement* node) override {
-        auto parent = extract(node->source());
-        auto relation = extract(node);
+        auto parent = relation_of(node->source());
+        auto relation = relation_of(node);
         relation->process() = parent->output();
     }
 
     void exit(model::statement::dml::UpdateStatement* node) override {
-        auto parent = extract(node->source());
-        auto relation = extract(node);
+        auto parent = relation_of(node->source());
+        auto relation = relation_of(node);
         relation->process() = parent->output();
     }
 
     void exit(model::statement::dml::DeleteStatement* node) override {
-        auto parent = extract(node->source());
-        auto relation = extract(node);
+        auto parent = relation_of(node->source());
+        auto relation = relation_of(node);
         relation->process() = parent->output();
-    }
-
-    void rebuild_type(model::expression::Expression* node, binding::RelationBinding const& relation) {
-        std::vector<common::core::type::Relation::Column> columns {};
-        for (auto&& var : relation.output().columns()) {
-            columns.emplace_back(make_clone(var->type()));
-        }
-        node->expression_key(context_.bindings().create_key(std::make_shared<binding::ExpressionBinding>(
-            std::make_unique<common::core::type::Relation>(std::move(columns)))));
-    }
-
-    std::shared_ptr<binding::VariableBinding> collect_variable(model::expression::Expression* node, bool ignore_cast = false) {
-        auto* current = node;
-        if (ignore_cast) {
-            while (auto* cast = dynamic_pointer_cast_if<model::expression::ImplicitCast>(current)) {
-                current = cast->operand();
-            }
-        }
-        if (auto* ref = dynamic_pointer_cast_if<model::expression::VariableReference>(current)) {
-            return extract_from_key(ref->variable_key());
-        }
-        return {};
     }
 
 private:

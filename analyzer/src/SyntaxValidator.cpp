@@ -478,11 +478,11 @@ protected:
             report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "aggregation expression must have one or more columns");
         }
         for (auto* column : node->columns()) {
-            // FIXME: for group key
-            if (!is_defined(column->function())) {
+            // NOTE: if function name is empty, it represents group key or constant value
+            if (!is_defined(column->function()) && column->quantifier() != model::expression::FunctionCall::Quantifier::ABSENT) {
                 report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "aggregation expression must have a valid set operator name");
             }
-            if (!is_defined(column->operand())) {
+            if (!is_defined(column->operand()) && column->quantifier() != model::expression::FunctionCall::Quantifier::ASTERISK) {
                 report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "aggregation expression must have a valid set operator target");
             }
         }
