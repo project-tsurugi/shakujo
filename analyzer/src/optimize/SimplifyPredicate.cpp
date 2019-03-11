@@ -30,6 +30,7 @@ namespace shakujo::analyzer::optimize {
 using Ternary = common::util::Ternary;
 using common::util::is_defined;
 using common::util::make_clone;
+using common::util::dynamic_pointer_cast_if;
 
 namespace {
 class Engine
@@ -53,11 +54,11 @@ public:
     }
 
     bool is_bool(common::core::Type const* type) const {
-        return is_defined(dynamic_cast<common::core::type::Bool const*>(type));
+        return is_defined(dynamic_pointer_cast_if<common::core::type::Bool>(type));
     }
 
     Ternary eval(common::core::Value const* value) const {
-        if (auto* v = dynamic_cast<common::core::value::Bool const*>(value)) {
+        if (auto* v = dynamic_pointer_cast_if<common::core::value::Bool>(value)) {
             return v->get() ? Ternary::TRUE : Ternary::FALSE;
         }
         return Ternary::UNKNOWN;
