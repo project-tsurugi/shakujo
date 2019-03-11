@@ -16,6 +16,8 @@
 #include "shakujo/analyzer/Optimizer.h"
 
 #include <type_traits>
+#include <shakujo/analyzer/Optimizer.h>
+
 
 #include "optimize/Context.h"
 #include "optimize/PredicatePushDown.h"
@@ -29,16 +31,22 @@ namespace shakujo::analyzer {
 class Optimizer::Impl {
 public:
     explicit Impl(binding::BindingContext& bindings)
-        : context(bindings)
+        : context({}, bindings)
     {}
 
     template<class Node>
     void operator()(Node* node) {
-        apply_engine<optimize::PredicatePushDown>(node);
-        apply_engine<optimize::SimplifyCast>(node);
-        apply_engine<optimize::SelectScan>(node);
-        apply_engine<optimize::SimplifyCast>(node);
-        apply_engine<optimize::ProjectionPushDown>(node);
+        if (context.options().predicate_push_down) {
+            apply_engine<optimize::PredicatePushDown>(node);
+            apply_engine<optimize::SimplifyCast>(node);
+        }
+        if (context.options().scan) {
+            apply_engine<optimize::SelectScan>(node);
+            apply_engine<optimize::SimplifyCast>(node);
+        }
+        if (context.options().projection_push_down) {
+            apply_engine<optimize::ProjectionPushDown>(node);
+        }
         apply_engine<optimize::FixRelationInfo>(node);
     }
 
@@ -75,6 +83,14 @@ void Optimizer::operator()(model::statement::Statement *node) {
 
 void Optimizer::operator()(model::expression::Expression *node) {
     (*impl_)(node);
+}
+
+Optimizer::Options& Optimizer::options() {
+    return impl_->context.options();
+}
+
+Optimizer::Options const& Optimizer::options() const {
+    return impl_->context.options();
 }
 
 }  // namespace shakujo::analyzer
