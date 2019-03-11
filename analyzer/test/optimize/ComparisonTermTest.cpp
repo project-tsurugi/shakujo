@@ -157,6 +157,31 @@ TEST_F(ComparisonTermTest, and) {
     }
 }
 
+TEST_F(ComparisonTermTest, resolve_thin) {
+    auto& vid = add_variable(f.Name("v"), t::Int(64U, NON_NULL));
+    auto expr = analyze(f.BinaryOperator(BOp::EQUAL, var("v"), literal(1)));
+
+    auto result = ComparisonTerm::resolve(env.binding_context(), expr.get());
+    ASSERT_TRUE(result.left().is_variable());
+    ASSERT_TRUE(result.right().is_constant());
+
+    EXPECT_EQ(result.source(), expr.get());
+    EXPECT_EQ(result.op(), ComparisonTerm::Operator::EQ);
+    EXPECT_EQ(result.left().variable()->id(), vid);
+    EXPECT_EQ(*result.right().constant(), v::Int(1));
+}
+
+TEST_F(ComparisonTermTest, resolve_thick) {
+    add_variable(f.Name("a"), t::Int(64U, NON_NULL));
+    add_variable(f.Name("b"), t::Int(64U, NON_NULL));
+    auto expr = analyze(f.BinaryOperator(BOp::CONDITIONAL_AND,
+        f.BinaryOperator(BOp::LESS_THAN, var("a"), literal(1)),
+        f.BinaryOperator(BOp::GREATER_THAN, var("b"), literal(2))));
+
+    auto result = ComparisonTerm::resolve(env.binding_context(), expr.get());
+    ASSERT_FALSE(result);
+}
+
 TEST_F(ComparisonTermTest, no_variables) {
     auto expr = analyze(f.BinaryOperator(BOp::EQUAL, literal(1), literal(1)));
 

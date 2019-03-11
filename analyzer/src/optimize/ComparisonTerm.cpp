@@ -109,8 +109,10 @@ public:
                 break;
 
             case Op::CONDITIONAL_AND:
-                dispatch(node->left());
-                dispatch(node->right());
+                if (recursive_) {
+                    dispatch(node->left());
+                    dispatch(node->right());
+                }
                 break;
 
             default:
