@@ -339,8 +339,6 @@ public:
         }
         {
             Requirements next { *relation_of(node->left()) };
-            // FIXME: is through heavy?
-            next.through_heavy(true);
             for (auto&& column : strategy.columns()) {
                 if (is_defined(column.left_source())) {
                     next.add(column.left_source());
@@ -353,8 +351,6 @@ public:
         }
         {
             Requirements next { *relation_of(node->right()) };
-            // FIXME: is through heavy?
-            next.through_heavy(true);
             for (auto&& column : strategy.columns()) {
                 if (is_defined(column.right_source())) {
                     next.add(column.right_source());

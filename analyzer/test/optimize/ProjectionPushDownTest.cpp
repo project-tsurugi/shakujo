@@ -397,34 +397,8 @@ TEST_F(ProjectionPushDownTest, join) {
     ));
     auto projection = cast<model::expression::relation::ProjectionExpression>(expr.get());
     auto node = cast<model::expression::relation::JoinExpression>(projection->operand());
-    {
-        auto slice = cast<model::expression::relation::ProjectionExpression>(node->left());
-        cast<model::expression::relation::ScanExpression>(slice->operand());
-
-        auto relation = extract_relation(slice);
-        auto&& output = relation->output().columns();
-        ASSERT_EQ(output.size(), 2U);
-        {
-            auto c = find("C1", output);
-            EXPECT_EQ(*c->type(), t::Int(64U, NON_NULL));
-        }
-        {
-            auto c = find("C3", output);
-            EXPECT_EQ(*c->type(), t::Int(32U, NON_NULL));
-        }
-    }
-    {
-        auto slice = cast<model::expression::relation::ProjectionExpression>(node->right());
-        cast<model::expression::relation::ScanExpression>(slice->operand());
-
-        auto relation = extract_relation(slice);
-        auto&& output = relation->output().columns();
-        ASSERT_EQ(output.size(), 1U);
-        {
-            auto c = find("C4", output);
-            EXPECT_EQ(*c->type(), t::Int(32U, NULLABLE));
-        }
-    }
+    cast<model::expression::relation::ScanExpression>(node->left());
+    cast<model::expression::relation::ScanExpression>(node->right());
     {
         auto relation = extract_relation(node);
         auto&& strategy = relation->join_strategy();
@@ -475,34 +449,8 @@ TEST_F(ProjectionPushDownTest, join_natural) {
     ));
     auto projection = cast<model::expression::relation::ProjectionExpression>(expr.get());
     auto node = cast<model::expression::relation::JoinExpression>(projection->operand());
-    {
-        auto slice = cast<model::expression::relation::ProjectionExpression>(node->left());
-        cast<model::expression::relation::ScanExpression>(slice->operand());
-
-        auto relation = extract_relation(slice);
-        auto&& output = relation->output().columns();
-        ASSERT_EQ(output.size(), 2U);
-        {
-            auto c = find("C1", output);
-            EXPECT_EQ(*c->type(), t::Int(64U, NON_NULL));
-        }
-        {
-            auto c = find("C3", output);
-            EXPECT_EQ(*c->type(), t::Int(32U, NON_NULL));
-        }
-    }
-    {
-        auto slice = cast<model::expression::relation::ProjectionExpression>(node->right());
-        cast<model::expression::relation::ScanExpression>(slice->operand());
-
-        auto relation = extract_relation(slice);
-        auto&& output = relation->output().columns();
-        ASSERT_EQ(output.size(), 1U);
-        {
-            auto c = find("C3", output);
-            EXPECT_EQ(*c->type(), t::Int(32U, NON_NULL));
-        }
-    }
+    cast<model::expression::relation::ScanExpression>(node->left());
+    cast<model::expression::relation::ScanExpression>(node->right());
     {
         auto relation = extract_relation(node);
         auto&& strategy = relation->join_strategy();
@@ -566,30 +514,8 @@ TEST_F(ProjectionPushDownTest, join_cross) {
     ));
     auto projection = cast<model::expression::relation::ProjectionExpression>(expr.get());
     auto node = cast<model::expression::relation::JoinExpression>(projection->operand());
-    {
-        auto slice = cast<model::expression::relation::ProjectionExpression>(node->left());
-        cast<model::expression::relation::ScanExpression>(slice->operand());
-
-        auto relation = extract_relation(slice);
-        auto&& output = relation->output().columns();
-        ASSERT_EQ(output.size(), 1U);
-        {
-            auto&& c = output[0];
-            EXPECT_EQ(*c->type(), t::Null());
-        }
-    }
-    {
-        auto slice = cast<model::expression::relation::ProjectionExpression>(node->right());
-        cast<model::expression::relation::ScanExpression>(slice->operand());
-
-        auto relation = extract_relation(slice);
-        auto&& output = relation->output().columns();
-        ASSERT_EQ(output.size(), 1U);
-        {
-            auto&& c = output[0];
-            EXPECT_EQ(*c->type(), t::Null());
-        }
-    }
+    cast<model::expression::relation::ScanExpression>(node->left());
+    cast<model::expression::relation::ScanExpression>(node->right());
     {
         auto relation = extract_relation(node);
         auto&& strategy = relation->join_strategy();
