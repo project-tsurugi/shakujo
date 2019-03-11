@@ -121,6 +121,24 @@ public:
         return right_;
     }
 
+    explicit operator bool() const {
+        return source_ != nullptr;
+    }
+
+    /**
+     * @brief extract a comparison term from the given expression.
+     * Invariant of the term [t]:
+     * - t.left().is_variable()
+     * - t.right().is_variable() or t.right().is_constant()
+     * @param context the current context
+     * @param expression the target expression
+     * @return the extracted term
+     * @return invalid object if the target is not a valid comparison term
+     */
+    static ComparisonTerm resolve(
+        binding::BindingContext& context,
+        model::expression::Expression* expression);
+
     /**
      * @brief collects comparison terms in the given expression.
      * Invariant of each term [t]:

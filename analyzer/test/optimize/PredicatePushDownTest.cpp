@@ -476,4 +476,50 @@ TEST_F(PredicatePushDownTest, scan_joinnatural_select) {
     }
 }
 
+TEST_F(PredicatePushDownTest, scan_join_select_propagate) {
+    add(common::schema::TableInfo { "T1", {
+        { "K", t::Int(64U, NON_NULL), },
+        { "C1", t::Int(64U, NON_NULL), },
+    }});
+    add(common::schema::TableInfo { "T2", {
+        { "K", t::Int(64U, NON_NULL), },
+        { "C2", t::Int(64U, NON_NULL), },
+    }});
+    // select - join - scan
+    auto expr = apply(f.SelectionExpression(
+        f.JoinExpression(
+            model::expression::relation::JoinExpression::Kind::INNER,
+            f.ScanExpression(f.Name("T1")),
+            f.ScanExpression(f.Name("T2")),
+            {
+                f.BinaryOperator(BOp::EQUAL, var("T1", "K"), var("T2", "K")),
+            }),
+        f.BinaryOperator(BOp::EQUAL, var("T1", "K"), literal(1))));
+
+    // join - select - scan
+    auto join = cast<model::expression::relation::JoinExpression>(expr.get());
+    {
+        auto selection = cast<model::expression::relation::SelectionExpression>(join->left());
+        cast<model::expression::relation::ScanExpression>(selection->operand());
+        auto relation = extract_relation(selection);
+        auto cond = selection->condition();
+        ASSERT_TRUE(cond);
+        EXPECT_EQ(var_of(left(cond)), relation->process().columns()[0]);
+        EXPECT_EQ(val_of<v::Int>(right(cond)), 1);
+    }
+    {
+        auto selection = cast<model::expression::relation::SelectionExpression>(join->right());
+        cast<model::expression::relation::ScanExpression>(selection->operand());
+        auto relation = extract_relation(selection);
+        auto cond = selection->condition();
+        ASSERT_TRUE(cond);
+        EXPECT_EQ(var_of(left(cond)), relation->process().columns()[0]);
+        EXPECT_EQ(val_of<v::Int>(right(cond)), 1);
+    }
+    {
+        auto cond = join->condition();
+        ASSERT_FALSE(cond);
+    }
+}
+
 }  // namespace shakujo::analyzer::optimize

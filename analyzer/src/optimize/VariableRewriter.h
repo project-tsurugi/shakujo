@@ -16,6 +16,7 @@
 #ifndef SHAKUJO_ANALYZER_OPTIMIZE_VARIABLE_COLLECTOR_H_
 #define SHAKUJO_ANALYZER_OPTIMIZE_VARIABLE_COLLECTOR_H_
 
+#include <iostream>
 #include <map>
 #include <memory>
 #include <vector>
@@ -46,6 +47,21 @@ public:
     void deny(std::vector<std::shared_ptr<binding::VariableBinding>> const& from);
 
     VariableRewriter& merge(VariableRewriter const& other);
+
+    friend std::ostream& operator<<(std::ostream& out, VariableRewriter const& value) {
+        out << "VariableRewriter(";
+        bool first = true;
+        for (auto&& [k, v] : value.mapping_) {
+            if (first) {
+                first = false;
+            } else {
+                out << ", ";
+            }
+            out << k->id() << "=>" << v->id();
+        }
+        out << ")";
+        return out;
+    }
 
 private:
     std::map<std::shared_ptr<binding::VariableBinding>, std::shared_ptr<binding::VariableBinding>> mapping_ {};

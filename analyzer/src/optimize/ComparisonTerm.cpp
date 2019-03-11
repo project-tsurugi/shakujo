@@ -17,6 +17,7 @@
 
 #include <stdexcept>
 
+#include <cassert>
 #include <cstdlib>
 
 #include "shakujo/model/expression/ExpressionVisitor.h"
@@ -154,16 +155,33 @@ private:
     }
 
 public:
-    explicit Collector(binding::BindingContext& bindings) : bindings_(bindings) {}
+    explicit Collector(binding::BindingContext& bindings, bool recursive)
+        : bindings_(bindings)
+        , recursive_(recursive)
+    {}
+
     binding::BindingContext& bindings_;
+    bool recursive_;
     std::vector<ComparisonTerm> terms_ {};
 };
 } // namespace
 
+ComparisonTerm ComparisonTerm::resolve(
+    binding::BindingContext& context,
+    model::expression::Expression* expression) {
+    Collector collector { context, false };
+    collector.dispatch(expression);
+    assert(collector.terms_.size() <= 1);  // NOLINT
+    if (collector.terms_.empty()) {
+        return {};
+    }
+    return std::move(collector.terms_[0]);
+}
+
 std::vector<ComparisonTerm> ComparisonTerm::collect(
         binding::BindingContext& context,
         model::expression::Expression *expression) {
-    Collector collector { context };
+    Collector collector { context, true };
     collector.dispatch(expression);
     return std::move(collector.terms_);
 }

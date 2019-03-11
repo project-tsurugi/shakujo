@@ -98,6 +98,18 @@ public:
     std::unique_ptr<model::key::RelationKey> create_key(std::shared_ptr<RelationBinding> binding);
 
     /**
+     * @brief creates a binding and returns the corresponded key.
+     * @tparam T the binding type
+     * @tparam Args the binding argument types
+     * @param args the binding arguments
+     * @return the corresponded key
+     */
+    template<class T, class... Args>
+    std::unique_ptr<typename T::key_type> create_key(Args&&... args) {
+        return create_key(std::make_shared<T>(std::forward<Args>(args)...));
+    }
+
+    /**
      * @brief returns a binding for the key.
      * @param key the target key
      * @return a shared pointer with the corresponded binding
