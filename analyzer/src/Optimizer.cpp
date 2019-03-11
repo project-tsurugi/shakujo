@@ -16,8 +16,6 @@
 #include "shakujo/analyzer/Optimizer.h"
 
 #include <type_traits>
-#include <shakujo/analyzer/Optimizer.h>
-
 
 #include "optimize/Context.h"
 #include "optimize/PredicatePushDown.h"
