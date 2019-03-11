@@ -133,7 +133,7 @@ private:
 
     auto create_null_variable() {
         auto id = context_.bindings().next_variable_id();
-        common::core::Name name { unique_name(id) };
+        common::core::Name name { id.to_unique_name() };
         return std::make_shared<binding::VariableBinding>(
             std::move(id),
             std::move(name),
@@ -141,16 +141,11 @@ private:
             std::make_unique<common::core::value::Null>());
     }
 
-    template<class T>
-    static std::string unique_name(binding::Id<T> const& id) {
-        return to_string('#', id.get());
-    }
-
     static std::string name_of(binding::VariableBinding const& variable) {
         if (!variable.name().empty()) {
             return variable.name().segments()[variable.name().segments().size() - 1];
         }
-        return unique_name(variable.id());
+        return variable.id().to_unique_name();
     }
 
     void collect(Requirements& requirements, model::expression::Expression* node) {

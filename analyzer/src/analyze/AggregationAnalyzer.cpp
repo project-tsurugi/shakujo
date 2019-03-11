@@ -105,9 +105,9 @@ public:
         for (auto&& column : aggregation->columns()) {
             agg_columns.emplace_back(bindings().get(column->variable_key()));
         }
-        aggregation->relation_key(bindings().create_key(std::make_shared<binding::RelationBinding>(
+        aggregation->relation_key(bindings().create_key<binding::RelationBinding>(
             source_profile_,
-            binding::RelationBinding::Profile { std::move(agg_columns) })));
+            binding::RelationBinding::Profile { std::move(agg_columns) }));
 
         // FIXME: push down for group-by operation
 

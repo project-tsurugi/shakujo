@@ -19,6 +19,7 @@
 #include <atomic>
 #include <iostream>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
 
 #include <cstddef>
@@ -107,6 +108,16 @@ public:
      */
     Id::type get() const {
         return value_;
+    }
+
+    /**
+     * @brief returns a unique name for this ID.
+     * @return a unique name for this ID
+     */
+    std::string to_unique_name() const {
+        std::ostringstream ss;
+        ss << '#' << value_;
+        return ss.str();
     }
 
     /**

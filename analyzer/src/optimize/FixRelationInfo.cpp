@@ -76,12 +76,12 @@ private:
             }
             columns.emplace_back(make_clone(var->type()));
         }
-        node->expression_key(context_.bindings().create_key(std::make_shared<binding::ExpressionBinding>(
-            std::make_unique<common::core::type::Relation>(std::move(columns)))));
+        node->expression_key(context_.bindings().create_key<binding::ExpressionBinding>(
+            std::make_unique<common::core::type::Relation>(std::move(columns))));
     }
 
     void inherit_type(model::expression::Expression* node, common::core::type::Relation const* parent_type) {
-        node->expression_key(context_.bindings().create_key(std::make_shared<binding::ExpressionBinding>(make_clone(parent_type))));
+        node->expression_key(context_.bindings().create_key<binding::ExpressionBinding>(make_clone(parent_type)));
     }
 
     std::shared_ptr<binding::VariableBinding> collect_variable(model::expression::Expression* node, bool ignore_cast = false) {
@@ -331,8 +331,8 @@ public:
                 std::move(name),
                 make_clone(column.output()->type()));
         }
-        node->expression_key(context_.bindings().create_key(std::make_shared<binding::ExpressionBinding>(
-            std::make_unique<common::core::type::Relation>(std::move(type_columns)))));
+        node->expression_key(context_.bindings().create_key<binding::ExpressionBinding>(
+            std::make_unique<common::core::type::Relation>(std::move(type_columns))));
     }
 
     void exit(model::expression::relation::OrderExpression* node) override {
@@ -434,8 +434,8 @@ public:
             auto var = binding_of(column->variable_key());
             type_columns.emplace_back(name, make_clone(var->type()));
         }
-        node->expression_key(context_.bindings().create_key(std::make_shared<binding::ExpressionBinding>(
-            std::make_unique<common::core::type::Relation>(std::move(type_columns)))));
+        node->expression_key(context_.bindings().create_key<binding::ExpressionBinding>(
+            std::make_unique<common::core::type::Relation>(std::move(type_columns))));
     }
 
     void exit(model::expression::relation::AggregationExpression* node) override {

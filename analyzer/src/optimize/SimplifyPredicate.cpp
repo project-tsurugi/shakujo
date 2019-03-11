@@ -164,10 +164,10 @@ public:
         auto* replacement = node->replace_with(f.Literal(
             std::make_unique<common::core::type::Bool>(common::core::Type::Nullity::NEVER_NULL),
             std::make_unique<common::core::value::Bool>(value)));
-        replacement->expression_key(context_.bindings().create_key(std::make_shared<binding::ExpressionBinding>(
+        replacement->expression_key(context_.bindings().create_key<binding::ExpressionBinding>(
             make_clone(replacement->type()),
             make_clone(replacement->value()),
-            true)));
+            true));
         return value ? Ternary::TRUE : Ternary::FALSE;
     }
 

@@ -442,16 +442,11 @@ public:
         return true;
     }
 
-    template<class T>
-    static std::string unique_name(binding::Id<T> const& id) {
-        return to_string('#', id.get());
-    }
-
     static std::string name_of(binding::VariableBinding const& variable) {
         if (!variable.name().empty()) {
             return variable.name().segments()[variable.name().segments().size() - 1];
         }
-        return unique_name(variable.id());
+        return variable.id().to_unique_name();
     }
 
     common::core::Type const* type_of(model::key::ExpressionKey::Provider* node) {
