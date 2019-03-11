@@ -30,6 +30,7 @@ namespace shakujo::analyzer::optimize {
 
 using common::util::is_valid;
 using common::util::make_clone;
+using common::util::dynamic_pointer_cast_if;
 
 namespace {
 class Collector : public model::expression::ExpressionVisitor<ComparisonTerm::Factor> {
@@ -79,10 +80,10 @@ public:
                     case Kind::INT:
                         // FIXME: MIN_VALUE
                         return factor.constant(std::make_unique<common::core::value::Int>(
-                            -dynamic_cast<common::core::value::Int const *>(value)->get()));
+                            -dynamic_pointer_cast_if<common::core::value::Int>(value)->get()));
                     case Kind::FLOAT:
                         return factor.constant(std::make_unique<common::core::value::Float>(
-                            -dynamic_cast<common::core::value::Float const *>(value)->get()));
+                            -dynamic_pointer_cast_if<common::core::value::Float>(value)->get()));
                     default:
                         return {};
                 }
