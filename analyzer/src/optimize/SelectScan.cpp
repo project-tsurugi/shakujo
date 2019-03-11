@@ -86,19 +86,23 @@ public:
         auto terms = grouping(*relation, all_terms);
 
         std::vector<StrategyInfo> candidates {};
-        if (auto&& index = table.primary_index()) {
-            auto candidate = extract_candidate(index, columns, terms);
-            // primary key single row
-            if (candidate.prefix.size() == index.columns().size()) {
-                relation->scan_strategy(create_strategy(candidate, table, columns));
-                consume_terms(candidate);
-                return true;
+        if (context_.options().scan.primary_index) {
+            if (auto&& index = table.primary_index()) {
+                auto candidate = extract_candidate(index, columns, terms);
+                // primary key single row
+                if (candidate.prefix.size() == index.columns().size()) {
+                    relation->scan_strategy(create_strategy(candidate, table, columns));
+                    consume_terms(candidate);
+                    return true;
+                }
+                candidates.emplace_back(std::move(candidate));
             }
-            candidates.emplace_back(std::move(candidate));
         }
-        for (auto&& index : table.secondary_indices()) {
-            auto candidate = extract_candidate(index, columns, terms);
-            candidates.emplace_back(std::move(candidate));
+        if (context_.options().scan.secondary_index) {
+            for (auto&& index : table.secondary_indices()) {
+                auto candidate = extract_candidate(index, columns, terms);
+                candidates.emplace_back(std::move(candidate));
+            }
         }
         if (!candidates.empty()) {
             if (auto* candidate = select_strategy(candidates); is_defined(candidate)) {
@@ -116,7 +120,7 @@ public:
          * FIXME: use cost info
          * temporary scoring rule:
          * primary index = x 1.0
-         * secondary index = x 0.5
+         * secondary index = x 1.0 - secondary_index_penalty
          * columns = x (prefix-length + suffix-count / 3) / (key-size + 1)
          */
         double current_max = -std::numeric_limits<double>::infinity();
@@ -129,7 +133,7 @@ public:
             }
             double score = 1.0;
             if (!candidate.index.is_primary()) {
-                score *= 0.5;
+                score *= 1.0 - context_.options().scan.secondary_index_penalty;
             }
             std::size_t suffix_count = 0;
             if (is_defined(candidate.lower.term)) {

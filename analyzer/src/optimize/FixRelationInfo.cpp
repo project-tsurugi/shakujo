@@ -152,9 +152,7 @@ public:
 
     void exit(model::expression::relation::DistinctExpression* node) override {
         auto parent = relation_of(node->operand());
-
-        // redundant distinct elision
-        if (parent->output().distinct()) {
+        if (context_.options().redundancy.distinct && parent->output().distinct()) {
             node->replace_with(node->release_operand());
             return;
         }
@@ -163,8 +161,9 @@ public:
         relation->process() = parent->output();
         relation->output() = parent->output();
 
-        assert(relation->output().unique_keys().empty());  // NOLINT
-        relation->output().unique_keys().emplace(relation->output().columns().begin(), relation->output().columns().end());
+        if (auto&& output = parent->output(); !output.distinct()) {
+            relation->output().unique_keys().emplace(output.columns().begin(), output.columns().end());
+        }
         inherit_type(node, type_of<common::core::type::Relation>(node->operand()));
     }
 
@@ -364,7 +363,10 @@ public:
             saw_unresolved = true;
             break;
         }
-        if (auto&& input = parent->output(); input.order().size() >= output.order().size() && !saw_unresolved) {
+        if (auto&& input = parent->output();
+                context_.options().redundancy.sort
+                && input.order().size() >= output.order().size()
+                && !saw_unresolved) {
             bool diff = false;
             for (std::size_t i = 0, n = output.order().size(); i < n; ++i) {
                 auto&& in = input.order()[i];

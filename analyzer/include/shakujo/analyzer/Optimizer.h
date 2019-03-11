@@ -82,6 +82,143 @@ public:
      */
     void operator()(model::expression::Expression* node);
 
+    /**
+     * @brief optimizer options.
+     */
+    struct Options {
+
+        /**
+         * @brief options about scan operation optimization.
+         */
+        struct Scan {
+
+            /**
+             * @brief whether or not primary index scan is enabled.
+             */
+            bool primary_index = true;
+
+            /**
+             * @brief whether or not secondary index scan (with primary index) is enabled.
+             */
+            bool secondary_index = true;
+
+            /**
+             * @brief a penalty ratio of using secondary index instead of primary index.
+             * 0.0: no penalty .. 1.0: never use secondary indices.
+             */
+            double secondary_index_penalty = 0.5;
+
+            /**
+             * @brief returns whether or not this optimization is enabled.
+             * @return true if enabled
+             * @return false otherwise
+             */
+            explicit operator bool() const {
+                return primary_index || secondary_index;
+            }
+        };
+
+        /**
+         * @brief options about join operation optimization.
+         */
+        struct Join {
+            // empty
+        };
+
+        /**
+         * @brief options about predicate push down optimization.
+         */
+        struct PredicatePushDown {
+
+            /**
+             * @brief whether or not enable this optimization.
+             */
+            bool enabled = true;
+
+            /**
+             * @brief returns whether or not this optimization is enabled.
+             * @return true if enabled
+             * @return false otherwise
+             */
+            explicit operator bool() const {
+                return enabled;
+            }
+        };
+
+        /**
+         * @brief options about projection push down optimization.
+         */
+        struct ProjectionPushDown {
+
+            /**
+             * @brief whether or not enable this optimization.
+             */
+            bool enabled = true;
+
+            /**
+             * @brief returns whether or not this optimization is enabled.
+             * @return true if enabled
+             * @return false otherwise
+             */
+            explicit operator bool() const {
+                return enabled;
+            }
+        };
+
+        /**
+         * @brief options about redundant relational operators.
+         */
+        struct Redundancy {
+
+            /**
+             * @brief whether or not remove redundant sort operations.
+             */
+            bool sort = true;
+
+            /**
+             * @brief whether or not remove redundant distinct operations.
+             */
+            bool distinct = true;
+        };
+
+        /**
+         * @brief options about scan operation optimization.
+         */
+        Scan scan {};
+
+        /**
+         * @brief options about scan operation optimization.
+         */
+        Join join {};
+
+        /**
+         * @brief options about predicate push down optimization.
+         */
+        PredicatePushDown predicate_push_down {};
+
+        /**
+         * @brief options about projection push down optimization.
+         */
+        ProjectionPushDown projection_push_down {};
+
+        /**
+         * @brief options about redundant relational operators.
+         */
+        Redundancy redundancy {};
+    };
+
+    /**
+     * @brief returns options of this optimizer.
+     * @return the options
+     */
+    Options& options();
+
+    /**
+     * @brief returns options of this optimizer.
+     * @return the options
+     */
+    Options const& options() const;
+
 private:
     class Impl;
     std::unique_ptr<Impl> impl_;

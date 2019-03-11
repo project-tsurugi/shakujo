@@ -16,21 +16,36 @@
 #ifndef SHAKUJO_ANALYZER_OPTIMIZE_CONTEXT_H_
 #define SHAKUJO_ANALYZER_OPTIMIZE_CONTEXT_H_
 
+#include "shakujo/analyzer/Optimizer.h"
 #include "shakujo/analyzer/binding/BindingContext.h"
 
 namespace shakujo::analyzer::optimize {
 
 class Context {
 public:
+    Context(Optimizer::Options options, binding::BindingContext& bindings) noexcept
+        : options_(options)
+        , bindings_(bindings)
+    {}
+
     explicit Context(binding::BindingContext& bindings) noexcept
         : bindings_(bindings)
     {}
+
+    Optimizer::Options& options() {
+        return options_;
+    }
+
+    Optimizer::Options const& options() const {
+        return options_;
+    }
 
     binding::BindingContext& bindings() {
         return bindings_;
     }
 
 private:
+    Optimizer::Options options_ {};
     binding::BindingContext& bindings_;
 };
 }  // namespace shakujo::analyzer::optimize
