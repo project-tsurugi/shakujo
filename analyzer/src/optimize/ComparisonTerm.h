@@ -122,7 +122,7 @@ public:
     }
 
     explicit operator bool() const {
-        return source_ != nullptr;
+        return static_cast<bool>(left()) && static_cast<bool>(right());
     }
 
     /**

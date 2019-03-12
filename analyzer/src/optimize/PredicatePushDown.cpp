@@ -15,6 +15,7 @@
  */
 #include "PredicatePushDown.h"
 
+#include <functional>
 #include <map>
 
 #include <cassert>
@@ -22,6 +23,7 @@
 #include "ComparisonTerm.h"
 #include "SimplifyPredicate.h"
 #include "VariableRewriter.h"
+#include "../analyze/typing.h"
 
 #include "shakujo/common/core/value/Error.h"
 #include "shakujo/common/util/utility.h"
@@ -46,13 +48,50 @@ using common::util::equals;
 namespace {
 class Term {
 public:
-    model::expression::Expression* node {};
-    ComparisonTerm comparison {};
-    bool alternative { false };
-    bool sticky { false };
-    explicit operator bool() const {
-        return is_defined(node);
+    Term(
+            model::expression::Expression* node,
+            ComparisonTerm comparison,
+            std::function<std::unique_ptr<model::expression::Expression>(Term&, VariableRewriter&)> rewriter,
+            std::function<void(Term&)> disposer)
+        : node_(node)
+        , comparison_(std::move(comparison))
+        , rewriter_(std::move(rewriter))
+        , disposer_(std::move(disposer))
+    {}
+
+    model::expression::Expression* node_;
+    ComparisonTerm comparison_;
+    bool sticky_ { false };
+
+    void rewriter(std::function<std::unique_ptr<model::expression::Expression>(Term&, VariableRewriter&)> rewriter) {
+        rewriter_ = std::move(rewriter);
     }
+
+    std::unique_ptr<model::expression::Expression> rewrite(VariableRewriter& rewriter) {
+        return rewriter_(*this, rewriter);
+    }
+
+    void disposer(std::function<void(Term&)> disposer) {
+        disposer_ = std::move(disposer);
+    }
+
+    void dispose() {
+        disposer_(*this);
+        enabled_ = false;
+        node_ = {};
+        comparison_ = {};
+        rewriter_ = [](auto&, auto&) -> std::unique_ptr<model::expression::Expression> { std::abort(); };
+        disposer_ = [](auto&) {};
+    }
+
+    explicit operator bool() const {
+        return enabled_;
+    }
+
+private:
+    std::function<std::unique_ptr<model::expression::Expression>(Term&, VariableRewriter&)> rewriter_;
+    std::function<void(Term&)> disposer_;
+    bool enabled_ { true };
 };
 
 struct Predicates {
@@ -62,31 +101,49 @@ struct Predicates {
 };
 
 class TermCollector
-    : public model::expression::ExpressionVisitor<void> {
+    : public model::expression::ExpressionVisitor<void, std::vector<std::shared_ptr<Term>>&> {
 
 public:
     using ExpressionVisitor::visit;
 
-    void visitDefault(model::expression::Expression* node) override {
-        auto term = std::make_shared<Term>();
-        term->node = node;
+    void visitDefault(model::expression::Expression* node, std::vector<std::shared_ptr<Term>>& terms) override {
+        auto comparison = ComparisonTerm::resolve(context_.bindings(), node);
+        auto term = std::make_shared<Term>(node, std::move(comparison), rewriter_, disposer_);
         terms.emplace_back(std::move(term));
     }
 
-    void visit(model::expression::ImplicitCast* node) override {
-        dispatch(node->operand());
+    void visit(model::expression::ImplicitCast* node, std::vector<std::shared_ptr<Term>>& terms) override {
+        dispatch(node->operand(), terms);
     }
 
-    void visit(model::expression::BinaryOperator* node) override {
+    void visit(model::expression::BinaryOperator* node, std::vector<std::shared_ptr<Term>>& terms) override {
         if (node->operator_kind() == model::expression::BinaryOperator::Kind::CONDITIONAL_AND) {
-            dispatch(node->left());
-            dispatch(node->right());
+            dispatch(node->left(), terms);
+            dispatch(node->right(), terms);
             return;
         }
-        visitDefault(node);
+        visitDefault(node, terms);
     }
 
-    std::vector<std::shared_ptr<Term>> terms {};
+    explicit TermCollector(
+            Context& context,
+            std::function<std::unique_ptr<model::expression::Expression>(Term&, VariableRewriter&)> rewriter,
+            std::function<void(Term&)> disposer)
+        : context_(context)
+        , rewriter_(std::move(rewriter))
+        , disposer_(std::move(disposer))
+    {}
+
+    std::vector<std::shared_ptr<Term>> collect(model::expression::Expression* node) {
+        std::vector<std::shared_ptr<Term>> results {};
+        dispatch(node, results);
+        return results;
+    }
+
+private:
+    Context& context_;
+    std::function<std::unique_ptr<model::expression::Expression>(Term&, VariableRewriter&)> rewriter_;
+    std::function<void(Term&)> disposer_;
 };
 
 class Engine
@@ -164,7 +221,7 @@ public:
         auto&& join = relation->join_strategy();
 
         std::vector<std::shared_ptr<Term>> terms;
-        if (is_defined(node->condition())) {
+        if (is_defined(node->condition()) || !join.equalities().empty()) {
             Predicates preds { prev };
             VariableRewriter rewriter {};
             for (auto&& column : join.columns()) {
@@ -175,7 +232,7 @@ public:
                 }
             }
             preds.rewriter.merge(rewriter);
-            terms = collect(preds, node->condition(), true);
+            terms = collect(preds, node->condition(), &join.equalities(), true);
         }
         if (!join.right_outer()) {
             Predicates next { prev };
@@ -190,9 +247,7 @@ public:
             rewriter.deny(opposite->output().columns());
             next.rewriter.merge(rewriter);
             for (auto&& term : terms) {
-                if (term) {
-                    next.terms.emplace_back(term);
-                }
+                next.terms.emplace_back(term);
             }
             dispatch(node->left(), std::move(next));
         }
@@ -210,9 +265,7 @@ public:
             rewriter.deny(opposite->output().columns());
             next.rewriter.merge(rewriter);
             for (auto&& term : terms) {
-                if (term) {
-                    next.terms.emplace_back(term);
-                }
+                next.terms.emplace_back(term);
             }
             dispatch(node->right(), std::move(next));
         }
@@ -251,81 +304,127 @@ public:
         dispatch(node->operand(), {});
     }
 
-    std::vector<std::shared_ptr<Term>> collect(Predicates& preds, model::expression::Expression* node, bool sticky = false) {
-        TermCollector collector;
-        collector.dispatch(node);
-        for (auto&& term : collector.terms) {
-            term->comparison = ComparisonTerm::resolve(context_.bindings(), term->node);
-            term->sticky = sticky;
+    std::vector<std::shared_ptr<Term>> collect(
+            Predicates& preds,
+            model::expression::Expression* node,
+            std::set<std::pair<std::shared_ptr<binding::VariableBinding>, std::shared_ptr<binding::VariableBinding>>>* equalities = {},
+            bool sticky = false) {
+        std::vector<std::shared_ptr<Term>> results {};
+        if (is_defined(node)) {
+            results = TermCollector {
+                context_,
+                [this](Term& term, VariableRewriter& rewriter) { return this->rewrite_default(term, rewriter); },
+                [](auto&) {}
+            }.collect(node);
+            for (auto&& term : results) {
+                term->sticky_ = sticky;
+            }
         }
-        std::vector<std::shared_ptr<Term>> terms {};
-        terms.reserve(collector.terms.size() + preds.terms.size());
-        for (auto&& term : collector.terms) {
+        if (is_defined(equalities)) {
+            for (auto&& pair : *equalities) {
+                // NOTE: clang cannot not capture structured binding variables in lambda
+                auto& left = std::get<0>(pair);
+                auto& right = std::get<1>(pair);
+                auto term = std::make_shared<Term>(
+                    nullptr,
+                    ComparisonTerm {
+                        nullptr,
+                        ComparisonTerm::Operator::EQ,
+                        ComparisonTerm::Factor { left },
+                        ComparisonTerm::Factor { right },
+                    },
+                    [this](Term& term, VariableRewriter& rewriter) {
+                        return this->rewrite_comparison(term, rewriter);
+                    },
+                    [equalities, left, right](Term&) {
+                        auto it = equalities->find(std::make_pair(left, right));
+                        assert(it != equalities->end());  // NOLINT
+                        equalities->erase(it);
+                    }
+                );
+                term->sticky_ = sticky;
+                results.emplace_back(std::move(term));
+            }
+        }
+        if (results.empty()) {
+            return {};
+        }
+        std::vector<std::shared_ptr<Term>> terms;
+        terms.reserve(results.size() + preds.terms.size());
+        for (auto&& term : results) {
             terms.emplace_back(term);
         }
         for (auto&& term : preds.terms) {
             terms.emplace_back(term);
         }
-        auto constants = build_constants(preds, terms);
-        if (!constants.empty()) {
-            for (auto&& term : terms) {
-                if (!term) {
-                    continue;
-                }
-                auto&& comparison = term->comparison;
-                if (!comparison
-                        || comparison.op() != ComparisonTerm::Operator::EQ
-                        || !comparison.left().is_variable()
-                        || !comparison.right().is_variable()) {
-                    continue;
-                }
-                {
-                    auto rewrite = preds.rewriter.apply(comparison.left().variable());
-                    if (!is_valid(rewrite)) {
-                        continue;
-                    }
-                    if (auto it = constants.find(rewrite); it != constants.end()) {
-                        comparison = ComparisonTerm(
-                            comparison.source(),
-                            comparison.op(),
-                            comparison.right(),
-                            ComparisonTerm::Factor(make_clone(it->second)));
-                        term->alternative = true;
-                        continue;
-                    }
+        propagate_constants(preds.rewriter, std::move(terms));
+        return results;
+    }
 
+    void propagate_constants(VariableRewriter& rewriter, std::vector<std::shared_ptr<Term>> terms) {
+        auto constants = build_constants(rewriter, terms);
+        if (constants.empty()) {
+            return;
+        }
+        for (auto&& term : terms) {
+            if (!*term) {
+                continue;
+            }
+            auto&& comparison = term->comparison_;
+            if (!comparison
+                    || comparison.op() != ComparisonTerm::Operator::EQ
+                    || !comparison.left().is_variable()
+                    || !comparison.right().is_variable()) {
+                continue;
+            }
+            {
+                auto rewrite = rewriter.apply(comparison.left().variable());
+                if (!is_valid(rewrite)) {
+                    continue;
                 }
-                {
-                    auto rewrite = preds.rewriter.apply(comparison.right().variable());
-                    if (!is_valid(rewrite)) {
-                        continue;
-                    }
-                    if (auto it = constants.find(rewrite); it != constants.end()) {
-                        comparison.right() = ComparisonTerm::Factor(make_clone(it->second));
-                        term->alternative = true;
-                        continue;
-                    }
+                if (auto it = constants.find(rewrite); it != constants.end()) {
+                    comparison = ComparisonTerm(
+                        comparison.source(),
+                        comparison.op(),
+                        comparison.right(),
+                        ComparisonTerm::Factor(make_clone(it->second)));
+                    term->rewriter([this](Term& term, VariableRewriter& rewriter) {
+                        return this->rewrite_comparison(term, rewriter);
+                    });
+                    continue;
+                }
+            }
+            {
+                auto rewrite = rewriter.apply(comparison.right().variable());
+                if (!is_valid(rewrite)) {
+                    continue;
+                }
+                if (auto it = constants.find(rewrite); it != constants.end()) {
+                    comparison.right() = ComparisonTerm::Factor(make_clone(it->second));
+                    term->rewriter([this](Term& term, VariableRewriter& rewriter) {
+                        return this->rewrite_comparison(term, rewriter);
+                    });
+                    continue;
                 }
             }
         }
-        return std::move(collector.terms);
     }
 
     std::map<std::shared_ptr<binding::VariableBinding>, std::unique_ptr<common::core::Value>> build_constants(
-            Predicates& preds,
+        VariableRewriter& rewriter,
             std::vector<std::shared_ptr<Term>>& terms) {
         std::map<std::shared_ptr<binding::VariableBinding>, std::unique_ptr<common::core::Value>> constants {};
         for (auto&& term : terms) {
             if (!term) {
                 continue;
             }
-            auto&& comparison = term->comparison;
+            auto&& comparison = term->comparison_;
             if (!comparison
                     || comparison.op() != ComparisonTerm::Operator::EQ
                     || !comparison.left().is_variable()) {
                 continue;
             }
-            auto left = preds.rewriter.apply(comparison.left().variable());
+            auto left = rewriter.apply(comparison.left().variable());
             if (!is_valid(left)) {
                 continue;
             }
@@ -363,12 +462,12 @@ public:
             if (!*term) {
                 continue;
             }
-            if (!force && term->sticky) {
+            if (!force && term->sticky_) {
                 continue;
             }
-            if (rewrite_variables(preds, *term)) {
-                auto replaced = replace_constant(*term, true);
-                predicate = merge_condition(std::move(predicate), std::move(replaced));
+            if (auto detached = term->rewrite(preds.rewriter); is_defined(detached)) {
+                predicate = merge_condition(std::move(predicate), std::move(detached));
+                term->dispose();
             }
         }
         if (!is_defined(predicate)) {
@@ -390,55 +489,6 @@ public:
         auto parent = relation_of(dynamic_pointer_cast<model::key::RelationKey::Provider>(selection->operand()));
         auto relation = std::make_shared<binding::RelationBinding>(parent->output(), parent->output());
         selection->relation_key(context_.bindings().create_key(std::move(relation)));
-    }
-
-    bool rewrite_variables(Predicates& preds, Term& term) {
-        assert(term);  // NOLINT
-        if (term.alternative) {
-            auto&& comparison = term.comparison;
-            // FIXME: simple implementation only
-            assert(comparison);  // NOLINT
-            assert(comparison.op() == ComparisonTerm::Operator::EQ);  // NOLINT
-            assert(comparison.left().is_variable());  // NOLINT
-            assert(comparison.right().is_constant());  // NOLINT
-
-            auto rewrite = preds.rewriter.apply(comparison.left().variable());
-            if (!is_valid(rewrite)) {
-                return false;
-            }
-            auto left = f.VariableReference(f.Name(name_of(*rewrite)));
-            bless(left.get(), rewrite->type());
-            left->variable_key(context_.bindings().create_key(rewrite));
-
-            auto right = f.Literal(make_clone(rewrite->type()), make_clone(comparison.right().constant()));
-            bless(right.get(), right->type(), right->value(), true);
-
-            auto compare = f.BinaryOperator(model::expression::BinaryOperator::Kind::EQUAL, std::move(left), std::move(right));
-            compare->expression_key(context_.bindings().create_key<binding::ExpressionBinding>(
-                std::make_unique<common::core::type::Bool>(common::core::Type::Nullity::NEVER_NULL)));
-
-            auto original_type = make_clone(type_of(term.node));
-            term.node = term.node->replace_with(std::move(compare));
-            encast(original_type.get(), term.node);
-            return true;
-        }
-        auto variables = VariableRewriter::collect(term.node);
-        for (auto* ref : variables) {
-            auto var = variable_of(ref);
-            if (auto rewrite = preds.rewriter.apply(var); !is_valid(rewrite)) {
-                return false;
-            }
-        }
-        for (auto* ref : variables) {
-            auto var = variable_of(ref);
-            auto rewrite = preds.rewriter.apply(var);
-            assert(is_valid(rewrite));  // NOLINT
-            ref->variable_key(context_.bindings().create_key(rewrite));
-            if (!equals(var->type(), rewrite->type())) {
-                encast(rewrite->type(), ref);
-            }
-        }
-        return true;
     }
 
     static std::string name_of(binding::VariableBinding const& variable) {
@@ -465,8 +515,8 @@ public:
             common::core::Type const* type,
             common::core::Value const* value = nullptr,
             bool constant = false) {
-        auto expr = std::make_shared<binding::ExpressionBinding>(make_clone(type), make_clone(value), constant);
-        node->expression_key(context_.bindings().create_key(std::move(expr)));
+        node->expression_key(context_.bindings().create_key<binding::ExpressionBinding>(
+            make_clone(type), make_clone(value), constant));
     }
 
     std::shared_ptr<binding::VariableBinding> extract_variable_deep(model::expression::Expression* node) {
@@ -522,24 +572,125 @@ public:
         }
     }
 
-    std::unique_ptr<model::expression::Expression> replace_constant(Term& term, bool value) {
-        assert(term);  // NOLINT
+    std::unique_ptr<model::expression::Expression> rewrite_default(Term& term, VariableRewriter& rewriter) {
+        assert(is_defined(term.node_));  // NOLINT
+        auto variables = VariableRewriter::collect(term.node_);
+        for (auto* ref : variables) {
+            auto var = variable_of(ref);
+            if (auto rewrite = rewriter.apply(var); !is_valid(rewrite)) {
+                return {};
+            }
+        }
+        for (auto* ref : variables) {
+            auto var = variable_of(ref);
+            auto rewrite = rewriter.apply(var);
+            assert(is_valid(rewrite));  // NOLINT
+            ref->variable_key(context_.bindings().create_key(rewrite));
+            if (!equals(var->type(), rewrite->type())) {
+                encast(rewrite->type(), ref);
+            }
+        }
+        return detach_node(term, create_true_node());
+    }
+
+    std::unique_ptr<model::expression::Expression> rewrite_comparison(Term& term, VariableRewriter& rewriter) {
+        auto&& comparison = term.comparison_;
+        assert(comparison);  // NOLINT
+        assert(comparison.op() == ComparisonTerm::Operator::EQ);  // NOLINT
+        assert(comparison.left().is_variable());  // NOLINT
+        if (auto rewrite = rewriter.apply(comparison.left().variable()); !is_valid(rewrite)) {
+            return {};
+        }
+        if (auto& factor = comparison.right(); factor.is_variable()) {
+            if (auto rewrite = rewriter.apply(factor.variable()); !is_valid(rewrite)) {
+                return {};
+            }
+        }
+        comparison.left().variable(rewriter.apply(comparison.left().variable()));
+        if (auto& factor = comparison.right(); factor.is_variable()) {
+            factor.variable(rewriter.apply(factor.variable()));
+        }
+        auto compare = create_comparison_node(comparison);
+        if (!is_defined(term.node_)) {
+            return compare;
+        }
+        common::util::ManagedPtr holder { std::move(compare) };
+        encast(type_of(term.node_), holder.get());
+        detach_node(term, create_true_node());
+        return holder.release();
+    }
+
+    std::unique_ptr<model::expression::Expression> create_true_node() {
+        auto node = f.Literal(
+            std::make_unique<common::core::type::Bool>(common::core::Type::Nullity::NEVER_NULL),
+            std::make_unique<common::core::value::Bool>(true));
+        node->expression_key(context_.bindings().create_key<binding::ExpressionBinding>(
+            make_clone(node->type()),
+            make_clone(node->value()),
+            true));
+        return node;
+    }
+
+    std::unique_ptr<model::expression::Expression> create_comparison_node(ComparisonTerm const& term) {
+        auto type = term.left().variable()->type();
+        auto left = f.VariableReference(f.Name(name_of(*term.left().variable())));
+        bless(left.get(), type);
+        left->variable_key(context_.bindings().create_key(term.left().variable()));
+
+        std::unique_ptr<model::expression::Expression> right {};
+        if (term.right().is_variable()) {
+            auto factor = f.VariableReference(f.Name(name_of(*term.right().variable())));
+            bless(right.get(), type);
+            factor->variable_key(context_.bindings().create_key(term.right().variable()));
+            right = std::move(factor);
+        } else if (term.right().is_constant()) {
+            auto factor = f.Literal(make_clone(type), make_clone(term.right().constant()));
+            bless(factor.get(), factor->type(), factor->value(), true);
+            right = std::move(factor);
+        } else {
+            std::abort();
+        }
+
+        auto promoted = analyze::typing::binary_promotion(type_of(left.get()), type_of(right.get()));
+        auto op = convert(term.op());
+        auto compare = f.BinaryOperator(op,
+            std::move(left),
+            std::move(right));
+        compare->expression_key(context_.bindings().create_key<binding::ExpressionBinding>(
+            std::make_unique<common::core::type::Bool>(
+                term.op() == ComparisonTerm::Operator::EQ || term.op() == ComparisonTerm::Operator::NE
+                    ? common::core::Type::Nullity::NEVER_NULL : promoted->nullity()
+                )));
+        encast(promoted.get(), compare->left());
+        encast(promoted.get(), compare->right());
+
+        return compare;
+    }
+
+    std::unique_ptr<model::expression::Expression> detach_node(
+            Term& term,
+            std::unique_ptr<model::expression::Expression> replacement) {
+        assert(is_defined(term.node_));  // NOLINT
         std::unique_ptr<model::expression::Expression> detached;
-        auto replacement = constant(value);
-        term.node->replace([&](auto origin) {
+        term.node_->replace([&](auto origin) {
             detached = std::move(origin);
             return std::move(replacement);
         });
-        term.node = nullptr;
         return detached;
     }
 
-    std::unique_ptr<model::expression::Literal> constant(bool value) {
-        auto node = f.Literal(
-            std::make_unique<common::core::type::Bool>(common::core::Type::Nullity::NEVER_NULL),
-            std::make_unique<common::core::value::Bool>(value));
-        bless(node.get(), node->type(), node->value(), true);
-        return node;
+    static model::expression::BinaryOperator::Kind convert(ComparisonTerm::Operator value) {
+        using IN = ComparisonTerm::Operator;
+        using OUT = model::expression::BinaryOperator::Kind;
+        switch (value) {
+            case IN::EQ: return OUT::EQUAL;
+            case IN::NE: return OUT::NOT_EQUAL;
+            case IN::LT: return OUT::LESS_THAN;
+            case IN::GT: return OUT::GREATER_THAN;
+            case IN::LE: return OUT::LESS_THAN_OR_EQUAL;
+            case IN::GE: return OUT::GREATER_THAN_OR_EQUAL;
+        }
+        std::abort();
     }
 
 private:
