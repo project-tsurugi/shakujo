@@ -425,7 +425,7 @@ TEST_F(AnalyzerRelationTest, join) {
     auto&& join = relation->join_strategy();
 
     EXPECT_EQ(join.kind(), binding::JoinStrategy::Kind::NESTED_LOOP);
-    EXPECT_FALSE(join.natural());
+    EXPECT_TRUE(join.equalities().empty());
     EXPECT_FALSE(join.left_outer());
     EXPECT_FALSE(join.right_outer());
     EXPECT_FALSE(join.left_semi());
@@ -474,7 +474,7 @@ TEST_F(AnalyzerRelationTest, join_inner) {
     auto&& join = relation->join_strategy();
 
     EXPECT_EQ(join.kind(), binding::JoinStrategy::Kind::NESTED_LOOP);
-    EXPECT_FALSE(join.natural());
+    EXPECT_TRUE(join.equalities().empty());
     EXPECT_FALSE(join.left_outer());
     EXPECT_FALSE(join.right_outer());
     EXPECT_FALSE(join.left_semi());
@@ -527,7 +527,7 @@ TEST_F(AnalyzerRelationTest, join_left_outer) {
     auto&& join = relation->join_strategy();
 
     EXPECT_EQ(join.kind(), binding::JoinStrategy::Kind::NESTED_LOOP);
-    EXPECT_FALSE(join.natural());
+    EXPECT_TRUE(join.equalities().empty());
     EXPECT_TRUE(join.left_outer());
     EXPECT_FALSE(join.right_outer());
     EXPECT_FALSE(join.left_semi());
@@ -580,7 +580,7 @@ TEST_F(AnalyzerRelationTest, join_right_outer) {
     auto&& join = relation->join_strategy();
 
     EXPECT_EQ(join.kind(), binding::JoinStrategy::Kind::NESTED_LOOP);
-    EXPECT_FALSE(join.natural());
+    EXPECT_TRUE(join.equalities().empty());
     EXPECT_FALSE(join.left_outer());
     EXPECT_TRUE(join.right_outer());
     EXPECT_FALSE(join.left_semi());
@@ -633,7 +633,7 @@ TEST_F(AnalyzerRelationTest, join_full_outer) {
     auto&& join = relation->join_strategy();
 
     EXPECT_EQ(join.kind(), binding::JoinStrategy::Kind::NESTED_LOOP);
-    EXPECT_FALSE(join.natural());
+    EXPECT_TRUE(join.equalities().empty());
     EXPECT_TRUE(join.left_outer());
     EXPECT_TRUE(join.right_outer());
     EXPECT_FALSE(join.left_semi());
@@ -687,7 +687,7 @@ TEST_F(AnalyzerRelationTest, join_natural) {
     auto&& join = relation->join_strategy();
 
     EXPECT_EQ(join.kind(), binding::JoinStrategy::Kind::NESTED_LOOP);
-    EXPECT_TRUE(join.natural());
+    EXPECT_FALSE(join.equalities().empty());
     EXPECT_FALSE(join.left_outer());
     EXPECT_FALSE(join.right_outer());
     EXPECT_FALSE(join.left_semi());
@@ -716,6 +716,14 @@ TEST_F(AnalyzerRelationTest, join_natural) {
         EXPECT_EQ(c.left_source(), nullptr);
         EXPECT_EQ(c.right_source(), right.columns()[1]);
         EXPECT_FALSE(c.nullify_right_source());
+    }
+
+    auto&& equalities = join.equalities();
+    ASSERT_EQ(equalities.size(), 1);
+    {
+        auto&& [a, b] = *equalities.begin();
+        EXPECT_EQ(a, left.columns()[0]);
+        EXPECT_EQ(b, right.columns()[0]);
     }
 }
 
@@ -866,7 +874,7 @@ TEST_F(AnalyzerRelationTest, join_qualified_column) {
     auto&& join = relation->join_strategy();
 
     EXPECT_EQ(join.kind(), binding::JoinStrategy::Kind::NESTED_LOOP);
-    EXPECT_FALSE(join.natural());
+    EXPECT_TRUE(join.equalities().empty());
     EXPECT_FALSE(join.left_outer());
     EXPECT_FALSE(join.right_outer());
     EXPECT_FALSE(join.left_semi());

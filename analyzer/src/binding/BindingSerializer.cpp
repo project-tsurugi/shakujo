@@ -488,11 +488,6 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, JoinStr
         printer.exit_property("kind");
     }
     {
-        printer.enter_property("natural");
-        printer.value(value->natural());
-        printer.exit_property("natural");
-    }
-    {
         printer.enter_property("left_outer");
         printer.value(value->left_outer());
         printer.exit_property("left_outer");
@@ -522,6 +517,20 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, JoinStr
         }
         printer.exit_array(size);
         printer.exit_property("columns");
+    }
+    {
+        printer.enter_property("equalities");
+        auto& list = value->equalities();
+        auto size = list.size();
+        printer.enter_array(size);
+        for (auto& [left, right] : list) {
+            printer.enter_array(2);
+            serialize(printer, left.get());
+            serialize(printer, right.get());
+            printer.exit_array(2);
+        }
+        printer.exit_array(size);
+        printer.exit_property("equalities");
     }
     printer.exit_object("JoinStrategy");
 }

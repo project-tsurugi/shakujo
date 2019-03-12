@@ -1317,6 +1317,7 @@ void Engine::visit(model::expression::relation::JoinExpression* node, ScopeConte
     }
     std::vector<common::core::type::Relation::Column> result_columns {};
     std::vector<std::shared_ptr<binding::VariableBinding>> result_variables {};
+    std::set<std::pair<std::shared_ptr<binding::VariableBinding>, std::shared_ptr<binding::VariableBinding>>> equalities {};
     result_columns.reserve(result_join_columns.size());
     result_variables.reserve(result_join_columns.size());
     for (auto&& column : result_join_columns) {
@@ -1327,6 +1328,9 @@ void Engine::visit(model::expression::relation::JoinExpression* node, ScopeConte
             column.qualifiers(),
             column.output()->name().segments()[0],
             make_clone(column.output()->type()));
+        if (is_defined(column.left_source()) && is_defined(column.right_source())) {
+            equalities.emplace(column.left_source(), column.right_source());
+        }
     }
     auto result_type = std::make_unique<common::core::type::Relation>(std::move(result_columns));
     RelationScope relation_scope { bindings(), &prev.variables(), result_type.get(), result_variables };
@@ -1335,12 +1339,12 @@ void Engine::visit(model::expression::relation::JoinExpression* node, ScopeConte
         relation_scope.profile());
     relation->join_strategy({
         union_join ? binding::JoinStrategy::Kind::UNION : binding::JoinStrategy::Kind::NESTED_LOOP,
-        natural,
         left_outer,
         right_outer,
         node->operator_kind() == Kind::LEFT_SEMI,
         node->operator_kind() == Kind::RIGHT_SEMI,
         std::move(result_join_columns),
+        std::move(equalities),
     });
     bless(node, std::move(relation));
     bless(node, std::move(result_type));

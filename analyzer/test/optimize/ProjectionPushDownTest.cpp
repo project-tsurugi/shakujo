@@ -454,28 +454,18 @@ TEST_F(ProjectionPushDownTest, join_natural) {
     {
         auto relation = extract_relation(node);
         auto&& strategy = relation->join_strategy();
-        ASSERT_EQ(strategy.columns().size(), 2);
+        ASSERT_EQ(strategy.columns().size(), 1);
         {
             auto&& c = strategy.columns()[0];
             EXPECT_TRUE(c.left_source());
             EXPECT_FALSE(c.right_source());
             EXPECT_EQ(*c.output()->type(), t::Int(64U, NON_NULL));
         }
-        {
-            auto&& c = strategy.columns()[1];
-            EXPECT_TRUE(c.left_source());
-            EXPECT_TRUE(c.right_source());
-            EXPECT_EQ(*c.output()->type(), t::Int(32U, NON_NULL));
-        }
         auto&& output = relation->output().columns();
-        ASSERT_EQ(output.size(), 2U);
+        ASSERT_EQ(output.size(), 1U);
         {
             auto&& c = output[0];
             EXPECT_EQ(*c->type(), t::Int(64U, NON_NULL));
-        }
-        {
-            auto&& c = output[1];
-            EXPECT_EQ(*c->type(), t::Int(32U, NON_NULL));
         }
     }
     {

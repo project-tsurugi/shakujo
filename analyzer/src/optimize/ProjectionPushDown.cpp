@@ -319,12 +319,8 @@ public:
             for (auto it = columns.begin(); it != columns.end();) {
                 bool erased = false;
                 if (!prev.requires(it->output())) {
-                    if (strategy.natural() && is_defined(it->left_source()) && is_defined(it->right_source())) {
-                        // keep natural join pair
-                    } else {
-                        it = columns.erase(it);
-                        erased = true;
-                    }
+                    it = columns.erase(it);
+                    erased = true;
                 }
                 if (!erased) {
                     ++it;
@@ -345,6 +341,9 @@ public:
                     next.add(column.left_source());
                 }
             }
+            for (auto&& pair : strategy.equalities()) {
+                next.add(std::get<0>(pair));
+            }
             if (is_defined(node->condition())) {
                 collect(next, node->condition());
             }
@@ -356,6 +355,9 @@ public:
                 if (is_defined(column.right_source())) {
                     next.add(column.right_source());
                 }
+            }
+            for (auto&& pair : strategy.equalities()) {
+                next.add(std::get<1>(pair));
             }
             if (is_defined(node->condition())) {
                 collect(next, node->condition());

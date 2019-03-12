@@ -18,6 +18,7 @@
 
 #include <iostream>
 #include <memory>
+#include <set>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -137,12 +138,11 @@ public:
     /**
      * @brief constructs a new object.
      */
-    JoinStrategy() noexcept : JoinStrategy(Kind::NESTED_LOOP, false, false, false, false, false) {}
+    JoinStrategy() noexcept : JoinStrategy(Kind::NESTED_LOOP, false, false, false, false) {}
 
     /**
      * @brief constructs a new object.
      * @param kind the join kind
-     * @param natural is natural join
      * @param left_outer is left/full outer join
      * @param right_outer is right/full outer join
      * @param left_semi is left semi join
@@ -151,19 +151,19 @@ public:
      */
     JoinStrategy(
             Kind kind,
-            bool natural,
             bool left_outer,
             bool right_outer,
             bool left_semi,
             bool right_semi,
-            std::vector<Column> columns = {})
+            std::vector<Column> columns = {},
+            std::set<std::pair<std::shared_ptr<VariableBinding>, std::shared_ptr<VariableBinding>>> equalities = {})
         : kind_(kind)
-        , natural_(natural)
         , left_outer_(left_outer)
         , right_outer_(right_outer)
         , left_semi_(left_semi)
         , right_semi_(right_semi)
         , columns_(std::move(columns))
+        , equalities_(std::move(equalities))
     {}
 
     /**
@@ -181,25 +181,6 @@ public:
      */
     JoinStrategy& kind(Kind kind) {
         kind_ = kind;
-        return *this;
-    }
-
-    /**
-     * @brief returns whether or not this operation is natural join.
-     * @return true if this is natural join
-     * @return false otherwise
-     */
-    bool natural() const {
-        return natural_;
-    }
-
-    /**
-     * @brief sets wether or not this operation is natural join.
-     * @param on true to mark as natural join
-     * @return this
-     */
-    JoinStrategy& natural(bool on) {
-        natural_ = on;
         return *this;
     }
 
@@ -301,6 +282,22 @@ public:
     }
 
     /**
+     * @brief returns the join equality terms.
+     * @return equality terms
+     */
+    std::set<std::pair<std::shared_ptr<VariableBinding>, std::shared_ptr<VariableBinding>>>& equalities() {
+        return equalities_;
+    }
+
+    /**
+     * @brief returns the join equality terms.
+     * @return equality terms
+     */
+    std::set<std::pair<std::shared_ptr<VariableBinding>, std::shared_ptr<VariableBinding>>> const& equalities() const {
+        return equalities_;
+    }
+
+    /**
      * @brief returns whether or not this object is valid.
      * @return true if this is valid
      * @return false otherwise
@@ -320,12 +317,12 @@ public:
 
 private:
     Kind kind_;
-    bool natural_;
     bool left_outer_;
     bool right_outer_;
     bool left_semi_;
     bool right_semi_;
-    std::vector<Column> columns_;
+    std::vector<Column> columns_ {};
+    std::set<std::pair<std::shared_ptr<VariableBinding>, std::shared_ptr<VariableBinding>>> equalities_ {};
 };
 
 
