@@ -282,7 +282,9 @@ public:
 
         Requirements next { *relation_of(node->operand()) };
         for (auto* column : columns) {
-            collect(next, column->operand());
+            if (is_defined(column->operand())) {
+                collect(next, column->operand());
+            }
         }
         dispatch(node->operand(), std::move(next));
     }
