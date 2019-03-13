@@ -151,7 +151,7 @@ FunctionBinding::resolve_overload(FunctionBinding::Quantifier quantifier, Expres
                 continue;
             }
             auto&& parameters = candidate->parameters();
-            if (parameters.empty() && is_defined(argument)) {
+            if (parameters.empty() && !is_defined(argument)) {
                 return candidate;
             }
             if (parameters.size() == 1 && is_defined(argument) && tester(parameters[0], *argument)) {
