@@ -380,7 +380,7 @@ inline constexpr std::string_view to_string_view(FunctionBinding::Quantifier val
         case Quantifier::ASTERISK: return "ASTERISK";
         case Quantifier::UNRESOLVED: return "UNRESOLVED";
     }
-    return "(unknown)";
+    std::abort();
 }
 
 }  // namespace shakujo::analyzer::binding

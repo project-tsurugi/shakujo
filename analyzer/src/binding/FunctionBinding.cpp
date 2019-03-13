@@ -13,19 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <shakujo/analyzer/binding/FunctionBinding.h>
-
 #include "shakujo/analyzer/binding/FunctionBinding.h"
 
-#include "shakujo/analyzer/binding/Id.h"
-#include "shakujo/analyzer/binding/VariableBinding.h"
-#include "shakujo/common/core/Name.h"
-#include "shakujo/common/core/Type.h"
 #include "shakujo/common/core/Value.h"
 
 #include "analyze/typing.h"
 
 namespace shakujo::analyzer::binding {
+
+using common::util::is_defined;
 
 class FunctionBinding::Impl {
 public:
@@ -149,17 +145,16 @@ FunctionBinding::resolve_overload(FunctionBinding::Quantifier quantifier, Expres
     if (!is_overload_stub()) {
         return {};
     }
-    std::size_t parameter_count = argument == nullptr ? 0U: 1U;
     for (tester_t const& tester : { eq_strict, eq_nullable, eq_assignable }) {
         for (auto&& candidate : impl_->overload_candidates_) {
             if (candidate->quantifier() != quantifier) {
                 continue;
             }
             auto&& parameters = candidate->parameters();
-            if (parameters.size() != parameter_count) {
-                continue;
+            if (parameters.empty() && is_defined(argument)) {
+                return candidate;
             }
-            if (tester(parameters[0], *argument)) {
+            if (parameters.size() == 1 && is_defined(argument) && tester(parameters[0], *argument)) {
                 return candidate;
             }
         }
