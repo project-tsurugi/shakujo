@@ -38,7 +38,7 @@ public:
     template<class T>
     void do_apply(T&& ptr) {
         do_analyze(ptr.get(), true);
-        env.reporter() = {};
+        env.reporter().clear();
         Context context { env.binding_context() };
         SelectScan { context }(ptr.get());
         FixRelationInfo { context }(ptr.get());

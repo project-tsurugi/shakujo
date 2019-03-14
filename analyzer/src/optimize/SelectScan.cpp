@@ -22,6 +22,7 @@
 #include <vector>
 
 #include <cassert>
+#include <cstdlib>
 
 #include "SimplifyPredicate.h"
 #include "ComparisonTerm.h"
@@ -332,6 +333,8 @@ public:
                     lower = true;
                     inclusive = true;
                     break;
+                default:
+                    std::abort();
             }
             if (!asc) {
                 lower = !lower;

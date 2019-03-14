@@ -90,6 +90,15 @@ public:
         diagnostics_.push_back(std::move(diagnostic));
         return *this;
     }
+
+    /**
+     * @brief removes the all reported diagnostics.
+     * @return this
+     */
+    Reporter& clear() {
+        diagnostics_.clear();
+        return *this;
+    }
 };
 }  // namespace shakujo::analyzer
 

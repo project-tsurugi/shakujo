@@ -38,7 +38,7 @@ public:
     std::unique_ptr<model::expression::Expression> apply(std::unique_ptr<model::expression::Expression> expr) {
         auto manager = manage<model::expression::Expression>(std::move(expr));
         do_analyze(manager.get(), true);
-        env.reporter() = {};
+        env.reporter().clear();
 
         Context context { env.binding_context() };
         SelectScan optimizer { context };
