@@ -164,6 +164,22 @@ public:
         }
 
         /**
+         * @brief returns a set of columns which is always constant.
+         * @return the constant columns
+         */
+        std::set<std::shared_ptr<VariableBinding>>& constants() {
+            return constants_;
+        }
+
+        /**
+         * @brief returns a set of columns which is always constant.
+         * @return the constant columns
+         */
+        std::set<std::shared_ptr<VariableBinding>> const& constants() const {
+            return constants_;
+        }
+
+        /**
          * @brief return the order of rows in the corresponded relation.
          * @return order if rows are sorted by the resulting elements
          * @return empty if rows are not ordered
@@ -229,6 +245,7 @@ public:
     private:
         std::vector<std::shared_ptr<VariableBinding>> columns_ {};
         common::schema::TableInfo const* source_table_ {};
+        std::set<std::shared_ptr<VariableBinding>> constants_ {};
         std::vector<Order> order_ {};
         std::set<std::set<std::shared_ptr<VariableBinding>>> unique_keys_ {};
     };
