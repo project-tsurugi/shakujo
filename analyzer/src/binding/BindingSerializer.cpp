@@ -103,7 +103,7 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, Diagnos
 }
 
 void BindingSerializer::serialize(common::util::DataSerializer& printer, ExpressionBinding const* value) {
-    if (value == nullptr) {
+    if (!is_valid(value)) {
         printer.value(nullptr);
         return;
     }
@@ -122,7 +122,7 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, Express
 }
 
 void BindingSerializer::serialize(common::util::DataSerializer& printer, VariableBinding const* value) {
-    if (value == nullptr) {
+    if (!is_valid(value)) {
         printer.value(nullptr);
         return;
     }
@@ -155,7 +155,7 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, Variabl
 }
 
 void BindingSerializer::serialize(common::util::DataSerializer& printer, FunctionBinding const* value) {
-    if (value == nullptr) {
+    if (!is_valid(value)) {
         printer.value(nullptr);
         return;
     }
@@ -246,7 +246,7 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, Functio
 }
 
 void BindingSerializer::serialize(common::util::DataSerializer& printer, RelationBinding const* value) {
-    if (value == nullptr) {
+    if (!is_valid(value)) {
         printer.value(nullptr);
         return;
     }
