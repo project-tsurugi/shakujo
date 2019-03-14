@@ -1,6 +1,5 @@
 file(GLOB TEST_SOURCES
     "*.cpp"
-    "api/*.cpp"
     "core/*.cpp"
     "schema/*.cpp"
     "util/*.cpp"

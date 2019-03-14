@@ -15,7 +15,6 @@
  */
 #include "shakujo/model/util/NodeSerializer.h"
 
-#include <sstream>
 #include <stdexcept>
 
 #include "shakujo/common/util/utility.h"
@@ -23,22 +22,13 @@
 
 namespace shakujo::model::util {
 
-class NodeSerializer::Impl {
-private:
-    std::ostringstream str_buffer_;
+using common::util::dynamic_pointer_cast;
 
+class NodeSerializer::Impl {
 public:
     bool undefined_value_ { false };
     bool value_kind_ { false };
     bool name_as_string_ { false };
-
-    template<typename T>
-    inline std::string to_string(const T& value) {
-        str_buffer_.str("");
-        str_buffer_.clear(std::stringstream::goodbit);
-        common::util::append(str_buffer_, value);
-        return str_buffer_.str();
-    }
 };
 
 NodeSerializer::NodeSerializer() : impl_(new Impl()) {}
@@ -127,22 +117,20 @@ void NodeSerializer::serialize(common::util::DataSerializer& printer, common::co
     using Type = shakujo::common::core::Type;
     using namespace shakujo::common::core::type;
     switch (value->kind()) {
-    case Type::Kind::INT: return serialize(printer, dynamic_cast<Int const*>(value));
-    case Type::Kind::FLOAT: return serialize(printer, dynamic_cast<Float const*>(value));
-    case Type::Kind::CHAR: return serialize(printer, dynamic_cast<Char const*>(value));
-    case Type::Kind::STRING: return serialize(printer, dynamic_cast<String const*>(value));
-    case Type::Kind::BOOL: return serialize(printer, dynamic_cast<Bool const*>(value));
-    case Type::Kind::NULL_: return serialize(printer, dynamic_cast<Null const*>(value));
-    case Type::Kind::TUPLE: return serialize(printer, dynamic_cast<Tuple const*>(value));
-    case Type::Kind::ARRAY: return serialize(printer, dynamic_cast<Array const*>(value));
-    case Type::Kind::VECTOR: return serialize(printer, dynamic_cast<Vector const*>(value));
-    case Type::Kind::RELATION: return serialize(printer, dynamic_cast<Relation const*>(value));
-    case Type::Kind::CURSOR: return serialize(printer, dynamic_cast<Cursor const*>(value));
-    case Type::Kind::ERROR: return serialize(printer, dynamic_cast<Error const*>(value));
+    case Type::Kind::INT: return serialize(printer, dynamic_pointer_cast<Int>(value));
+    case Type::Kind::FLOAT: return serialize(printer, dynamic_pointer_cast<Float>(value));
+    case Type::Kind::CHAR: return serialize(printer, dynamic_pointer_cast<Char>(value));
+    case Type::Kind::STRING: return serialize(printer, dynamic_pointer_cast<String>(value));
+    case Type::Kind::BOOL: return serialize(printer, dynamic_pointer_cast<Bool>(value));
+    case Type::Kind::NULL_: return serialize(printer, dynamic_pointer_cast<Null>(value));
+    case Type::Kind::TUPLE: return serialize(printer, dynamic_pointer_cast<Tuple>(value));
+    case Type::Kind::ARRAY: return serialize(printer, dynamic_pointer_cast<Array>(value));
+    case Type::Kind::VECTOR: return serialize(printer, dynamic_pointer_cast<Vector>(value));
+    case Type::Kind::RELATION: return serialize(printer, dynamic_pointer_cast<Relation>(value));
+    case Type::Kind::CURSOR: return serialize(printer, dynamic_pointer_cast<Cursor>(value));
+    case Type::Kind::ERROR: return serialize(printer, dynamic_pointer_cast<Error>(value));
     }
-    std::ostringstream ss;
-    ss << "unknown object kind: " << value->kind();
-    throw std::invalid_argument(ss.str());
+    throw std::invalid_argument(common::util::to_string("unknown object kind: ", value->kind()));
 }
 
 void NodeSerializer::serialize(common::util::DataSerializer& printer, common::core::Type::Nullity value) {
@@ -153,7 +141,7 @@ void NodeSerializer::serialize(common::util::DataSerializer& printer, common::co
             printer.enter_object("Type::Nullity");
         }
         printer.enter_property("value");
-        printer.value(impl_->to_string(value));
+        printer.value(to_string_view(value));
         printer.exit_property("value");
         if (show_qualified_kind()) {
             printer.exit_object("Nullity");
@@ -161,7 +149,7 @@ void NodeSerializer::serialize(common::util::DataSerializer& printer, common::co
             printer.exit_object("Type::Nullity");
         }
     } else {
-        printer.value(impl_->to_string(value));
+        printer.value(to_string_view(value));
     }
 }
 
@@ -395,18 +383,16 @@ void NodeSerializer::serialize(common::util::DataSerializer& printer, common::co
     using Value = shakujo::common::core::Value;
     using namespace shakujo::common::core::value;
     switch (value->kind()) {
-    case Value::Kind::BOOL: return serialize(printer, dynamic_cast<Bool const*>(value));
-    case Value::Kind::INT: return serialize(printer, dynamic_cast<Int const*>(value));
-    case Value::Kind::FLOAT: return serialize(printer, dynamic_cast<Float const*>(value));
-    case Value::Kind::PLACEHOLDER: return serialize(printer, dynamic_cast<Placeholder const*>(value));
-    case Value::Kind::STRING: return serialize(printer, dynamic_cast<String const*>(value));
-    case Value::Kind::TUPLE: return serialize(printer, dynamic_cast<Tuple const*>(value));
-    case Value::Kind::NULL_: return serialize(printer, dynamic_cast<Null const*>(value));
-    case Value::Kind::ERROR: return serialize(printer, dynamic_cast<Error const*>(value));
+    case Value::Kind::BOOL: return serialize(printer, dynamic_pointer_cast<Bool>(value));
+    case Value::Kind::INT: return serialize(printer, dynamic_pointer_cast<Int>(value));
+    case Value::Kind::FLOAT: return serialize(printer, dynamic_pointer_cast<Float>(value));
+    case Value::Kind::PLACEHOLDER: return serialize(printer, dynamic_pointer_cast<Placeholder>(value));
+    case Value::Kind::STRING: return serialize(printer, dynamic_pointer_cast<String>(value));
+    case Value::Kind::TUPLE: return serialize(printer, dynamic_pointer_cast<Tuple>(value));
+    case Value::Kind::NULL_: return serialize(printer, dynamic_pointer_cast<Null>(value));
+    case Value::Kind::ERROR: return serialize(printer, dynamic_pointer_cast<Error>(value));
     }
-    std::ostringstream ss;
-    ss << "unknown object kind: " << value->kind();
-    throw std::invalid_argument(ss.str());
+    throw std::invalid_argument(common::util::to_string("unknown object kind: ", value->kind()));
 }
 
 void NodeSerializer::serialize(common::util::DataSerializer& printer, common::core::value::Bool const* value) {
@@ -529,6 +515,74 @@ void NodeSerializer::serialize(common::util::DataSerializer& printer, common::co
             printer.exit_property("value");
         }
         printer.exit_object("Error");
+    }
+}
+
+void NodeSerializer::serialize(common::util::DataSerializer& printer, common::core::DocumentRegion const *value) {
+    if (value == nullptr || !*value) {
+        printer.value(nullptr);
+        return;
+    }
+    printer.enter_object("DocumentRegion");
+    {
+        printer.enter_property("path");
+        if (auto&& v = value->path(); !v.empty()) {
+            printer.value(v);
+        } else {
+            printer.value(nullptr);
+        }
+        printer.exit_property("path");
+    }
+    {
+        printer.enter_property("begin");
+        serialize(printer, &value->begin());
+        printer.exit_property("begin");
+    }
+    {
+        printer.enter_property("end");
+        serialize(printer, &value->end());
+        printer.exit_property("end");
+    }
+    printer.exit_object("DocumentRegion");
+
+}
+
+void NodeSerializer::serialize(common::util::DataSerializer& printer, common::core::DocumentRegion::Position const *value) {
+    if (value == nullptr || !*value) {
+        printer.value(nullptr);
+        return;
+    }
+    if (!show_fragment_kind()) {
+        printer.enter_object({});
+    } else if (show_qualified_kind()) {
+        printer.enter_object("Position");
+    } else {
+        printer.enter_object("DocumentRegion::Position");
+    }
+    {
+        printer.enter_property("line_number");
+        if (auto v = value->line_number(); v > 0) {
+            printer.value(v);
+        } else {
+            printer.value(nullptr);
+        }
+        printer.exit_property("line_number");
+    }
+    {
+        printer.enter_property("column_number");
+        if (auto v = value->column_number(); v > 0) {
+            printer.value(v);
+        } else {
+            printer.value(nullptr);
+        }
+        printer.exit_property("column_number");
+    }
+    if (!show_fragment_kind()) {
+        printer.exit_object({});
+    } else if (show_qualified_kind()) {
+        printer.exit_object("Position");
+    } else {
+        printer.exit_object("DocumentRegion::Position");
     }
 }
 

@@ -17,8 +17,6 @@
 
 #include <gtest/gtest.h>
 #include <stdexcept>
-#include <shakujo/model/expression/relation/JoinExpression.h>
-#include <shakujo/model/expression/relation/OrderExpression.h>
 
 #include "shakujo/model/IRFactory.h"
 #include "shakujo/common/util/utility.h"

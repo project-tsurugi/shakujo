@@ -19,6 +19,8 @@
 
 #include <iostream>
 #include <memory>
+#include <string>
+#include <string_view>
 
 #include "shakujo/common/util/Clonable.h"
 #include "shakujo/common/util/operators.h"
@@ -158,12 +160,34 @@ public:
 };
 
 /**
+ * @brief returns string representation of the given value.
+ * @param value the target enum constant
+ * @return string representation
+ */
+inline constexpr std::string_view to_string_view(Value::Kind value) {
+    using Kind = Value::Kind;
+    switch (value) {
+        case Kind::BOOL: return "BOOL";
+        case Kind::INT: return "INT";
+        case Kind::FLOAT: return "FLOAT";
+        case Kind::STRING: return "STRING";
+        case Kind::TUPLE: return "TUPLE";
+        case Kind::NULL_: return "NULL";
+        case Kind::PLACEHOLDER: return "PLACEHOLDER";
+        case Kind::ERROR: return "ERROR";
+    }
+    std::abort();
+}
+
+/**
  * @brief Appends short name into the given output stream.
  * @param out the target output stream
  * @param value the target enum constant
  * @return the output stream
  */
-std::ostream& operator<<(std::ostream& out, Value::Kind value);
+inline std::ostream& operator<<(std::ostream& out, Value::Kind value) {
+    return out << to_string_view(value);
+}
 
 }  // namespace shakujo::common::core
 

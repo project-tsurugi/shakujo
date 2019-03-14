@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <shakujo/analyzer/binding/BindingSerializer.h>
-
 #include "shakujo/analyzer/binding/BindingSerializer.h"
 
 #include "shakujo/common/util/utility.h"
@@ -73,6 +71,35 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, model::
     } else {
         serialize(printer, binding.get());
     }
+}
+
+void BindingSerializer::serialize(common::util::DataSerializer& printer, Diagnostic const* value) {
+    if (value == nullptr) {
+        printer.value(nullptr);
+        return;
+    }
+    printer.enter_object("Diagnostic");
+    {
+        printer.enter_property("region");
+        serialize(printer, &value->region());
+        printer.exit_property("region");
+    }
+    {
+        printer.enter_property("code");
+        printer.value(to_string_view(value->code()));
+        printer.exit_property("code");
+    }
+    {
+        printer.enter_property("severity");
+        printer.value(to_string_view(value->severity()));
+        printer.exit_property("severity");
+    }
+    {
+        printer.enter_property("message");
+        printer.value(value->message());
+        printer.exit_property("message");
+    }
+    printer.exit_object("Diagnostic");
 }
 
 void BindingSerializer::serialize(common::util::DataSerializer& printer, ExpressionBinding const* value) {
@@ -264,7 +291,7 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, Relatio
 }
 
 void BindingSerializer::serialize(common::util::DataSerializer &printer, RelationBinding::Profile const *value) {
-    if (value == nullptr) {
+    if (!is_valid(value)) {
         printer.value(nullptr);
         return;
     }
@@ -273,38 +300,36 @@ void BindingSerializer::serialize(common::util::DataSerializer &printer, Relatio
     } else {
         printer.enter_object("RelationBinding::Profile");
     }
-    if (!value->columns().empty()) {
-        {
-            printer.enter_property("columns");
-            auto& list = value->columns();
-            auto size = list.size();
-            printer.enter_array(size);
-            for (auto& element : list) {
-                if (!element) {
-                    printer.value(nullptr);
-                } else {
-                    serialize(printer, element.get());
-                }
+    {
+        printer.enter_property("columns");
+        auto& list = value->columns();
+        auto size = list.size();
+        printer.enter_array(size);
+        for (auto& element : list) {
+            if (!element) {
+                printer.value(nullptr);
+            } else {
+                serialize(printer, element.get());
             }
-            printer.exit_array(size);
-            printer.exit_property("columns");
         }
-        {
-            printer.enter_property("source_table");
-            serialize(printer, &value->source_table());
-            printer.exit_property("source_table");
+        printer.exit_array(size);
+        printer.exit_property("columns");
+    }
+    {
+        printer.enter_property("source_table");
+        serialize(printer, &value->source_table());
+        printer.exit_property("source_table");
+    }
+    {
+        printer.enter_property("order");
+        auto& list = value->order();
+        auto size = list.size();
+        printer.enter_array(size);
+        for (auto& element : list) {
+            serialize(printer, &element);
         }
-        {
-            printer.enter_property("order");
-            auto& list = value->order();
-            auto size = list.size();
-            printer.enter_array(size);
-            for (auto& element : list) {
-                serialize(printer, &element);
-            }
-            printer.exit_array(size);
-            printer.exit_property("order");
-        }
+        printer.exit_array(size);
+        printer.exit_property("order");
     }
     if (show_qualified_kind()) {
         printer.exit_object("Profile");

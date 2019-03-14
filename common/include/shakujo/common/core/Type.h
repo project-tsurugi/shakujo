@@ -19,6 +19,8 @@
 
 #include <iostream>
 #include <memory>
+#include <string>
+#include <string_view>
 
 #include "shakujo/common/util/Clonable.h"
 #include "shakujo/common/util/operators.h"
@@ -224,13 +226,42 @@ public:
 };
 
 /**
- * @brief Appends short name into the given output stream.
- * @param out the target output stream
+ * @brief returns string representation of the given value.
  * @param value the target enum constant
- * @return the output stream
- * @see Type::Nullity
+ * @return string representation
  */
-std::ostream& operator<<(std::ostream& out, Type::Kind value);
+inline constexpr std::string_view to_string_view(Type::Kind value) {
+    using Kind = Type::Kind;
+    switch (value) {
+        case Kind::INT: return "INT";
+        case Kind::FLOAT: return "FLOAT";
+        case Kind::CHAR: return "CHAR";
+        case Kind::STRING: return "STRING";
+        case Kind::BOOL: return "BOOL";
+        case Kind::NULL_: return "NULL";
+        case Kind::TUPLE: return "TUPLE";
+        case Kind::ARRAY: return "ARRAY";
+        case Kind::VECTOR: return "VECTOR";
+        case Kind::RELATION: return "RELATION";
+        case Kind::CURSOR: return "CURSOR";
+        case Kind::ERROR: return "ERROR";
+    }
+    std::abort();
+}
+
+/**
+ * @brief returns string representation of the given value.
+ * @param value the target enum constant
+ * @return string representation
+ */
+inline constexpr std::string_view to_string_view(Type::Nullity value) {
+    using Kind = Type::Nullity;
+    switch (value) {
+        case Kind::NULLABLE: return "NULLABLE";
+        case Kind::NEVER_NULL: return "NEVER_NULL";
+    }
+    std::abort();
+}
 
 /**
  * @brief Appends short name into the given output stream.
@@ -239,7 +270,20 @@ std::ostream& operator<<(std::ostream& out, Type::Kind value);
  * @return the output stream
  * @see Type::Nullity
  */
-std::ostream& operator<<(std::ostream& out, Type::Nullity value);
+inline std::ostream& operator<<(std::ostream& out, Type::Kind value) {
+    return out << to_string_view(value);
+}
+
+/**
+ * @brief Appends short name into the given output stream.
+ * @param out the target output stream
+ * @param value the target enum constant
+ * @return the output stream
+ * @see Type::Nullity
+ */
+inline std::ostream& operator<<(std::ostream& out, Type::Nullity value) {
+    return out << to_string_view(value);
+}
 
 /**
  * @brief merges two nullity.
@@ -248,7 +292,9 @@ std::ostream& operator<<(std::ostream& out, Type::Nullity value);
  * @return Type::Nullity::NULLABLE if either one is Type::Nullity::NULLABLE
  * @return Type::Nullity::NEVER_NULL otherwise
  */
-Type::Nullity operator|(Type::Nullity a, Type::Nullity b);
+inline constexpr Type::Nullity operator|(Type::Nullity a, Type::Nullity b) {
+    return static_cast<Type::Nullity>(static_cast<bool>(a) || static_cast<bool>(b));
+}
 
 /**
  * @brief merges two nullity.
@@ -257,7 +303,9 @@ Type::Nullity operator|(Type::Nullity a, Type::Nullity b);
  * @return Type::Nullity::NULLABLE if both are Type::Nullity::NULLABLE
  * @return Type::Nullity::NEVER_NULL otherwise
  */
-Type::Nullity operator&(Type::Nullity a, Type::Nullity b);
+inline Type::Nullity operator&(Type::Nullity a, Type::Nullity b) {
+    return static_cast<Type::Nullity>(static_cast<bool>(a) && static_cast<bool>(b));
+}
 
 /**
  * @brief returns the flipped nullity.
@@ -265,7 +313,9 @@ Type::Nullity operator&(Type::Nullity a, Type::Nullity b);
  * @return Type::Nullity::NULLABLE if it is NEVER_NULL
  * @return Type::Nullity::NEVER_NULL otherwise
  */
-Type::Nullity operator~(Type::Nullity nullity);
+inline Type::Nullity operator~(Type::Nullity nullity) {
+    return static_cast<Type::Nullity>(!static_cast<bool>(nullity));
+}
 
 }  // namespace shakujo::common::core
 

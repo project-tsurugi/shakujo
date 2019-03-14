@@ -45,12 +45,4 @@ std::ostream& operator<<(std::ostream& out, const Diagnostic& value) {
     }
     return out;
 }
-
-std::ostream &operator<<(std::ostream &out, Diagnostic::Code value) {
-    return out << to_string_view(value);
-}
-
-std::ostream &operator<<(std::ostream &out, Diagnostic::Severity value) {
-    return out << to_string_view(value);
-}
 }  // namespace shakujo::analyzer

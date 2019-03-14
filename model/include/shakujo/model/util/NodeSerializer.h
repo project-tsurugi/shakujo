@@ -316,6 +316,20 @@ public:
      * @param value the target value
      */
     virtual void serialize(common::util::DataSerializer& printer, common::core::value::Error const* value);  // NOLINT
+
+    /**
+     * @brief serializes the value into given printer.
+     * @param printer the destination printer
+     * @param value the target value
+     */
+    virtual void serialize(common::util::DataSerializer& printer, common::core::DocumentRegion const* value);  // NOLINT
+
+    /**
+     * @brief serializes the value into given printer.
+     * @param printer the destination printer
+     * @param value the target value
+     */
+    virtual void serialize(common::util::DataSerializer& printer, common::core::DocumentRegion::Position const* value);  // NOLINT
 };
 
 }  // namespace shakujo::model::util

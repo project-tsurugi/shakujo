@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <shakujo/common/schema/TableInfo.h>
-
 #include "shakujo/common/schema/TableInfo.h"
 
 namespace shakujo::common::schema {

@@ -1,6 +1,5 @@
 file(GLOB SOURCES
     "*.cpp"
-    "api/*.cpp"
     "core/*.cpp"
     "util/*.cpp"
     "schema/*.cpp"

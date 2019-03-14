@@ -33,7 +33,7 @@ namespace shakujo::analyzer {
  */
 class Diagnostic final {
 private:
-    using code_type = uint16_t;
+    using code_type = std::uint16_t;
 
 public:
     /**
@@ -260,9 +260,7 @@ public:
      * @param code the diagnostic kind
      * @param message the message
      */
-    Diagnostic(Code code, std::string_view message)
-        : Diagnostic(common::core::DocumentRegion(), code, message)
-    {}
+    Diagnostic(Code code, std::string_view message) : Diagnostic({}, code, message) {}
 
     /**
      * @brief constructs a new object.
@@ -449,20 +447,24 @@ inline constexpr std::string_view to_string_view(Diagnostic::Severity value) {
 }
 
 /**
- * @brief append textual representation of Diagnostic::Code.
+ * @brief append textual representation of the given value.
  * @param out the target output stream
  * @param value the target value
  * @return the output stream
  */
-std::ostream& operator<<(std::ostream& out, Diagnostic::Code value);
+inline std::ostream& operator<<(std::ostream& out, Diagnostic::Code value) {
+    return out << to_string_view(value);
+}
 
 /**
- * @brief append textual representation of Diagnostic::Severity.
+ * @brief append textual representation of the given value.
  * @param out the target output stream
  * @param value the target value
  * @return the output stream
  */
-std::ostream& operator<<(std::ostream& out, Diagnostic::Severity value);
+inline std::ostream& operator<<(std::ostream& out, Diagnostic::Severity value) {
+    return out << to_string_view(value);
+}
 
 }  // namespace shakujo::analyzer
 

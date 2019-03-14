@@ -19,6 +19,8 @@
 #include <memory>
 
 #include "shakujo/model/util/NodeSerializer.h"
+
+#include "../Diagnostic.h"
 #include "BindingContext.h"
 #include "ExpressionBinding.h"
 #include "VariableBinding.h"
@@ -54,6 +56,13 @@ public:
     void serialize(common::util::DataSerializer& printer, model::key::FunctionKey const* value) override;
     void serialize(common::util::DataSerializer& printer, model::key::VariableKey const* value) override;
     void serialize(common::util::DataSerializer& printer, model::key::RelationKey const* value) override;
+
+    /**
+     * @brief serializes the value into given printer.
+     * @param printer the destination printer
+     * @param value the target value
+     */
+    virtual void serialize(common::util::DataSerializer& printer, Diagnostic const* value);  // NOLINT
 
     /**
      * @brief serializes the value into given printer.

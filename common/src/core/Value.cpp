@@ -79,6 +79,13 @@ bool Value::operator==(Value const& other) const {
         bool visit(value::Null const* node, Value const* other) override {
             return node->kind() == other->kind();
         }
+        bool visit(value::Placeholder const* node, Value const* other) override {
+            if (node->kind() != other->kind()) {
+                return false;
+            }
+            auto that = dynamic_pointer_cast<value::String>(other);
+            return node->get() == that->get();
+        }
         bool visit(value::Error const* node, Value const* other) override {
             return node->kind() == other->kind();
         }
@@ -115,41 +122,14 @@ std::ostream& operator<<(std::ostream& out, Value const& value) {
         void visit(value::Null const*, std::ostream& out) override {
             out << "Null()";
         }
+        void visit(value::Placeholder const* node, std::ostream& out) override {
+            out << "Placeholder(" << node->get() << ")";
+        }
         void visit(value::Error const*, std::ostream& out) override {
             out << "Error()";
         }
     };
     Printer {}.dispatch(&value, out);
-    return out;
-}
-
-std::ostream& operator<<(std::ostream& out, ::shakujo::common::core::Value::Kind value) {
-    switch (value) {
-    case Value::Kind::BOOL:
-        out << "BOOL";
-        break;
-    case Value::Kind::INT:
-        out << "INT";
-        break;
-    case Value::Kind::FLOAT:
-        out << "FLOAT";
-        break;
-    case Value::Kind::STRING:
-        out << "STRING";
-        break;
-    case Value::Kind::TUPLE:
-        out << "TUPLE";
-        break;
-    case Value::Kind::NULL_:
-        out << "NULL";
-        break;
-    case Value::Kind::PLACEHOLDER:
-        out << "PLACEHOLDER";
-        break;
-    case Value::Kind::ERROR:
-        out << "ERROR";
-        break;
-    }
     return out;
 }
 

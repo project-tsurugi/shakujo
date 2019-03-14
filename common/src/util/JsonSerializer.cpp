@@ -235,9 +235,9 @@ JsonSerializer::~JsonSerializer() noexcept = default;
 void JsonSerializer::enter_object(std::string_view kind) {
     impl_->enter(Scope::OBJECT);
     if (!kind.empty() && !impl_->kind_property_.empty()) {
-        enter_property(impl_->kind_property_.c_str());
+        enter_property(impl_->kind_property_);
         value(kind);
-        exit_property(impl_->kind_property_.c_str());
+        exit_property(impl_->kind_property_);
     }
 }
 
