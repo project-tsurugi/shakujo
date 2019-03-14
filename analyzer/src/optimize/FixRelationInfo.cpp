@@ -97,11 +97,31 @@ private:
         return {};
     }
 
+    void extract_constants(model::expression::Expression* condition, binding::RelationBinding::Profile& profile) {
+        auto terms = ComparisonTerm::collect(context_.bindings(), condition);
+        auto&& constants = profile.constants();
+        for (auto&& term : terms) {
+            if (term.op() != ComparisonTerm::Operator::EQ
+                    || !term.left().is_variable()
+                    || !term.right().is_constant()) {
+                continue;
+            }
+            constants.emplace(term.left().variable());
+        }
+    }
+
 public:
     void exit(model::expression::relation::ScanExpression* node) override {
         auto relation = relation_of(node);
         auto&& profile = relation->output();
         auto&& strategy = relation->scan_strategy();
+
+        auto&& constants = profile.constants();
+        constants.clear();
+        for (std::size_t i = 0, n = strategy.prefix().size(); i < n; ++i) {
+            constants.emplace(strategy.key_columns()[i]);
+        }
+
         profile.order().clear();
         profile.unique_keys().clear();
 
@@ -115,7 +135,11 @@ public:
             for (auto&& column : index.columns()) {
                 auto it = columns.find(column.name());
                 assert(it != columns.end());  // NOLINT
-                key.emplace(it->second);
+                auto&& var = it->second;
+                if (constants.find(var) != constants.end()) {
+                    continue;
+                }
+                key.emplace(var);
             }
             profile.unique_keys().emplace(std::move(key));
         }
@@ -127,7 +151,11 @@ public:
             for (auto&& column : index.columns()) {
                 auto it = columns.find(column.name());
                 assert(it != columns.end());  // NOLINT
-                order.emplace_back(it->second, column.direction());
+                auto&& var = it->second;
+                if (constants.find(var) != constants.end()) {
+                    continue;
+                }
+                order.emplace_back(var, column.direction());
             }
             profile.order() = std::move(order);
         }
@@ -139,6 +167,7 @@ public:
         auto relation = relation_of(node);
         relation->process() = parent->output();
         relation->output() = parent->output();
+        extract_constants(node->condition(), relation->output());
         inherit_type(node, type_of<common::core::type::Relation>(node->operand()));
     }
 
@@ -161,8 +190,17 @@ public:
         relation->process() = parent->output();
         relation->output() = parent->output();
 
-        if (auto&& output = parent->output(); !output.distinct()) {
-            relation->output().unique_keys().emplace(output.columns().begin(), output.columns().end());
+        if (auto&& output = relation->output(); !output.distinct()) {
+            output.unique_keys().clear();
+            std::set<std::shared_ptr<binding::VariableBinding>> key {};
+            auto&& constants = relation->output().constants();
+            for (auto&& column : output.columns()) {
+                if (constants.find(column) != constants.end()) {
+                    continue;
+                }
+                key.emplace(column);
+            }
+            output.unique_keys().emplace(std::move(key));
         }
         inherit_type(node, type_of<common::core::type::Relation>(node->operand()));
     }
@@ -190,11 +228,34 @@ public:
             output.columns().emplace_back(column.output());
         }
 
+        auto&& constants = output.constants();
+        constants.clear();
+        {
+            auto&& lconsts = left->output().constants();
+            auto&& rconsts = right->output().constants();
+            for (auto&& column : strategy.columns()) {
+                if (!strategy.right_outer()) {
+                    if (auto&& c = column.left_source(); is_valid(c) && lconsts.find(c) != lconsts.end()) {
+                        constants.emplace(column.output());
+                        continue;
+                    }
+                }
+                if (!strategy.left_outer()) {
+                    if (auto&& c = column.right_source(); is_valid(c) && rconsts.find(c) != rconsts.end()) {
+                        constants.emplace(column.output());
+                        continue;
+                    }
+                }
+            }
+        }
+
         // FIXME: ordering?
         output.order().clear();
 
         output.unique_keys().clear();
-        if (left->output().distinct() && right->output().distinct()) {
+        if (left->output().distinct() && right->output().distinct()
+                && !strategy.left_outer() && !strategy.right_outer()) {
+            // FIXME: re-think uniqueness for outer joins
             std::map<std::shared_ptr<binding::VariableBinding>, std::shared_ptr<binding::VariableBinding>> iomap {};
             for (auto&& column : strategy.columns()) {
                 if (is_valid(column.left_source())) {
@@ -205,34 +266,38 @@ public:
                 }
             }
             std::map<std::shared_ptr<binding::VariableBinding>, std::shared_ptr<binding::VariableBinding>> eqmap {};
-            if (is_defined(node->condition()) && (!strategy.left_outer() || !strategy.right_outer())) {
-                // NOTE: build equivalent pairs from condition, like T1.a = T2.b
-                // the eqmap replaces key with value, so that we put bidirectional in the case of INNER join
-                // natural join is already merged such equivalent pairs
+            std::vector<std::pair<std::shared_ptr<binding::VariableBinding>, std::shared_ptr<binding::VariableBinding>>> pairs {};
+            if (is_defined(node->condition())) {
                 auto terms = ComparisonTerm::collect(context_.bindings(), node->condition());
                 for (auto&& term : terms) {
                     if (term.op() == ComparisonTerm::Operator::EQ
                             && term.left().is_variable() && term.right().is_variable()) {
-                        auto itl = iomap.find(term.left().variable());
-                        if (itl == iomap.end()) {
-                            continue;
-                        }
-                        auto itr = iomap.find(term.right().variable());
-                        if (itr == iomap.end()) {
-                            continue;
-                        }
-                        if (itl->second == itr->second) {
-                            continue;
-                        }
-                        // if LEFT OUTER JOIN, the replacement must be come from left operand
-                        if (!strategy.left_outer() || left->output().index_of(*itr->first).has_value()) {
-                            eqmap.emplace(itl->second, itr->second);
-                        }
-                        // if RIGHT OUTER JOIN, the replacement must be come from right operand
-                        if (!strategy.right_outer() || right->output().index_of(*itl->first).has_value()) {
-                            eqmap.emplace(itr->second, itl->second);
-                        }
+                        pairs.emplace_back(term.left().variable(), term.right().variable());
                     }
+                }
+            }
+            for (auto&& pair : strategy.equalities()) {
+                pairs.emplace_back(pair);
+            }
+            for (auto&& [a, b] : pairs) {
+                auto ita = iomap.find(a);
+                if (ita == iomap.end()) {
+                    continue;
+                }
+                auto itb = iomap.find(b);
+                if (itb == iomap.end()) {
+                    continue;
+                }
+                if (ita->second == itb->second) {
+                    continue;
+                }
+                // if LEFT OUTER JOIN, the replacement must be come from left operand
+                if (!strategy.left_outer() || left->output().index_of(*itb->first).has_value()) {
+                    eqmap.emplace(ita->second, itb->second);
+                }
+                // if RIGHT OUTER JOIN, the replacement must be come from right operand
+                if (!strategy.right_outer() || right->output().index_of(*ita->first).has_value()) {
+                    eqmap.emplace(itb->second, ita->second);
                 }
             }
             for (auto&& left_key : left->output().unique_keys()) {
@@ -340,28 +405,41 @@ public:
         relation->process() = parent->output();
         relation->output() = parent->output();
         auto&& output = relation->output();
+        auto&& constants = output.constants();
         output.order().clear();
         bool saw_unresolved = false;
-        for (auto* element : node->elements()) {
+        auto&& elements = node->elements();
+        for (std::size_t i = 0; i < elements.size();) {
+            auto* element = elements[i];
             auto expr = binding_of(element->key()->expression_key());
             auto var = binding_of(element->variable_key());
 
+            // remove constant columns
+            if (expr->constant()) {
+                elements.remove(i);
+                continue;
+            }
+
             // just a column reference
             if (parent->output().index_of(*var).has_value()) {
-                output.order().emplace_back(
-                    std::move(var),
-                    element->direction() == model::expression::relation::OrderExpression::Direction::ASCENDANT
-                        ? common::core::Direction::ASCENDANT
-                        : common::core::Direction::DESCENDANT);
+                if (constants.find(var) == constants.end()) {
+                    output.order().emplace_back(
+                        std::move(var),
+                        element->direction() == model::expression::relation::OrderExpression::Direction::ASCENDANT
+                            ? common::core::Direction::ASCENDANT
+                            : common::core::Direction::DESCENDANT);
+                }
+                ++i;
                 continue;
             }
-            // skip constant values
-            if (expr->constant()) {
-                continue;
-            }
+
             // cannot resolve in compile time..
             saw_unresolved = true;
             break;
+        }
+        if (node->elements().empty()) {
+            node->replace_with(node->release_operand());
+            return;
         }
         if (auto&& input = parent->output();
                 context_.options().redundancy.sort
@@ -388,43 +466,60 @@ public:
         auto parent = relation_of(node->operand());
         auto relation = relation_of(node);
         relation->process() = parent->output();
-
-        std::vector<std::shared_ptr<binding::VariableBinding>> columns {};
+        relation->output() = {};
+        auto&& output = relation->output();
+        auto&& columns = output.columns();
         columns.reserve(node->columns().size());
+        auto&& constants = output.constants();
         std::map<std::shared_ptr<binding::VariableBinding>, std::shared_ptr<binding::VariableBinding>> iomap;
         for (auto* column : node->columns()) {
             auto out = binding_of(column->variable_key());
             columns.emplace_back(out);
             if (auto in = collect_variable(column->value()); is_valid(in)) {
                 iomap.emplace(in, out);
+                if (auto it = parent->output().constants().find(in); it != parent->output().constants().end()) {
+                    constants.emplace(out);
+                }
+            }
+            if (auto expr = binding_of(column->value()->expression_key()); is_valid(expr) && expr->constant()) {
+                constants.emplace(out);
             }
         }
-        binding::RelationBinding::Profile output { std::move(columns) };
-        if (auto&& source = relation->process().order(); !source.empty()) {
+
+        if (auto&& source = parent->output().order(); !source.empty()) {
             output.order().clear();
             std::vector<binding::RelationBinding::Order> order {};
             for (auto&& element : source) {
                 if (auto it = iomap.find(element.column()); it != iomap.end()) {
-                    output.order().emplace_back(it->second, element.direction());
+                    auto&& out = it->second;
+                    if (constants.find(out) != constants.end()) {
+                        continue;
+                    }
+                    output.order().emplace_back(out, element.direction());
                 } else {
                     break;
                 }
             }
         }
-        for (auto&& source : relation->process().unique_keys()) {
+        for (auto&& source : parent->output().unique_keys()) {
+            bool broken = false;
             std::set<std::shared_ptr<binding::VariableBinding>> key {};
             for (auto&& var : source) {
                 if (auto it = iomap.find(var); it != iomap.end()) {
-                    key.emplace(it->second);
+                    auto&& out = it->second;
+                    if (constants.find(out) != constants.end()) {
+                        continue;
+                    }
+                    key.emplace(out);
                 } else {
+                    broken = true;
                     break;
                 }
             }
-            if (source.size() == key.size()) {
+            if (!broken) {
                 output.unique_keys().emplace(std::move(key));
             }
         }
-        relation->output() = std::move(output);
 
         std::vector<common::core::type::Relation::Column> type_columns {};
         type_columns.reserve(node->columns().size());
