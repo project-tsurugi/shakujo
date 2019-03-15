@@ -46,6 +46,11 @@ public:
          * @brief nested loop join.
          */
         NESTED_LOOP,
+
+        /**
+         * @brief nested loop join with seek operation.
+         */
+        NESTED_LOOP_WITH_SEEK,
     };
 
     /**
@@ -133,6 +138,55 @@ public:
         bool nullify_left_source_;
         std::shared_ptr<VariableBinding> right_source_;
         bool nullify_right_source_;
+    };
+
+    /**
+     * @brief represents a column data which is resolved or unresolved.
+     */
+    class ColumnData {
+    public:
+        /**
+         * @brief constructs a new object.
+         * @param variable the variable which represents this data
+         */
+        explicit ColumnData(std::shared_ptr<binding::VariableBinding> variable) : variable_(std::move(variable)) {}
+
+        /**
+         * @brief constructs a new object.
+         * @param variable the constant value
+         */
+        explicit ColumnData(std::unique_ptr<common::core::Value> value) : value_(std::move(value)) {}
+
+        /**
+         * @brief returns whether or not this column data has a resolved value.
+         * @return true if value() returns a valid value
+         * @return false if variable() returns a valid variable binding
+         */
+        bool is_resolved() const {
+            return value_ != nullptr;
+        }
+
+        /**
+         * @brief returns the variable.
+         * @return the variable which represents this data
+         * @return empty if it is not defined
+         */
+        std::shared_ptr<binding::VariableBinding> variable() const {
+            return variable_;
+        }
+
+        /**
+         * @brief returns the value.
+         * @return the value which represents this data
+         * @return nullptr if it is not defined
+         */
+        common::core::Value const* value() const {
+            return value_.get();
+        }
+
+    private:
+        std::shared_ptr<binding::VariableBinding> variable_ {};
+        std::shared_ptr<common::core::Value> value_ {};
     };
 
     /**
@@ -298,6 +352,26 @@ public:
     }
 
     /**
+     * @brief returns the list of column data for the seek operation.
+     * This list represents just a prefix of scan operation on the *right* source.
+     * @return the column data for seek operation
+     * @return empty if this strategy does not perform seek operation
+     */
+    std::vector<ColumnData>& seek_columns() {
+        return seek_columns_;
+    }
+
+    /**
+     * @brief returns the list of column data for the seek operation.
+     * This list represents just a prefix of scan operation on the *right* source.
+     * @return the column data for seek operation
+     * @return empty if this strategy does not perform seek operation
+     */
+    std::vector<ColumnData> const& seek_columns() const {
+        return seek_columns_;
+    }
+
+    /**
      * @brief returns whether or not this object is valid.
      * @return true if this is valid
      * @return false otherwise
@@ -323,6 +397,7 @@ private:
     bool right_semi_;
     std::vector<Column> columns_ {};
     std::set<std::pair<std::shared_ptr<VariableBinding>, std::shared_ptr<VariableBinding>>> equalities_ {};
+    std::vector<ColumnData> seek_columns_ {};
 };
 
 
@@ -336,8 +411,9 @@ inline constexpr std::string_view to_string_view(JoinStrategy::Kind value) {
     switch (value) {
         case Kind::UNION: return "UNION";
         case Kind::NESTED_LOOP: return "NESTED_LOOP";
+        case Kind::NESTED_LOOP_WITH_SEEK: return "NESTED_LOOP_WITH_SEEK";
     }
-    return "(unknown)";
+    std::abort();
 }
 
 /**
