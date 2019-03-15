@@ -314,22 +314,29 @@ private:
         if (left_seek.empty()) {
             return Side::RIGHT;
         }
+        double left_selectivity = compute_selectivity(left_scan, left_seek);
+        double right_selectivity = compute_selectivity(right_scan, right_seek);
+        return right_selectivity <= left_selectivity ? Side::RIGHT : Side::LEFT;
+    }
 
-        // FIXME: use selectivity
-        bool left_primary = left_scan.index().is_primary();
-        bool right_primary = right_scan.index().is_primary();
-        bool left_complete = is_complete(left_scan, left_seek);
-        bool right_complete = is_complete(right_scan, right_seek);
-        if (right_primary && right_complete) {
-            if (left_primary && left_complete && left_seek.size() > right_seek.size()) {
-                return Side::LEFT;
-            }
-            return Side::RIGHT;
+    double compute_selectivity(binding::ScanStrategy const& scan, std::vector<equality> const& seek) {
+        if (seek.empty()) {
+            return 1.0;
         }
-        if (left_primary && left_complete) {
-            return Side::LEFT;
+        // complete primary key
+        if (scan.index().is_primary() && scan.key_columns().size() == scan.prefix().size() + seek.size()) {
+            return 0.0;
         }
-        return right_seek.size() >= left_seek.size() ? Side::RIGHT : Side::LEFT;
+        // FIXME: use stats
+        std::size_t origin =
+            scan.prefix().size() * 3  // x3 of prefix size
+            + (scan.lower_suffix() ? 1 : 0)  // lower bound
+            + (scan.upper_suffix() ? 1 : 0)  // upper bound
+            ;
+        std::size_t improved =
+            (scan.prefix().size() + seek.size()) * 3  // x3 of prefix size
+            ;
+        return static_cast<double>(improved) / static_cast<double>(origin);
     }
 
     bool is_complete(binding::ScanStrategy const& scan, std::vector<equality> const& seek) {
