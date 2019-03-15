@@ -211,14 +211,40 @@ public:
     }
 
     void visit(model::expression::relation::JoinExpression* node, Predicates&& prev) override {
+        auto relation = relation_of(node);
+        auto left = relation_of(node->left());
+        auto right = relation_of(node->right());
+        auto&& join = relation->join_strategy();
         SimplifyPredicate simplifier { context_ };
         if (is_defined(node->condition())) {
+            // build join.equalities()
+            auto terms = ComparisonTerm::collect(context_.bindings(), node->condition());
+            for (auto&& term : terms) {
+                if (term.op() != ComparisonTerm::Operator::EQ
+                        || !term.left().is_variable()
+                        || !term.right().is_variable()) {
+                    continue;
+                }
+                bool consumed = false;
+                auto&& v1 = term.left().variable();
+                auto&& v2 = term.right().variable();
+                if (left->output().index_of(*v2).has_value()
+                        && right->output().index_of(*v1).has_value()) {
+                    join.equalities().emplace(v2, v1);
+                    consumed = true;
+                } else if (left->output().index_of(*v1).has_value()
+                        && right->output().index_of(*v2).has_value()) {
+                    join.equalities().emplace(v1, v2);
+                    consumed = true;
+                }
+                if (consumed) {
+                    detach_node(term.source(), create_true_node());
+                }
+            }
             if (auto predicate = simplifier(node->condition()); predicate == true) {
                 node->condition({});
             }
         }
-        auto relation = relation_of(node);
-        auto&& join = relation->join_strategy();
 
         std::vector<std::shared_ptr<Term>> terms;
         if (is_defined(node->condition()) || !join.equalities().empty()) {
@@ -243,8 +269,7 @@ public:
                     rewriter.add_rule(column.output(), column.left_source());
                 }
             }
-            auto opposite = relation_of(dynamic_pointer_cast<model::key::RelationKey::Provider>(node->right()));
-            rewriter.deny(opposite->output().columns());
+            rewriter.deny(right->output().columns());
             next.rewriter.merge(rewriter);
             for (auto&& term : terms) {
                 next.terms.emplace_back(term);
@@ -261,8 +286,7 @@ public:
                     rewriter.add_rule(column.output(), column.right_source());
                 }
             }
-            auto opposite = relation_of(dynamic_pointer_cast<model::key::RelationKey::Provider>(node->left()));
-            rewriter.deny(opposite->output().columns());
+            rewriter.deny(left->output().columns());
             next.rewriter.merge(rewriter);
             for (auto&& term : terms) {
                 next.terms.emplace_back(term);
@@ -452,7 +476,7 @@ public:
             return;
         }
         {
-            auto relation = relation_of(dynamic_pointer_cast<model::key::RelationKey::Provider>(node));
+            auto relation = relation_of(node);
             VariableRewriter rewriter {};
             rewriter.add_rule(relation->output().columns(), relation->output().columns());
             preds.rewriter.merge(rewriter);
@@ -486,7 +510,7 @@ public:
 
         bless(selection, type_of(selection->operand()));
 
-        auto parent = relation_of(dynamic_pointer_cast<model::key::RelationKey::Provider>(selection->operand()));
+        auto parent = relation_of(selection->operand());
         auto relation = std::make_shared<binding::RelationBinding>(parent->output(), parent->output());
         selection->relation_key(context_.bindings().create_key(std::move(relation)));
     }
@@ -502,8 +526,8 @@ public:
         return context_.bindings().get(node->expression_key())->type();
     }
 
-    std::shared_ptr<binding::RelationBinding> relation_of(model::key::RelationKey::Provider *node) {
-        return context_.bindings().get(node->relation_key());
+    std::shared_ptr<binding::RelationBinding> relation_of(model::expression::Expression* node) {
+        return context_.bindings().get(dynamic_pointer_cast<model::key::RelationKey::Provider>(node)->relation_key());
     }
 
     std::shared_ptr<binding::VariableBinding> variable_of(model::key::VariableKey::Provider *node) {
@@ -590,7 +614,7 @@ public:
                 encast(rewrite->type(), ref);
             }
         }
-        return detach_node(term, create_true_node());
+        return detach_node(term.node_, create_true_node());
     }
 
     std::unique_ptr<model::expression::Expression> rewrite_comparison(Term& term, VariableRewriter& rewriter) {
@@ -616,7 +640,7 @@ public:
         }
         common::util::ManagedPtr holder { std::move(compare) };
         encast(type_of(term.node_), holder.get());
-        detach_node(term, create_true_node());
+        detach_node(term.node_, create_true_node());
         return holder.release();
     }
 
@@ -668,11 +692,11 @@ public:
     }
 
     std::unique_ptr<model::expression::Expression> detach_node(
-            Term& term,
+            model::expression::Expression* node,
             std::unique_ptr<model::expression::Expression> replacement) {
-        assert(is_defined(term.node_));  // NOLINT
+        assert(is_defined(node));  // NOLINT
         std::unique_ptr<model::expression::Expression> detached;
-        term.node_->replace([&](auto origin) {
+        node->replace([&](auto origin) {
             detached = std::move(origin);
             return std::move(replacement);
         });

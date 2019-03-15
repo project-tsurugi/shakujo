@@ -96,6 +96,11 @@ public:
         auto var = extract_var(cast<model::expression::VariableReference>(node));
         return var->id();
     }
+
+    template<class E>
+    static bool contains(std::set<E> const& set, E const& element) {
+        return set.find(element) != set.end();
+    }
 };
 
 TEST_F(PredicatePushDownTest, scan) {
@@ -272,9 +277,16 @@ TEST_F(PredicatePushDownTest, scan_join_select) {
     // join - select - scan
     auto join = cast<model::expression::relation::JoinExpression>(expr.get());
     {
-        auto relation = extract_relation(join);
         auto cond = join->condition();
-        ASSERT_TRUE(cond);
+        ASSERT_FALSE(cond);
+
+        auto relation = extract_relation(join);
+        auto&& left = extract_relation(join->left())->output().columns();
+        auto&& right = extract_relation(join->right())->output().columns();
+        auto&& strategy = relation->join_strategy();
+        auto&& eq = strategy.equalities();
+        EXPECT_EQ(eq.size(), 1U);
+        EXPECT_TRUE(contains(eq, std::make_pair(left[0], right[0])));
     }
     {
         auto selection = cast<model::expression::relation::SelectionExpression>(join->left());
@@ -320,9 +332,16 @@ TEST_F(PredicatePushDownTest, scan_join_select_complex) {
     auto select = cast<model::expression::relation::SelectionExpression>(expr.get());
     auto join = cast<model::expression::relation::JoinExpression>(select->operand());
     {
-        auto relation = extract_relation(join);
         auto cond = join->condition();
-        ASSERT_TRUE(cond);
+        ASSERT_FALSE(cond);
+
+        auto relation = extract_relation(join);
+        auto&& left = extract_relation(join->left())->output().columns();
+        auto&& right = extract_relation(join->right())->output().columns();
+        auto&& strategy = relation->join_strategy();
+        auto&& eq = strategy.equalities();
+        EXPECT_EQ(eq.size(), 1U);
+        EXPECT_TRUE(contains(eq, std::make_pair(left[0], right[0])));
     }
     cast<model::expression::relation::ScanExpression>(join->left());
     cast<model::expression::relation::ScanExpression>(join->right());
@@ -361,9 +380,16 @@ TEST_F(PredicatePushDownTest, scan_joinleft_select) {
     }
     auto join = cast<model::expression::relation::JoinExpression>(select->operand());
     {
-        auto relation = extract_relation(join);
         auto cond = join->condition();
-        ASSERT_TRUE(cond);
+        ASSERT_FALSE(cond);
+
+        auto relation = extract_relation(join);
+        auto&& left = extract_relation(join->left())->output().columns();
+        auto&& right = extract_relation(join->right())->output().columns();
+        auto&& strategy = relation->join_strategy();
+        auto&& eq = strategy.equalities();
+        EXPECT_EQ(eq.size(), 1U);
+        EXPECT_TRUE(contains(eq, std::make_pair(left[0], right[0])));
     }
     {
         auto selection = cast<model::expression::relation::SelectionExpression>(join->left());
@@ -410,9 +436,16 @@ TEST_F(PredicatePushDownTest, scan_joinright_select) {
     }
     auto join = cast<model::expression::relation::JoinExpression>(select->operand());
     {
-        auto relation = extract_relation(join);
         auto cond = join->condition();
-        ASSERT_TRUE(cond);
+        ASSERT_FALSE(cond);
+
+        auto relation = extract_relation(join);
+        auto&& left = extract_relation(join->left())->output().columns();
+        auto&& right = extract_relation(join->right())->output().columns();
+        auto&& strategy = relation->join_strategy();
+        auto&& eq = strategy.equalities();
+        EXPECT_EQ(eq.size(), 1U);
+        EXPECT_TRUE(contains(eq, std::make_pair(left[0], right[0])));
     }
     cast<model::expression::relation::ScanExpression>(join->left());
     {
@@ -452,9 +485,16 @@ TEST_F(PredicatePushDownTest, scan_joinfull_select) {
     auto select = cast<model::expression::relation::SelectionExpression>(expr.get());
     auto join = cast<model::expression::relation::JoinExpression>(select->operand());
     {
-        auto relation = extract_relation(join);
         auto cond = join->condition();
-        ASSERT_TRUE(cond);
+        ASSERT_FALSE(cond);
+
+        auto relation = extract_relation(join);
+        auto&& left = extract_relation(join->left())->output().columns();
+        auto&& right = extract_relation(join->right())->output().columns();
+        auto&& strategy = relation->join_strategy();
+        auto&& eq = strategy.equalities();
+        EXPECT_EQ(eq.size(), 1U);
+        EXPECT_TRUE(contains(eq, std::make_pair(left[0], right[0])));
     }
     cast<model::expression::relation::ScanExpression>(join->left());
     cast<model::expression::relation::ScanExpression>(join->right());
@@ -482,10 +522,16 @@ TEST_F(PredicatePushDownTest, scan_joinnatural_select) {
     // join - select - scan
     auto join = cast<model::expression::relation::JoinExpression>(expr.get());
     {
-        auto relation = extract_relation(join);
         auto cond = join->condition();
         ASSERT_FALSE(cond);
-        ASSERT_EQ(relation->join_strategy().equalities().size(), 1);
+
+        auto relation = extract_relation(join);
+        auto&& left = extract_relation(join->left())->output().columns();
+        auto&& right = extract_relation(join->right())->output().columns();
+        auto&& strategy = relation->join_strategy();
+        auto&& eq = strategy.equalities();
+        EXPECT_EQ(eq.size(), 1U);
+        EXPECT_TRUE(contains(eq, std::make_pair(left[0], right[0])));
     }
     {
         auto selection = cast<model::expression::relation::SelectionExpression>(join->left());
@@ -530,10 +576,13 @@ TEST_F(PredicatePushDownTest, scan_join_select_propagate) {
     // join - select - scan
     auto join = cast<model::expression::relation::JoinExpression>(expr.get());
     {
-        auto relation = extract_relation(join);
         auto cond = join->condition();
         ASSERT_FALSE(cond);
-        ASSERT_EQ(relation->join_strategy().equalities().size(), 0);
+
+        auto relation = extract_relation(join);
+        auto&& strategy = relation->join_strategy();
+        auto&& eq = strategy.equalities();
+        EXPECT_EQ(eq.size(), 0U);
     }
     {
         auto selection = cast<model::expression::relation::SelectionExpression>(join->left());
@@ -576,10 +625,13 @@ TEST_F(PredicatePushDownTest, scan_joinnatural_select_propagate) {
     // join - select - scan
     auto join = cast<model::expression::relation::JoinExpression>(expr.get());
     {
-        auto relation = extract_relation(join);
         auto cond = join->condition();
         ASSERT_FALSE(cond);
-        ASSERT_EQ(relation->join_strategy().equalities().size(), 0);
+
+        auto relation = extract_relation(join);
+        auto&& strategy = relation->join_strategy();
+        auto&& eq = strategy.equalities();
+        EXPECT_EQ(eq.size(), 0);
     }
     {
         auto selection = cast<model::expression::relation::SelectionExpression>(join->left());
