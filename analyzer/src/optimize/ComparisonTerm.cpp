@@ -37,6 +37,10 @@ class Collector : public model::expression::ExpressionVisitor<ComparisonTerm::Fa
 public:
     using ExpressionVisitor::visit;
 
+    ComparisonTerm::Factor visitDefault(model::expression::Expression*) override {
+        return {};
+    }
+
     ComparisonTerm::Factor visit(model::expression::VariableReference* node) override {
         if (auto variable = bindings_.find(node->variable_key()); is_valid(variable)) {
             ComparisonTerm::Factor result { std::move(variable) };

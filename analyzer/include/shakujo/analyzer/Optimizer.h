@@ -122,7 +122,19 @@ public:
          * @brief options about join operation optimization.
          */
         struct Join {
-            // empty
+            /**
+             * @brief whether or not seek operations in nested loop join is enabled.
+             */
+            bool nested_loop_seek = true;
+
+            /**
+             * @brief returns whether or not this optimization is enabled.
+             * @return true if enabled
+             * @return false otherwise
+             */
+            explicit operator bool() const {
+                return nested_loop_seek;
+            }
         };
 
         /**

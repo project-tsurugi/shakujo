@@ -134,7 +134,7 @@ public:
      * @return false otherwise
      */
     bool is_primary() const {
-        return name_.empty();
+        return is_valid() && name_.empty();
     }
 
     /**

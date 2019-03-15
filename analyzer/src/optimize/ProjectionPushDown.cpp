@@ -96,7 +96,7 @@ public:
 private:
     template<class T>
     auto binding_of(T *key) {
-        return context_.bindings().get(key);
+        return context_.binding_of(key);
     }
 
     template<class T>
@@ -229,6 +229,8 @@ private:
 public:
     using ExpressionVisitor::visit;
 
+    void visitDefault(model::expression::Expression*, Requirements&&) override {} 
+
     void visit(model::expression::relation::ScanExpression* node, Requirements&& prev) override {
         flush(node, std::move(prev));
     }
@@ -344,6 +346,11 @@ public:
             for (auto&& pair : strategy.equalities()) {
                 next.add(std::get<0>(pair));
             }
+            for (auto&& column : strategy.seek_columns()) {
+                if (!column.is_resolved()) {
+                    next.add(column.variable());
+                }
+            }
             if (is_defined(node->condition())) {
                 collect(next, node->condition());
             }
@@ -359,6 +366,7 @@ public:
             for (auto&& pair : strategy.equalities()) {
                 next.add(std::get<1>(pair));
             }
+            // NOTE: seek_columns only contains variable from left operand
             if (is_defined(node->condition())) {
                 collect(next, node->condition());
             }

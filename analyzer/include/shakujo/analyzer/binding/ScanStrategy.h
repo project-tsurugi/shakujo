@@ -160,10 +160,14 @@ public:
         , table_(&table)
         , index_(&index)
         , key_columns_(std::move(key_columns))
-        , prefix_(std::move(prefix))
         , lower_suffix_(std::move(lower_suffix))
         , upper_suffix_(std::move(upper_suffix))
-    {}
+    {
+        prefix_.reserve(prefix.size());
+        for (auto&& v : prefix) {
+            prefix_.emplace_back(std::move(v));
+        }
+    }
 
     /**
      * @brief returns the kind of this strategy.
@@ -224,7 +228,7 @@ public:
      * @return the key or key prefix
      * @return empty if this strategy is not a kind of prefix scan or range scan
      */
-    std::vector<std::unique_ptr<common::core::Value>> const& prefix() const {
+    std::vector<std::shared_ptr<common::core::Value>> const& prefix() const {
         return prefix_;
     }
 
@@ -298,7 +302,7 @@ private:
     common::schema::TableInfo const* table_ {};
     common::schema::IndexInfo const* index_ {};
     std::vector<std::shared_ptr<VariableBinding>> key_columns_ {};
-    std::vector<std::unique_ptr<common::core::Value>> prefix_ {};
+    std::vector<std::shared_ptr<common::core::Value>> prefix_ {};
     Suffix lower_suffix_ {};
     Suffix upper_suffix_ {};
 };

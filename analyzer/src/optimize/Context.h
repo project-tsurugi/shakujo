@@ -16,8 +16,13 @@
 #ifndef SHAKUJO_ANALYZER_OPTIMIZE_CONTEXT_H_
 #define SHAKUJO_ANALYZER_OPTIMIZE_CONTEXT_H_
 
+#include <memory>
+#include <type_traits>
+
 #include "shakujo/analyzer/Optimizer.h"
 #include "shakujo/analyzer/binding/BindingContext.h"
+
+#include "shakujo/common/util/utility.h"
 
 namespace shakujo::analyzer::optimize {
 
@@ -42,6 +47,17 @@ public:
 
     binding::BindingContext& bindings() {
         return bindings_;
+    }
+
+    template<class T>
+    auto binding_of(T const* key) -> decltype(std::declval<binding::BindingContext>().get(key)) {
+        return bindings_.get(key);
+    }
+
+    template<class T>
+    std::shared_ptr<binding::RelationBinding> relation_of(T* node) {
+        auto* provider = common::util::dynamic_pointer_cast<model::key::RelationKey::Provider>(node);
+        return binding_of(provider->relation_key());
     }
 
 private:

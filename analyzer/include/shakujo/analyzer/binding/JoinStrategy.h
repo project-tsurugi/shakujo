@@ -46,11 +46,6 @@ public:
          * @brief nested loop join.
          */
         NESTED_LOOP,
-
-        /**
-         * @brief nested loop join with seek operation.
-         */
-        NESTED_LOOP_WITH_SEEK,
     };
 
     /**
@@ -138,6 +133,18 @@ public:
         bool nullify_left_source_;
         std::shared_ptr<VariableBinding> right_source_;
         bool nullify_right_source_;
+
+        friend class JoinStrategy;
+
+        /**
+         * @brief swap left/right.
+         * @return this
+         */
+        Column& commute() {
+            std::swap(left_source_, right_source_);
+            std::swap(nullify_left_source_, nullify_right_source_);
+            return *this;
+        }
     };
 
     /**
@@ -147,15 +154,27 @@ public:
     public:
         /**
          * @brief constructs a new object.
+         * @param type the value type
          * @param variable the variable which represents this data
          */
-        explicit ColumnData(std::shared_ptr<binding::VariableBinding> variable) : variable_(std::move(variable)) {}
+        ColumnData(
+                std::unique_ptr<common::core::Type> type,
+                std::shared_ptr<binding::VariableBinding> variable)
+            : type_(std::move(type))
+            , variable_(std::move(variable))
+        {}
 
         /**
          * @brief constructs a new object.
-         * @param variable the constant value
+         * @param type the value type
+         * @param value the constant value
          */
-        explicit ColumnData(std::unique_ptr<common::core::Value> value) : value_(std::move(value)) {}
+        ColumnData(
+                std::unique_ptr<common::core::Type> type,
+                std::unique_ptr<common::core::Value> value)
+            : type_(std::move(type))
+            , value_(std::move(value))
+        {}
 
         /**
          * @brief returns whether or not this column data has a resolved value.
@@ -164,6 +183,14 @@ public:
          */
         bool is_resolved() const {
             return value_ != nullptr;
+        }
+
+        /**
+         * @brief returns the data type.
+         * @return the data type
+         */
+        common::core::Type const* type() const {
+            return type_.get();
         }
 
         /**
@@ -185,6 +212,7 @@ public:
         }
 
     private:
+        std::shared_ptr<common::core::Type> type_;
         std::shared_ptr<binding::VariableBinding> variable_ {};
         std::shared_ptr<common::core::Value> value_ {};
     };
@@ -363,9 +391,10 @@ public:
 
     /**
      * @brief returns the list of column data for the seek operation.
-     * This list represents just a prefix of scan operation on the *right* source.
+     * This list represents just a prefix of scan operation on the *right* source,
+     * and may appear varibles from *left* source.
      * @return the column data for seek operation
-     * @return empty if this strategy does not perform seek operation
+     * @return empty if this strategy does not perform any seek operations
      */
     std::vector<ColumnData> const& seek_columns() const {
         return seek_columns_;
@@ -387,6 +416,24 @@ public:
      */
     explicit operator bool() const {
         return is_valid();
+    }
+
+    /**
+     * @brief swap left/right.
+     * @return this
+     */
+    JoinStrategy& commute() {
+        std::swap(left_outer_, right_outer_);
+        std::swap(left_semi_, right_semi_);
+        for (auto&& column : columns_) {
+            column.commute();
+        }
+        decltype(equalities_) equalities {};
+        for (auto&& term : equalities_) {
+            equalities.emplace(term.second, term.first);
+        }
+        equalities_ = std::move(equalities);
+        return *this;
     }
 
 private:
@@ -411,7 +458,6 @@ inline constexpr std::string_view to_string_view(JoinStrategy::Kind value) {
     switch (value) {
         case Kind::UNION: return "UNION";
         case Kind::NESTED_LOOP: return "NESTED_LOOP";
-        case Kind::NESTED_LOOP_WITH_SEEK: return "NESTED_LOOP_WITH_SEEK";
     }
     std::abort();
 }

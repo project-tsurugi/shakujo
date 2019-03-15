@@ -19,6 +19,7 @@
 
 #include "optimize/Context.h"
 #include "optimize/PredicatePushDown.h"
+#include "optimize/SelectJoin.h"
 #include "optimize/SelectScan.h"
 #include "optimize/SimplifyCast.h"
 #include "optimize/ProjectionPushDown.h"
@@ -41,6 +42,10 @@ public:
         if (context.options().scan) {
             apply_engine<optimize::SelectScan>(node);
             apply_engine<optimize::SimplifyCast>(node);
+        }
+        if (context.options().join) {
+            // FIXME: this requires predicate push down
+            apply_engine<optimize::SelectJoin>(node);
         }
         if (context.options().projection_push_down) {
             apply_engine<optimize::ProjectionPushDown>(node);

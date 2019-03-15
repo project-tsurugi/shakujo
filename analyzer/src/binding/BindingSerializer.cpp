@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <shakujo/analyzer/binding/BindingSerializer.h>
+
 #include "shakujo/analyzer/binding/BindingSerializer.h"
 
 #include "shakujo/common/util/utility.h"
@@ -557,6 +559,17 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, JoinStr
         printer.exit_array(size);
         printer.exit_property("equalities");
     }
+    {
+        printer.enter_property("seek_columns");
+        auto& list = value->seek_columns();
+        auto size = list.size();
+        printer.enter_array(size);
+        for (auto& element : list) {
+            serialize(printer, &element);
+        }
+        printer.exit_array(size);
+        printer.exit_property("seek_columns");
+    }
     printer.exit_object("JoinStrategy");
 }
 
@@ -631,6 +644,39 @@ void BindingSerializer::serialize(common::util::DataSerializer& printer, JoinStr
     } else {
         printer.exit_object("JoinStrategy::Column");
     }
+}
+
+void BindingSerializer::serialize(common::util::DataSerializer& printer, JoinStrategy::ColumnData const* value) {
+    if (value == nullptr) {
+        printer.value(nullptr);
+        return;
+    }
+    if (show_qualified_kind()) {
+        printer.enter_object("ColumnData");
+    } else {
+        printer.enter_object("JoinStrategy::ColumnData");
+    }
+    {
+        printer.enter_property("type");
+        serialize(printer, value->type());
+        printer.exit_property("type");
+    }
+    {
+        printer.enter_property("variable");
+        serialize(printer, value->variable().get());
+        printer.exit_property("variable");
+    }
+    {
+        printer.enter_property("value");
+        serialize(printer, value->value());
+        printer.exit_property("value");
+    }
+    if (show_qualified_kind()) {
+        printer.exit_object("ColumnData");
+    } else {
+        printer.exit_object("JoinStrategy::ColumnData");
+    }
+
 }
 
 }  // namespace shakujo::analyzer::binding
