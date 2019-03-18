@@ -845,4 +845,172 @@ TEST_F(SelectJoinTest, via_projection_removed) {
     ASSERT_EQ(equalities.size(), 0);
 }
 
+TEST_F(SelectJoinTest, via_order) {
+    add(common::schema::TableInfo { "T1",
+        {
+            { "C1", t::Int(64U, NON_NULL), },
+            { "C2", t::Int(64U, NON_NULL), },
+            { "C3", t::Int(64U, NON_NULL), },
+        },
+        {  // pk
+        }
+    });
+    add(common::schema::TableInfo { "T2",
+        {
+            { "C1", t::Int(64U, NON_NULL), },
+            { "C2", t::Int(64U, NON_NULL), },
+            { "C3", t::Int(64U, NON_NULL), },
+        },
+        {  // pk
+            {
+                { "C1" },
+            }
+        }
+    });
+    auto expr = apply(f.JoinExpression(
+        JoinKind::INNER,
+        f.ScanExpression(f.Name("T1")),
+        f.OrderExpression(
+            f.ScanExpression(f.Name("T2")),
+            {
+                f.OrderExpressionElement(var("C1")),
+                f.OrderExpressionElement(var("C2")),
+            }
+            ),
+        f.BinaryOperator(BOp::EQUAL, var("T1", "C1"), var("T2", "C1"))
+    ));
+    auto join = cast<model::expression::relation::JoinExpression>(expr.get());
+    auto through = cast<model::expression::relation::OrderExpression>(join->right());
+    auto relation = extract_relation(join);
+    auto left = extract_relation(join->left());
+    auto right = extract_relation(through->operand());
+    ASSERT_EQ(left->scan_strategy().table().name(), "T1");
+    ASSERT_EQ(right->scan_strategy().table().name(), "T2");
+
+    auto&& strategy = relation->join_strategy();
+
+    auto&& seek = strategy.seek_columns();
+    auto&& equalities = strategy.equalities();
+    ASSERT_EQ(seek.size(), 1);
+    {
+        auto&& c = seek[0];
+        ASSERT_FALSE(c.is_resolved());
+        EXPECT_EQ(c.variable(), left->output().columns()[0]);
+    }
+
+    ASSERT_EQ(equalities.size(), 0);
+}
+
+TEST_F(SelectJoinTest, via_distinct) {
+    add(common::schema::TableInfo { "T1",
+        {
+            { "C1", t::Int(64U, NON_NULL), },
+            { "C2", t::Int(64U, NON_NULL), },
+            { "C3", t::Int(64U, NON_NULL), },
+        },
+        {  // pk
+        }
+    });
+    add(common::schema::TableInfo { "T2",
+        {
+            { "C1", t::Int(64U, NON_NULL), },
+            { "C2", t::Int(64U, NON_NULL), },
+            { "C3", t::Int(64U, NON_NULL), },
+        },
+        {  // pk
+            {
+                { "C1" },
+                { "C2" },
+            }
+        }
+    });
+    auto expr = apply(f.JoinExpression(
+        JoinKind::INNER,
+        f.ScanExpression(f.Name("T1")),
+        f.DistinctExpression(
+            f.ProjectionExpression(
+                f.ScanExpression(f.Name("T2")),
+                {
+                    f.ProjectionExpressionColumn(var("C1"), f.Name("P1")),
+                    f.ProjectionExpressionColumn(var("C3"), f.Name("P2")),
+                })),
+        f.BinaryOperator(BOp::EQUAL, var("T1", "C1"), var("P1"))
+    ));
+    auto join = cast<model::expression::relation::JoinExpression>(expr.get());
+    auto distinct = cast<model::expression::relation::DistinctExpression>(join->right());
+    auto projection = cast<model::expression::relation::ProjectionExpression>(distinct->operand());
+    auto relation = extract_relation(join);
+    auto left = extract_relation(join->left());
+    auto right = extract_relation(projection->operand());
+    ASSERT_EQ(left->scan_strategy().table().name(), "T1");
+    ASSERT_EQ(right->scan_strategy().table().name(), "T2");
+
+    auto&& strategy = relation->join_strategy();
+
+    auto&& seek = strategy.seek_columns();
+    auto&& equalities = strategy.equalities();
+    ASSERT_EQ(seek.size(), 1);
+    {
+        auto&& c = seek[0];
+        ASSERT_FALSE(c.is_resolved());
+        EXPECT_EQ(c.variable(), left->output().columns()[0]);
+    }
+
+    ASSERT_EQ(equalities.size(), 0);
+}
+
+TEST_F(SelectJoinTest, compete) {
+    add(common::schema::TableInfo { "T1",
+        {
+            { "C1", t::Int(64U, NON_NULL), },
+            { "C2", t::Int(64U, NON_NULL), },
+            { "C3", t::Int(64U, NON_NULL), },
+        },
+        {  // pk
+            {
+                { "C1" },
+                { "C2" },
+            }
+        }
+    });
+    add(common::schema::TableInfo { "T2",
+        {
+            { "C1", t::Int(64U, NON_NULL), },
+            { "C2", t::Int(64U, NON_NULL), },
+            { "C3", t::Int(64U, NON_NULL), },
+        },
+        {  // pk
+            {
+                { "C1" },
+                { "C2" },
+            }
+        }
+    });
+    auto expr = apply(f.JoinExpression(
+        JoinKind::INNER,
+        f.ScanExpression(f.Name("T1")),
+        f.ScanExpression(f.Name("T2")),
+        f.BinaryOperator(BOp::EQUAL, var("T1", "C1"), var("T2", "C1"))
+    ));
+    auto join = cast<model::expression::relation::JoinExpression>(expr.get());
+    auto relation = extract_relation(join);
+    auto left = extract_relation(join->left());
+    auto right = extract_relation(join->right());
+    ASSERT_EQ(left->scan_strategy().table().name(), "T1");
+    ASSERT_EQ(right->scan_strategy().table().name(), "T2");
+
+    auto&& strategy = relation->join_strategy();
+
+    auto&& seek = strategy.seek_columns();
+    auto&& equalities = strategy.equalities();
+    ASSERT_EQ(seek.size(), 1);
+    {
+        auto&& c = seek[0];
+        ASSERT_FALSE(c.is_resolved());
+        EXPECT_EQ(c.variable(), left->output().columns()[0]);
+    }
+
+    ASSERT_EQ(equalities.size(), 0);
+}
+
 }  // namespace shakujo::analyzer::optimize

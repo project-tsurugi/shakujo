@@ -24,6 +24,7 @@
 namespace shakujo::analyzer::optimize {
 
 using BOp = model::expression::BinaryOperator::Kind;
+using UOp = model::expression::UnaryOperator::Kind;
 namespace t = common::core::type;
 namespace v = common::core::value;
 
@@ -154,6 +155,46 @@ TEST_F(ComparisonTermTest, and) {
         EXPECT_EQ(t.op(), ComparisonTerm::Operator::GT);
         EXPECT_EQ(t.left().variable()->id(), bid);
         EXPECT_EQ(*t.right().constant(), v::Int(2));
+    }
+}
+
+TEST_F(ComparisonTermTest, negative) {
+    auto& vid = add_variable(f.Name("v"), t::Int(64U, NON_NULL));
+    auto expr = analyze(f.BinaryOperator(
+        BOp::EQUAL, var("v"),
+        f.UnaryOperator(UOp::SIGN_INVERSION, literal(1))));
+
+    auto results = ComparisonTerm::collect(env.binding_context(), expr.get());
+    ASSERT_EQ(results.size(), 1U);
+    {
+        auto& t = results[0];
+        ASSERT_TRUE(t.left().is_variable());
+        ASSERT_TRUE(t.right().is_constant());
+
+        EXPECT_EQ(t.source(), expr.get());
+        EXPECT_EQ(t.op(), ComparisonTerm::Operator::EQ);
+        EXPECT_EQ(t.left().variable()->id(), vid);
+        EXPECT_EQ(*t.right().constant(), v::Int(-1));
+    }
+}
+
+TEST_F(ComparisonTermTest, negative_float) {
+    auto& vid = add_variable(f.Name("v"), t::Float(64U, NON_NULL));
+    auto expr = analyze(f.BinaryOperator(
+        BOp::EQUAL, var("v"),
+        f.UnaryOperator(UOp::SIGN_INVERSION, literal(1.0))));
+
+    auto results = ComparisonTerm::collect(env.binding_context(), expr.get());
+    ASSERT_EQ(results.size(), 1U);
+    {
+        auto& t = results[0];
+        ASSERT_TRUE(t.left().is_variable());
+        ASSERT_TRUE(t.right().is_constant());
+
+        EXPECT_EQ(t.source(), expr.get());
+        EXPECT_EQ(t.op(), ComparisonTerm::Operator::EQ);
+        EXPECT_EQ(t.left().variable()->id(), vid);
+        EXPECT_EQ(*t.right().constant(), v::Float(-1));
     }
 }
 

@@ -152,7 +152,7 @@ private:
         using OUT = ComparisonTerm::Operator;
         switch (op) {
             case IN::EQUAL: return OUT::EQ;
-            case IN::NOT_EQUAL: return OUT::EQ;
+            case IN::NOT_EQUAL: return OUT::NE;
             case IN::LESS_THAN: return OUT::LT;
             case IN::GREATER_THAN: return OUT::GT;
             case IN::LESS_THAN_OR_EQUAL: return OUT::LE;
