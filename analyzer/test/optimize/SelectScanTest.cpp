@@ -35,24 +35,26 @@ using common::util::dynamic_pointer_cast_if;
 
 class SelectScanTest : public AnalyzerTestBase, public ::testing::Test {
 public:
-    std::unique_ptr<model::expression::Expression> apply(std::unique_ptr<model::expression::Expression> expr) {
-        auto manager = manage<model::expression::Expression>(std::move(expr));
-        do_analyze(manager.get(), true);
+    template<class T>
+    void do_apply(T&& ptr) {
+        do_analyze(ptr.get(), true);
         env.reporter().clear();
 
         Context context { env.binding_context() };
-        SelectScan optimizer { context };
-        optimizer(manager.get());
+        SelectScan { context }(ptr.get());
+        ensure(ptr.get());
+    }
+
+    std::unique_ptr<model::expression::Expression> apply(std::unique_ptr<model::expression::Expression> expr) {
+        auto manager = manage<model::expression::Expression>(std::move(expr));
+        do_apply(manager);
         return manager.release();
     }
 
     template<class T>
     std::enable_if_t<!std::is_base_of_v<model::expression::Expression, T>, std::unique_ptr<T>>
     apply(std::unique_ptr<T> node) {
-        do_analyze(node.get());
-        Context context { env.binding_context() };
-        SelectScan optimizer { context };
-        optimizer(node.get());
+        do_apply(node);
         return node;
     }
 

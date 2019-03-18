@@ -43,6 +43,7 @@ public:
         Context context { env.binding_context() };
         SimplifyPredicate optimizer { context };
         auto result = optimizer(manager.get());
+        ensure(manager.get());
 
         return std::make_tuple(dynamic_pointer_cast<T>(manager.release()), result);
     }

@@ -51,6 +51,8 @@ public:
         SelectJoin { context }(manager.get());
         FixRelationInfo { context }(manager.get());
 
+        ensure(manager.get());
+
         return manager.release();
     }
 

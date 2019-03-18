@@ -42,6 +42,7 @@ public:
         Context context { env.binding_context() };
         SelectScan { context }(ptr.get());
         FixRelationInfo { context }(ptr.get());
+        ensure(ptr.get());
     }
 
     std::unique_ptr<model::expression::Expression> apply(std::unique_ptr<model::expression::Expression> expr) {

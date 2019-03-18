@@ -29,6 +29,7 @@
 #include "shakujo/common/util/utility.h"
 
 #include "shakujo/model/IRFactory.h"
+#include "shakujo/model/util/NodeWalker.h"
 #include "shakujo/common/schema/StorageInfoProvider.h"
 #include "shakujo/common/schema/ConfigurableStorageInfoProvider.h"
 #include "shakujo/common/util/JsonSerializer.h"
@@ -244,9 +245,42 @@ public:
     void do_analyze(T* node, bool fail_on_error = false) {
         Analyzer {}.analyze(env, node);
         env.reporter().report(Diagnostic { Diagnostic::Code::MESSAGE, to_string(node) });
+        if (!env.reporter().saw_error()) {
+            ensure(node);
+        }
         if (fail_on_error && env.reporter().saw_error()) {
             throw std::invalid_argument(common::util::to_string(diagnostics()));
         }
+    }
+
+    void ensure(model::Node* node) {
+        class Ensure : public model::util::NodeWalker {
+        public:
+            using NodeWalker::exit;
+            using NodeWalker::exitDefault;
+
+            void exitDefault(model::expression::Expression* node) override {
+                auto binding = context_.find(node->expression_key());
+                if (!common::util::is_defined(binding)) {
+                    throw std::domain_error("invalid key");
+                }
+            }
+
+            void exit(model::expression::VariableReference* node) override {
+                auto binding = context_.find(node->variable_key());
+                if (!common::util::is_defined(binding)) {
+                    throw std::domain_error("invalid key");
+                }
+                exitDefault(node);
+            }
+
+            Ensure(binding::BindingContext& context) : context_(context) {}
+        private:
+            binding::BindingContext& context_;
+        };
+
+        Ensure ensure { env.binding_context() };
+        ensure.walk(node);
     }
 
     template<typename T>

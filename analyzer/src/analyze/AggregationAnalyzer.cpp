@@ -18,6 +18,7 @@
 #include <algorithm>
 
 #include <cassert>
+#include <shakujo/common/core/type/Relation.h>
 
 #include "shakujo/model/IRFactory.h"
 #include "shakujo/model/util/NodeWalker.h"
@@ -26,6 +27,7 @@
 
 namespace shakujo::analyzer::analyze {
 
+using common::util::is_defined;
 using common::util::dynamic_pointer_cast;
 using common::util::make_clone;
 using common::util::to_string;
@@ -70,6 +72,7 @@ public:
 
         auto replacement = f.VariableReference(f.Name(std::move(variable_name)));
         replacement->variable_key(bindings().create_key(std::move(variable_binding)));
+        replacement->expression_key(bindings().create_key<binding::ExpressionBinding>(make_clone(function->type())));
         node->replace_with(std::move(replacement));
 
         return false;
@@ -101,13 +104,23 @@ public:
             }));
 
         std::vector<std::shared_ptr<binding::VariableBinding>> agg_columns {};
+        std::vector<common::core::type::Relation::Column> type_columns {};
         agg_columns.reserve(aggregation->columns().size());
+        type_columns.reserve(aggregation->columns().size());
         for (auto&& column : aggregation->columns()) {
-            agg_columns.emplace_back(bindings().get(column->variable_key()));
+            auto variable = bindings().get(column->variable_key());
+            std::string_view name;
+            if (is_defined(column->alias())) {
+                name = column->alias()->token();
+            }
+            type_columns.emplace_back(name, make_clone(variable->type()));
+            agg_columns.emplace_back(std::move(variable));
         }
         aggregation->relation_key(bindings().create_key<binding::RelationBinding>(
             source_profile_,
             binding::RelationBinding::Profile { std::move(agg_columns) }));
+        aggregation->expression_key(bindings().create_key<binding::ExpressionBinding>(
+            std::make_unique<common::core::type::Relation>(std::move(type_columns))));
 
         // FIXME: push down for group-by operation
 
