@@ -274,7 +274,7 @@ private:
         if (!scan.table()) {
             return {};
         }
-        if (left ? join.right_outer() : join.left_outer()) {
+        if (left ? join.left_outer() : join.right_outer()) {
             return {};
         }
         auto&& columns = scan.key_columns();

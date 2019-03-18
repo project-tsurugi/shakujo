@@ -476,8 +476,8 @@ TEST_F(SelectJoinTest, left_outer) {
     auto relation = extract_relation(join);
     auto left = extract_relation(join->left());
     auto right = extract_relation(join->right());
-    ASSERT_EQ(left->scan_strategy().table().name(), "T2");
-    ASSERT_EQ(right->scan_strategy().table().name(), "T1");
+    ASSERT_EQ(left->scan_strategy().table().name(), "T1");
+    ASSERT_EQ(right->scan_strategy().table().name(), "T2");
 
     auto&& strategy = relation->join_strategy();
 
@@ -501,6 +501,9 @@ TEST_F(SelectJoinTest, left_outer_miss) {
             { "C3", t::Int(64U, NON_NULL), },
         },
         {  // pk
+            {
+                { "C1" },
+            }
         }
     });
     add(common::schema::TableInfo { "T2",
@@ -510,9 +513,6 @@ TEST_F(SelectJoinTest, left_outer_miss) {
             { "C3", t::Int(64U, NON_NULL), },
         },
         {  // pk
-            {
-                { "C1" },
-            }
         }
     });
     auto expr = apply(f.JoinExpression(
@@ -572,8 +572,8 @@ TEST_F(SelectJoinTest, right_outer) {
     auto relation = extract_relation(join);
     auto left = extract_relation(join->left());
     auto right = extract_relation(join->right());
-    ASSERT_EQ(left->scan_strategy().table().name(), "T1");
-    ASSERT_EQ(right->scan_strategy().table().name(), "T2");
+    ASSERT_EQ(left->scan_strategy().table().name(), "T2");
+    ASSERT_EQ(right->scan_strategy().table().name(), "T1");
 
     auto&& strategy = relation->join_strategy();
 
@@ -597,9 +597,6 @@ TEST_F(SelectJoinTest, right_outer_miss) {
             { "C3", t::Int(64U, NON_NULL), },
         },
         {  // pk
-            {
-                { "C1" },
-            }
         }
     });
     add(common::schema::TableInfo { "T2",
@@ -609,6 +606,9 @@ TEST_F(SelectJoinTest, right_outer_miss) {
             { "C3", t::Int(64U, NON_NULL), },
         },
         {  // pk
+            {
+                { "C1" },
+            }
         }
     });
     auto expr = apply(f.JoinExpression(
