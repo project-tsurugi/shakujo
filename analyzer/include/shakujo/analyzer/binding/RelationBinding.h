@@ -216,7 +216,7 @@ public:
         }
 
         /**
-         * @brief returns whether or not the the corresponded relation only consists of distinct rows.
+         * @brief returns whether or not the corresponded relation only consists of distinct rows.
          * @return true if the relation does not have any duplicated rows
          * @return false if the relation may have duplicated rows
          */
