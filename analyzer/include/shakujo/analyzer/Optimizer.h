@@ -60,7 +60,6 @@ public:
     /**
      * @brief optimizes the given program.
      * The given node must be analyzed by Analyzer.
-     * @param context the analysis context
      * @param node the target node
      */
     void operator()(model::program::Program* node);
@@ -68,7 +67,6 @@ public:
     /**
      * @brief optimizes the given statement.
      * The given node must be analyzed by Analyzer.
-     * @param context the analysis context
      * @param node the target node
      */
     void operator()(model::statement::Statement* node);
@@ -77,7 +75,6 @@ public:
      * @brief optimizes the given expression.
      * The given node must be analyzed by Analyzer.
      * The expression must be managed because it may be rewrite to another expression.
-     * @param context the analysis context
      * @param node the target node
      */
     void operator()(model::expression::Expression* node);

@@ -66,13 +66,13 @@ inline auto is_valid(T const& object) -> decltype(object.is_valid()) {
 /**
  * @brief returns whether or not the given pointer like object is valid.
  * @tparam T the pointer type
- * @param ptr the pointer like object
+ * @param object the pointer like object
  * @return true if the object is not null and is valid
  * @return false otherwise
  */
 template<class T>
-inline auto is_valid(T const& ptr) -> decltype(is_defined(ptr) && ptr->is_valid()) {
-    return is_defined(ptr) && ptr->is_valid();
+inline auto is_valid(T const& object) -> decltype(is_defined(object), object->is_valid(), bool {}) {
+    return is_defined(object) && object->is_valid();
 }
 
 /**

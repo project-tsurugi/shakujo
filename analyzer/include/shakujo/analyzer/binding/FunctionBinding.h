@@ -147,7 +147,7 @@ public:
      * @param name the function name
      * @param type the function return type, may be undefined if it does not return anything
      * @param quantifier the function quantifier
-     * @param parameter the function parameter
+     * @param parameters the function parameters
      */
     FunctionBinding(
             Id<FunctionBinding>&& id,

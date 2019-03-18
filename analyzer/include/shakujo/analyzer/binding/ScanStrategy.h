@@ -94,7 +94,7 @@ public:
         /**
          * @brief returns whether or not the corresponded range bound is inclusive.
          * @return true if the bound is inclusive
-         * @retur false otherwise
+         * @return false otherwise
          */
         bool inclusive() const {
             return inclusive_;
@@ -144,10 +144,8 @@ public:
      * @param index the target index
      * @param key_columns the key columns
      * @param prefix the prefix values
-     * @param lower_suffix the lower suffix
-     * @param lower_inclusive range includes the lower bound
-     * @param upper_suffix the upper suffix
-     * @param upper_inclusive range includes the upper bound
+     * @param lower_suffix suffix of the lower bound
+     * @param upper_suffix suffix of the upper bound
      */
     ScanStrategy(
             common::schema::TableInfo const& table,

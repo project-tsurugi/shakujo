@@ -230,6 +230,7 @@ public:
      * @param left_semi is left semi join
      * @param right_semi is right semi join
      * @param columns the join columns
+     * @param equalities the equality terms
      */
     JoinStrategy(
             Kind kind,

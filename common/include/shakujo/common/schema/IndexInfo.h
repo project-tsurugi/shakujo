@@ -97,7 +97,6 @@ public:
 
     /**
      * @brief constructs a new object that represents a primary index.
-     * @param name the index name
      * @param columns the columns
      */
     IndexInfo(std::vector<Column> columns)  // NOLINT
@@ -105,7 +104,7 @@ public:
     {}
 
     /**
-     * @brief constructs a new object.
+     * @brief constructs a new object that represents a secondary index.
      * @param name the index name
      * @param columns the columns
      */
