@@ -305,4 +305,29 @@ TEST_F(ParserExpressionTest, logical_xor) {
     EXPECT_EQ(1, as_int(v->left()));
     EXPECT_EQ(2, as_int(v->right()));
 }
+
+TEST_F(ParserExpressionTest, single_line_comment) {
+    auto v = parse_expression<BinaryOperator>(
+        "1 -- one \r\n"
+        "+ -- plus \n"
+        "2 -- two"
+        );
+    EXPECT_EQ(BinaryOperator::Kind::ADD, v->operator_kind());
+    EXPECT_EQ(1, as_int(v->left()));
+    EXPECT_EQ(2, as_int(v->right()));
+}
+
+TEST_F(ParserExpressionTest, multi_line_comment) {
+    auto v = parse_expression<BinaryOperator>(
+        "1 /* multi */"
+        "+ /* line"
+        " comment */"
+        "/* a */ 2 /* b */"
+    );
+    EXPECT_EQ(BinaryOperator::Kind::ADD, v->operator_kind());
+    EXPECT_EQ(1, as_int(v->left()));
+    EXPECT_EQ(2, as_int(v->right()));
+}
+
+
 }  // namespace shakujo::parser
