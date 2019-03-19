@@ -39,14 +39,14 @@ public:
     parser::Parser parser;
     model::IRFactory f;
 
-    template<typename T>
+    template<typename T = model::statement::Statement>
     std::unique_ptr<T> parse_program_main(std::string const& text) {
         auto program = parser.parse_program("<testing>", text);
         auto result = dynamic_pointer_cast<T>(program->release_main());
         return result;
     }
 
-    template<typename T>
+    template<typename T = model::expression::Expression>
     std::unique_ptr<T> parse_expression(std::string const& text) {
         auto node = parser.parse_expression("<testing>", text);
         auto result = dynamic_pointer_cast<T>(std::move(node));

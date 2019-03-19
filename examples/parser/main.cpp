@@ -35,7 +35,6 @@ static int run(std::vector<char*> const& args) {
     std::cout << "input: " << input << std::endl;
 
     shakujo::parser::Parser parser;
-    parser.debug(true);
     std::cout << "parse tree: ";
     auto result = parser.parse_program("<stdin>", input);
     if (!result) {

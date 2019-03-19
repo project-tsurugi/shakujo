@@ -30,7 +30,7 @@ using common::util::dynamic_pointer_cast;
 class ParserExpressionTest : public ParserTestBase, public ::testing::Test {
 public:
     int as_int(Expression const* expr) {
-        return value_of<v::Int>(expr);
+        return static_cast<int>(value_of<v::Int>(expr));
     }
     std::string as_string(Expression const* expr) {
         return value_of<v::String>(expr);
@@ -329,5 +329,13 @@ TEST_F(ParserExpressionTest, multi_line_comment) {
     EXPECT_EQ(2, as_int(v->right()));
 }
 
+TEST_F(ParserExpressionTest, raise) {
+    try {
+        parse_expression("1 + * 2");
+        FAIL();
+    } catch (Parser::Exception&) {
+        // ok
+    }
+}
 
 }  // namespace shakujo::parser

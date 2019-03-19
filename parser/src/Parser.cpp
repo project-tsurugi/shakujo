@@ -20,6 +20,8 @@
 #include <memory>
 #include <string>
 
+#include <glog/logging.h>
+
 #include "antlr4-runtime.h"
 #include "ShakujoLexer.h"
 #include "ShakujoParser.h"
@@ -30,14 +32,79 @@ namespace shakujo::parser {
 
 using namespace shakujo_lang;
 
+class ErrorListener : public antlr4::BaseErrorListener {
+public:
+    explicit ErrorListener(std::string_view path) noexcept : path_(path) {}
+
+    void syntaxError(
+            antlr4::Recognizer* recognizer,
+            antlr4::Token* offendingSymbol,
+            std::size_t line,
+            std::size_t charPositionInLine,
+            std::string const& msg,
+            std::exception_ptr e) override {
+        common::core::DocumentRegion region { path_, { line, charPositionInLine, } };
+        throw Parser::Exception(msg, std::move(region));
+    }
+
+    void reportAmbiguity(
+            antlr4::Parser *recognizer,
+            antlr4::dfa::DFA const &dfa,
+            std::size_t startIndex,
+            std::size_t stopIndex,
+            bool exact,
+            antlrcpp::BitSet const& ambigAlts,
+            antlr4::atn::ATNConfigSet *configs) override {
+        (void) recognizer;
+        (void) dfa;
+        (void) startIndex;
+        (void) stopIndex;
+        (void) exact;
+        (void) ambigAlts;
+        (void) configs;
+        VLOG(2) << "ambiguity" << std::endl;
+    }
+
+    void reportAttemptingFullContext(
+            antlr4::Parser *recognizer,
+            antlr4::dfa::DFA const& dfa,
+            std::size_t startIndex,
+            std::size_t stopIndex,
+            antlrcpp::BitSet const& conflictingAlts,
+            antlr4::atn::ATNConfigSet *configs) override {
+        (void) recognizer;
+        (void) dfa;
+        (void) startIndex;
+        (void) stopIndex;
+        (void) conflictingAlts;
+        (void) configs;
+        VLOG(2) << "attempting full context" << std::endl;
+    }
+
+    void reportContextSensitivity(
+            antlr4::Parser *recognizer,
+            antlr4::dfa::DFA const& dfa,
+            std::size_t startIndex,
+            std::size_t stopIndex,
+            std::size_t prediction,
+            antlr4::atn::ATNConfigSet* configs) override {
+        (void) recognizer;
+        (void) dfa;
+        (void) startIndex;
+        (void) stopIndex;
+        (void) prediction;
+        (void) configs;
+        VLOG(2) << "context sensitivity" << std::endl;
+    }
+
+private:
+    std::string_view path_;
+};
+
 class Parser::Impl {
 public:
-    bool debug_;
-
     void debug(antlr4::RuleContext *context, antlr4::Parser &parser) {
-        if (debug_) {
-            std::cout << context->toStringTree(&parser) << std::endl;
-        }
+        VLOG(2) << context->toStringTree(&parser) << std::endl;
     }
 
     template<class In, class Context>
@@ -46,6 +113,10 @@ public:
         ShakujoLexer lexer { &is };
         antlr4::CommonTokenStream tokens { &lexer };
         ShakujoParser parser { &tokens };
+
+        ErrorListener listener { path };
+        parser.removeErrorListeners();
+        parser.addErrorListener(&listener);
 
         auto tree = entry(parser);
         debug(tree, parser);
@@ -57,11 +128,6 @@ public:
 Parser::Parser() : impl_(new Impl()) {}
 
 Parser::~Parser() noexcept = default;
-
-Parser& Parser::debug(bool on) {
-    impl_->debug_ = on;
-    return *this;
-}
 
 std::unique_ptr<model::program::Program> Parser::parse_program(std::string path, std::istream& input) {
     std::function<ShakujoParser::ProgramEntryContext*(ShakujoParser&)> entry = &ShakujoParser::programEntry;

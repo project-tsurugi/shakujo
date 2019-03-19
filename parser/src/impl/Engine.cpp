@@ -23,19 +23,22 @@
 
 #include <glog/logging.h>
 
+#include "shakujo/parser/Parser.h"
 #include "shakujo/common/util/utility.h"
 
 namespace shakujo::parser::impl {
 
 using common::util::is_defined;
 using common::util::make_clone;
-using common::util::to_string;
 
 void Engine::check(antlr4::ParserRuleContext *c) {
     if (is_defined(c) && c->exception) {
-        VLOG(1) << "parse error: " << c->toStringTree(parser_);
-        // FIXME: make it nested custom exception
-        std::rethrow_exception(c->exception);
+        VLOG(1) << "parse error: " << c->toInfoString(parser_);
+        try {
+            std::rethrow_exception(c->exception);
+        } catch (std::exception& e) {
+            throw Parser::Exception(e.what(), region(c));
+        }
     }
 }
 
@@ -57,9 +60,8 @@ common::core::DocumentRegion Engine::region(antlr4::ParserRuleContext *first, an
     return common::core::DocumentRegion(location_, begin, end);
 }
 
-[[noreturn]] static void rule_error(antlr4::ParserRuleContext *c) {
-    // FIXME: more info
-    throw std::domain_error(to_string("unknown rule: ", c->getText()));
+[[noreturn]] void Engine::rule_error(antlr4::ParserRuleContext *c) {
+    throw Parser::Exception("unknown rule", region(c));
 }
 
 std::unique_ptr<model::program::Program> Engine::visit(Grammar::ProgramEntryContext *c) {

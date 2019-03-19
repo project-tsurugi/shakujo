@@ -560,7 +560,9 @@ public:
 
 private:
     void check(antlr4::ParserRuleContext *);
+
     common::core::DocumentRegion region(antlr4::ParserRuleContext *, antlr4::ParserRuleContext * = nullptr);
+    [[noreturn]] void rule_error(antlr4::ParserRuleContext *);
 };
 
 }  //  namespace shakujo::parser::impl

@@ -16,9 +16,12 @@
 #ifndef SHAKUJO_PARSER_PARSER_H_
 #define SHAKUJO_PARSER_PARSER_H_
 
+#include <exception>
 #include <iostream>
 #include <memory>
 #include <string>
+#include <string_view>
+#include <sstream>
 
 #include "shakujo/model/program/Program.h"
 #include "shakujo/model/statement/Statement.h"
@@ -30,11 +33,55 @@ namespace shakujo::parser {
  * @brief parses source program.
  */
 class Parser {
-private:
-    class Impl;
-    std::unique_ptr<Impl> impl_;
-
 public:
+    /**
+     * @brief a parse exception.
+     */
+    class Exception : public std::exception {
+    public:
+        /**
+         * @brief constructs a new object.
+         * @param message
+         * @param region
+         */
+        Exception(std::string_view message, common::core::DocumentRegion region)
+            : message_(message)
+            , region_(std::move(region))
+        {
+            std::ostringstream s;
+            s << message_;
+            if (region_) {
+                s << "(at " << region_ << ")";
+            }
+            what_ = s.str();
+        }
+
+        /**
+         * @brief returns the exception message.
+         * @return the exception message
+         */
+        std::string const& message() const noexcept {
+            return message_;
+        }
+
+        /**
+         * @brief returns where this exception was occur.
+         * @return the exception location in the source document
+         */
+        common::core::DocumentRegion const& region() const noexcept {
+            return region_;
+        }
+
+        char const* what() const noexcept override {
+            return what_.c_str();
+        }
+
+    private:
+        std::string message_;
+        common::core::DocumentRegion region_;
+        std::string what_;
+    };
+
     /**
      * @brief constructs a new object.
      */
@@ -71,19 +118,12 @@ public:
      */
     Parser& operator=(Parser&& other) noexcept = default;
 
-    // FIXME: logger instead
-    /**
-     * @brief sets enable debugging.
-     * @param on the debug flag
-     * @return this
-     */
-    Parser& debug(bool on);
-
     /**
      * @brief parses source input and parses it as a program model.
      * @param path the input path
      * @param input the source input stream, must be UTF-8 formatted
      * @return the parsed model
+     * @throws Parser::Exception if the input is wrong syntax
      */
     std::unique_ptr<model::program::Program> parse_program(std::string path, std::istream& input);
 
@@ -92,6 +132,7 @@ public:
      * @param path the input path
      * @param input the source input, must be UTF-8 formatted
      * @return the parsed model
+     * @throws Parser::Exception if the input is wrong syntax
      */
     std::unique_ptr<model::program::Program> parse_program(std::string path, std::string const& input);
 
@@ -100,6 +141,7 @@ public:
      * @param path the input path
      * @param input the source input stream, must be UTF-8 formatted
      * @return the parsed model
+     * @throws Parser::Exception if the input is wrong syntax
      */
     std::unique_ptr<model::statement::Statement> parse_statement(std::string path, std::istream& input);
 
@@ -108,6 +150,7 @@ public:
      * @param path the input path
      * @param input the source input, must be UTF-8 formatted
      * @return the parsed model
+     * @throws Parser::Exception if the input is wrong syntax
      */
     std::unique_ptr<model::statement::Statement> parse_statement(std::string path, std::string const& input);
 
@@ -116,6 +159,7 @@ public:
      * @param path the input path
      * @param input the source input stream, must be UTF-8 formatted
      * @return the parsed model
+     * @throws Parser::Exception if the input is wrong syntax
      */
     std::unique_ptr<model::expression::Expression> parse_expression(std::string path, std::istream& input);
 
@@ -124,8 +168,13 @@ public:
      * @param path the input path
      * @param input the source input, must be UTF-8 formatted
      * @return the parsed model
+     * @throws Parser::Exception if the input is wrong syntax
      */
     std::unique_ptr<model::expression::Expression> parse_expression(std::string path, std::string const& input);
+
+private:
+    class Impl;
+    std::unique_ptr<Impl> impl_;
 };
 }  // namespace shakujo::parser
 

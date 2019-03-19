@@ -51,7 +51,7 @@ public:
          * @param line_number 1-origin line number
          * @param column_number 1-origin column number
          */
-        explicit constexpr Position(std::size_t line_number, std::size_t column_number = 0U) noexcept
+        constexpr Position(std::size_t line_number, std::size_t column_number = 0U) noexcept  // NOLINT
             : line_number_(line_number), column_number_(line_number == 0U ? 0U : column_number)
         {}
 
@@ -125,7 +125,7 @@ public:
     };
 
 private:
-    std::shared_ptr<const std::string> path_;
+    std::shared_ptr<std::string const> path_;
     Position begin_;
     Position end_;
 
@@ -133,7 +133,7 @@ public:
     /**
      * @brief constructs a new empty object.
      */
-    DocumentRegion() noexcept : DocumentRegion(std::shared_ptr<const std::string>()) {};
+    DocumentRegion() noexcept : DocumentRegion(std::shared_ptr<std::string const>()) {};
 
     /**
      * @brief constructs a new object
@@ -142,7 +142,7 @@ public:
      * @param end the ending position (inclusive)
      */
     explicit DocumentRegion(
-            std::shared_ptr<const std::string> path,
+            std::shared_ptr<std::string const> path,
             Position begin = {},
             Position end = {}) noexcept
         : path_(std::move(path)), begin_(begin), end_(end)
@@ -173,7 +173,7 @@ public:
      * @return the shared pointer of document path
      * @return empty shared pointer if it is not defined
      */
-    inline std::shared_ptr<const std::string> path_shared() const {
+    inline std::shared_ptr<std::string const> path_shared() const {
         return path_;
     }
 
