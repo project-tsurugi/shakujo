@@ -19,14 +19,14 @@ function(antlr)
     if(NOT ANTLR_GEN_SOURCES)
         message(FATAL_ERROR "SOURCES must be set")
     endif()
-    if(NOT ANTLR_GEN_DEPENDS)
-        list(APPEND DEPENDS ${SOURCES})
-    endif()
 
-    set(ANTLR_TOOL_JAR "${shakujo_SOURCE_DIR}/third_party/antlr-4.7.2-complete.jar")
+    set(ANTLR_TOOL_JAR "${shakujo_SOURCE_DIR}/third_party/antlr4-4.7.2-complete.jar")
     if (NOT EXISTS ${ANTLR_TOOL_JAR})
         message(FATAL_ERROR "ANTLR tool not found: ${ANTLR_TOOL_JAR}")
     endif()
+
+    list(APPEND ANTLR_GEN_DEPENDS ${ANTLR_GEN_SOURCES})
+    list(APPEND ANTLR_GEN_DEPENDS ${ANTLR_TOOL_JAR})
 
     # compute output target
     execute_process(
