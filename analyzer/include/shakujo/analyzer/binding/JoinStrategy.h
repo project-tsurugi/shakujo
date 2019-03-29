@@ -18,6 +18,7 @@
 
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <string_view>
@@ -417,6 +418,40 @@ public:
      */
     explicit operator bool() const {
         return is_valid();
+    }
+
+    /**
+     * @brief returns where the given variable appears in join columns from the left source.
+     * @param variable the variable
+     * @return the index on left source
+     * @return empty if the variable is not in left source
+     */
+    std::optional<std::size_t> left_index_of(VariableBinding const& variable) {
+        std::size_t index = 0;
+        for (auto&& column : columns_) {
+            if (column.left_source().get() == &variable) {
+                return { index };
+            }
+            ++index;
+        }
+        return {};
+    }
+
+    /**
+     * @brief returns where the given variable appears in join columns from the right source.
+     * @param variable the variable
+     * @return the index on right source
+     * @return empty if the variable is not in right source
+     */
+    std::optional<std::size_t> right_index_of(VariableBinding const& variable) {
+        std::size_t index = 0;
+        for (auto&& column : columns_) {
+            if (column.right_source().get() == &variable) {
+                return { index };
+            }
+            ++index;
+        }
+        return {};
     }
 
     /**

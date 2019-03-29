@@ -310,6 +310,46 @@ TEST_F(PredicatePushDownTest, scan_join_select) {
     }
 }
 
+TEST_F(PredicatePushDownTest, scan_join_select_cross) {
+    add(common::schema::TableInfo { "T1", {
+        { "K", t::Int(64U, NON_NULL), },
+        { "C1", t::Int(64U, NON_NULL), },
+    }});
+    add(common::schema::TableInfo { "T2", {
+        { "K", t::Int(64U, NON_NULL), },
+        { "C2", t::Int(64U, NON_NULL), },
+    }});
+    // select - join - scan
+    auto expr = apply(f.SelectionExpression(
+        f.JoinExpression(
+            model::expression::relation::JoinExpression::Kind::CROSS,
+            f.ScanExpression(f.Name("T1")),
+            f.ScanExpression(f.Name("T2"))),
+        f.BinaryOperator(BOp::EQUAL, var("T1", "K"), var("T2", "K"))
+    ));
+
+    // join - select - scan
+    auto join = cast<model::expression::relation::JoinExpression>(expr.get());
+    {
+        auto cond = join->condition();
+        ASSERT_FALSE(cond);
+
+        auto relation = extract_relation(join);
+        auto&& left = extract_relation(join->left())->output().columns();
+        auto&& right = extract_relation(join->right())->output().columns();
+        auto&& strategy = relation->join_strategy();
+        auto&& eq = strategy.equalities();
+        EXPECT_EQ(eq.size(), 1U);
+        EXPECT_TRUE(contains(eq, std::make_pair(left[0], right[0])));
+    }
+    {
+        cast<model::expression::relation::ScanExpression>(join->left());
+    }
+    {
+        cast<model::expression::relation::ScanExpression>(join->right());
+    }
+}
+
 TEST_F(PredicatePushDownTest, scan_join_select_complex) {
     add(common::schema::TableInfo { "T1", {
         { "K", t::Int(64U, NON_NULL), },

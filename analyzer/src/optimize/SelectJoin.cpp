@@ -188,6 +188,7 @@ public:
     explicit Engine(Context& context) noexcept : context_(context) {}
 
     using NodeWalker::enter;
+    using NodeWalker::exit;
 
     void exit(model::expression::relation::JoinExpression* node) override {
         if (context_.options().join.nested_loop_seek && try_seek(node)) {

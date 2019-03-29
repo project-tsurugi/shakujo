@@ -294,12 +294,59 @@ public:
             dispatch(node->right(), std::move(next));
         }
 
+        if (!join.left_outer() && !join.right_outer()) {
+            Predicates next { prev };
+            VariableRewriter rewriter {};
+            for (auto&& column : join.columns()) {
+                if (column.left_source()) {
+                    rewriter.add_rule(column.output(), column.left_source());
+                } else if (column.right_source()) {
+                    rewriter.add_rule(column.output(), column.right_source());
+                }
+            }
+            next.rewriter.merge(rewriter);
+            flush_to_equalities(join, std::move(next));
+        }
+
         if (is_defined(node->condition()) && (!join.right_outer() || !join.left_outer())) {
             if (auto predicate = simplifier(node->condition()); predicate == true) {
                 node->condition({});
             }
         }
         flush_predicates(node, std::move(prev));
+    }
+
+    void flush_to_equalities(binding::JoinStrategy& strategy, Predicates&& preds) {
+        for (auto&& term : preds.terms) {
+            if (!term || term->sticky_ || !term->comparison_) {
+                continue;
+            }
+            auto&& cterm = term->comparison_;
+            if (cterm.op() != ComparisonTerm::Operator::EQ
+                    || !cterm.left().is_variable()
+                    || !cterm.right().is_variable()) {
+                continue;
+            }
+            auto a = preds.rewriter.apply(cterm.left().variable());
+            if (!is_valid(a)) {
+                continue;
+            }
+            auto b = preds.rewriter.apply(cterm.right().variable());
+            if (!is_valid(b)) {
+                continue;
+            }
+            if (strategy.left_index_of(*a).has_value() && strategy.right_index_of(*b).has_value()) {
+                strategy.equalities().emplace(std::move(a), std::move(b));
+                auto r = term->rewrite(preds.rewriter);
+                assert(is_defined(r));  // NOLINT
+                term->dispose();
+            } else if (strategy.left_index_of(*b).has_value() && strategy.right_index_of(*a).has_value()) {
+                strategy.equalities().emplace(std::move(b), std::move(a));
+                auto r = term->rewrite(preds.rewriter);
+                assert(is_defined(r));  // NOLINT
+                term->dispose();
+            }
+        }
     }
 
     void visit(model::expression::relation::OrderExpression* node, Predicates&& preds) override {
