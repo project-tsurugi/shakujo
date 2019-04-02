@@ -111,7 +111,7 @@ IDENTIFIER
     ;
 
 NAMED_PLACEHOLDER
-    : ':' [a-zA-Z_][a-zA-Z0-9]*
+    : ':' [a-zA-Z_][a-zA-Z0-9_]*
     ;
 
 INTEGRAL_NUMBER
