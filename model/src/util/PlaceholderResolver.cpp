@@ -27,6 +27,7 @@ namespace shakujo::model::util {
 using common::util::is_defined;
 using common::util::make_clone;
 using common::util::dynamic_pointer_cast;
+using common::util::dynamic_pointer_cast_if;
 
 PlaceholderResolver::Result PlaceholderResolver::operator()(Node *node) const {
     auto placeholders = collect(node);
@@ -37,7 +38,7 @@ PlaceholderResolver::Result PlaceholderResolver::operator()(Node *node) const {
         if (is_defined(origin)) {
             replaced.emplace_back(std::move(origin));
         } else {
-            left.push_back(ph);
+            left.emplace_back(ph);
         }
     }
     return { std::move(replaced), std::move(left) };
@@ -54,7 +55,11 @@ std::unique_ptr<expression::Placeholder> PlaceholderResolver::replace(expression
         std::unique_ptr<expression::Placeholder> result;
         node->replace([&](auto origin) {
             result = dynamic_pointer_cast<expression::Placeholder>(std::move(origin));
-            return make_clone(it->second);
+            auto replacement = make_clone(it->second);
+            if (!replacement->region() && result->region()) {
+                replacement->region(result->region());
+            }
+            return replacement;
         });
         return result;
     }
@@ -62,16 +67,17 @@ std::unique_ptr<expression::Placeholder> PlaceholderResolver::replace(expression
 }
 
 std::vector<expression::Placeholder *> PlaceholderResolver::collect(Node *node) {
-    if (auto ph = dynamic_cast<expression::Placeholder*>(node); is_defined(ph) && !ph->is_managed()) {
+    if (auto ph = dynamic_pointer_cast_if<expression::Placeholder>(node); is_defined(ph) && !ph->is_managed()) {
         throw std::invalid_argument("replacement target placeholder must be managed");
     }
     class Collector : public NodeWalker {
     public:
         std::vector<expression::Placeholder*> results {};
 
-    protected:
+        using NodeWalker::enter;
+
         bool enter(expression::Placeholder* node) override {
-            results.push_back(node);
+            results.emplace_back(node);
             return false;
         }
     } collector;

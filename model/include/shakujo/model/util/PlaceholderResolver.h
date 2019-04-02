@@ -33,9 +33,6 @@ namespace shakujo::model::util {
  * @brief resolves expression placeholders.
  */
 class PlaceholderResolver {
-private:
-    std::map<std::string, std::unique_ptr<expression::Expression>> keywords_;
-
 public:
     /**
      * @brief replacement result of PlaceholderResolver.
@@ -148,6 +145,8 @@ public:
     }
 
 private:
+    std::map<std::string, std::unique_ptr<expression::Expression>> keywords_;
+
     std::unique_ptr<expression::Placeholder> replace(expression::Placeholder* node) const;
 };
 
