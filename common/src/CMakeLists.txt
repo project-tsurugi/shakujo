@@ -5,8 +5,13 @@ file(GLOB SOURCES
     "schema/*.cpp"
 )
 
-add_library(common STATIC
+add_library(common
     ${SOURCES}
+)
+
+set_target_properties(common
+    PROPERTIES
+        LIBRARY_OUTPUT_NAME "shakujo-common"
 )
 
 target_include_directories(common

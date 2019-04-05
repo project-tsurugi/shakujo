@@ -31,6 +31,7 @@ ninja
 
 available options:
 
+* `-BUILD_SHARED_LIBS=OFF` - create static libraries instead of shared libraries
 * `-DBUILD_TESTS=OFF` - don't build test programs
 * `-DBUILD_DOCUMENTS=OFF` - don't build documents by doxygen
 * `-DBUILD_EXAMPLES=OFF` - don't build nor test example programs

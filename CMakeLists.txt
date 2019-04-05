@@ -25,6 +25,7 @@ option(BUILD_EXAMPLES "Build and test example programs" ON)
 option(BUILD_DOCUMENTS "Build documents" ON)
 option(INSTALL_EXAMPLES "Install example programs" OFF)
 option(FORCE_INSTALL_RPATH "force add lib dir of custom prefixes to INSTALL_RPATH" OFF)
+option(BUILD_SHARED_LIBS "build shared libraries instead of static" ON)
 
 option(ENABLE_SANITIZER "enable sanitizer on debug build" ON)
 option(ENABLE_UB_SANITIZER "enable undefined behavior sanitizer on debug build" OFF)

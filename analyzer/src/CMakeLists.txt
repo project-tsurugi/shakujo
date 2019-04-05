@@ -5,8 +5,13 @@ file(GLOB SOURCES
     "optimize/*.cpp"
 )
 
-add_library(analyzer STATIC
+add_library(analyzer
     ${SOURCES}
+)
+
+set_target_properties(analyzer
+    PROPERTIES
+        LIBRARY_OUTPUT_NAME "shakujo-analyzer"
 )
 
 target_include_directories(analyzer
@@ -21,7 +26,6 @@ target_link_libraries(analyzer
 
 set_compile_options(analyzer)
 install_custom(analyzer ${export_name})
-
 
 # for tests
 add_library(analyzer-impl INTERFACE)
