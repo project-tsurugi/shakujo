@@ -39,6 +39,11 @@ add_library(parser
     ${ANTLR_RUNTIME_SOURCES}
 )
 
+set_target_properties(parser
+    PROPERTIES
+        LIBRARY_OUTPUT_NAME "shakujo-parser"
+)
+
 target_include_directories(parser
     PRIVATE .
     PRIVATE ${ANTLR_OUTPUT_DIR}

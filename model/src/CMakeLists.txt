@@ -13,8 +13,13 @@ file(GLOB SOURCES
     "util/*.cpp"
 )
 
-add_library(model STATIC
+add_library(model
     ${SOURCES}
+)
+
+set_target_properties(model
+    PROPERTIES
+        LIBRARY_OUTPUT_NAME "shakujo-model"
 )
 
 target_include_directories(model
