@@ -357,6 +357,7 @@ primaryExpression
     | name
     | literal
     | placeholder
+    | '(' expression ')'
     ;
 
 functionCall

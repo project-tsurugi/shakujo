@@ -169,6 +169,17 @@ TEST_F(ParserExpressionTest, placeholder_positional) {
     EXPECT_EQ(v->name(), "");
 }
 
+TEST_F(ParserExpressionTest, parenthesized) {
+    auto v = parse_expression<BinaryOperator>("1 * (2 + 3)");
+    EXPECT_EQ(BinaryOperator::Kind::MULTIPLY, v->operator_kind());
+    EXPECT_EQ(1, as_int(v->left()));
+
+    auto right = dynamic_pointer_cast<BinaryOperator>(v->right());
+    EXPECT_EQ(BinaryOperator::Kind::ADD, right->operator_kind());
+    EXPECT_EQ(2, as_int(right->left()));
+    EXPECT_EQ(3, as_int(right->right()));
+}
+
 TEST_F(ParserExpressionTest, unary_plus) {
     auto v = parse_expression<UnaryOperator>("+1");
     EXPECT_EQ(UnaryOperator::Kind::PLUS, v->operator_kind());

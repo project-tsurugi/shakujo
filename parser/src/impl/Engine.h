@@ -505,6 +505,7 @@ public:
     //     | name
     //     | literal
     //     | placeholder
+    //     | '(' expression ')'
     //     ;
     std::unique_ptr<model::expression::Expression> visit(Grammar::PrimaryExpressionContext *);
 

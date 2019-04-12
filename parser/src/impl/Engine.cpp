@@ -1249,6 +1249,9 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::PrimaryExp
     if (auto t = c->placeholder(); is_defined(t)) {
         return visit(t);
     }
+    if (auto e = c->expression(); is_defined(e)) {
+        return visit(e);
+    }
     rule_error(c);
 }
 
