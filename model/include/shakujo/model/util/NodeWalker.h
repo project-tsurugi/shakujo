@@ -46,6 +46,7 @@
 #include "shakujo/model/expression/VectorLengthExpression.h"
 #include "shakujo/model/expression/relation/AggregationExpression.h"
 #include "shakujo/model/expression/relation/DistinctExpression.h"
+#include "shakujo/model/expression/relation/GroupExpression.h"
 #include "shakujo/model/expression/relation/JoinExpression.h"
 #include "shakujo/model/expression/relation/LimitExpression.h"
 #include "shakujo/model/expression/relation/OrderExpression.h"
@@ -847,6 +848,30 @@ protected:
      * @see enter()
      */
     virtual void exit([[maybe_unused]] expression::relation::DistinctExpression* node) {
+        exitDefault(node);
+    }
+
+    /**
+     * @brief callback on enter into GroupExpression.
+     * @param node the processing target
+     * @return true if continue to enter into child elements of the given node
+     * @return false don't walk into child elements, also the corresponded exit() will not be called
+     * @see expression::relation::GroupExpression
+     * @see walk()
+     * @see exit()
+     */
+    virtual bool enter([[maybe_unused]] expression::relation::GroupExpression* node) {
+        return enterDefault(node);
+    }
+
+    /**
+     * @brief callback on exit from GroupExpression.
+     * @param node the processing target
+     * @see expression::relation::GroupExpression
+     * @see walk()
+     * @see enter()
+     */
+    virtual void exit([[maybe_unused]] expression::relation::GroupExpression* node) {
         exitDefault(node);
     }
 
@@ -2281,6 +2306,13 @@ public:
      * @see expression::relation::DistinctExpression
      */
     void walk(expression::relation::DistinctExpression* node);
+
+    /**
+     * @brief Begins to walk GroupExpression.
+     * @param node the processing target
+     * @see expression::relation::GroupExpression
+     */
+    void walk(expression::relation::GroupExpression* node);
 
     /**
      * @brief Begins to walk JoinExpression.

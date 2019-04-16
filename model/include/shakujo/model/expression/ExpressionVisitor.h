@@ -49,6 +49,7 @@
 #include "shakujo/model/expression/VectorLengthExpression.h"
 #include "shakujo/model/expression/relation/AggregationExpression.h"
 #include "shakujo/model/expression/relation/DistinctExpression.h"
+#include "shakujo/model/expression/relation/GroupExpression.h"
 #include "shakujo/model/expression/relation/JoinExpression.h"
 #include "shakujo/model/expression/relation/LimitExpression.h"
 #include "shakujo/model/expression/relation/OrderExpression.h"
@@ -378,6 +379,17 @@ public:
     }
 
     /**
+     * @brief Processes GroupExpression.
+     * @param node the processing target
+     * @param args the processing arguments
+     * @return the result
+     * @see relation::GroupExpression
+     */
+    virtual Return visit(relation::GroupExpression* node, Args... args) {  // NOLINT
+        return visitDefault(node, std::forward<Args>(args)...);
+    }
+
+    /**
      * @brief Processes JoinExpression.
      * @param node the processing target
      * @param args the processing arguments
@@ -505,6 +517,8 @@ public:
             return visit(dynamic_cast<relation::AggregationExpression*>(node), std::forward<Args>(args)...);
         case ExpressionKind::DISTINCT_EXPRESSION:
             return visit(dynamic_cast<relation::DistinctExpression*>(node), std::forward<Args>(args)...);
+        case ExpressionKind::GROUP_EXPRESSION:
+            return visit(dynamic_cast<relation::GroupExpression*>(node), std::forward<Args>(args)...);
         case ExpressionKind::JOIN_EXPRESSION:
             return visit(dynamic_cast<relation::JoinExpression*>(node), std::forward<Args>(args)...);
         case ExpressionKind::LIMIT_EXPRESSION:

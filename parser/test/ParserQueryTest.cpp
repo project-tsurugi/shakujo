@@ -328,6 +328,43 @@ TEST_F(ParserQueryTest, order_by_complex) {
     }
 }
 
+TEST_F(ParserQueryTest, group_by) {
+    auto stmt = parse_select("SELECT k FROM A GROUP BY a, b, c");
+    auto select = dynamic_pointer_cast<ProjectionExpression>(stmt->source());
+    auto group = dynamic_pointer_cast<GroupExpression>(select->operand());
+
+    ASSERT_EQ(group->keys().size(), 3);
+    {
+        auto* e = group->keys()[0];
+        EXPECT_EQ(name_of(e), "a");
+    }
+    {
+        auto* e = group->keys()[1];
+        EXPECT_EQ(name_of(e), "b");
+    }
+    {
+        auto* e = group->keys()[2];
+        EXPECT_EQ(name_of(e), "c");
+    }
+}
+
+TEST_F(ParserQueryTest, having) {
+    auto stmt = parse_select("SELECT k FROM A WHERE FALSE GROUP BY a HAVING TRUE");
+    auto select = dynamic_pointer_cast<ProjectionExpression>(stmt->source());
+    auto having = dynamic_pointer_cast<SelectionExpression>(select->operand());
+    auto group = dynamic_pointer_cast<GroupExpression>(having->operand());
+    auto where = dynamic_pointer_cast<SelectionExpression>(group->operand());
+    dynamic_pointer_cast<ScanExpression>(where->operand());
+    {
+        auto condition = dynamic_pointer_cast<Literal>(having->condition());
+        EXPECT_EQ(v::Bool(true), *condition->value());
+    }
+    {
+        auto condition = dynamic_pointer_cast<Literal>(where->condition());
+        EXPECT_EQ(v::Bool(false), *condition->value());
+    }
+}
+
 TEST_F(ParserQueryTest, all) {
     auto select = parse_select("SELECT ALL * FROM TBL");
     auto scan = dynamic_pointer_cast<ScanExpression>(select->source());

@@ -193,7 +193,7 @@ public:
     std::unique_ptr<model::expression::relation::ProjectionExpression::Column> visit(Grammar::DerivedColumnContext *);
 
     // tableExpression
-    //     : fromClause whereClause? (TODO: groupByClause) (TODO: havingClause)
+    //     : fromClause whereClause? groupByClause? havingClause?
     //     ;
     std::unique_ptr<model::expression::Expression> visit(Grammar::TableExpressionContext *);
 
@@ -316,6 +316,30 @@ public:
     //     | K_DESC
     //     ;
     model::expression::relation::OrderExpression::Direction visit(Grammar::OrderingSpecificationContext *);
+
+    // groupByClause
+    //     : K_GROUP K_BY groupingElementList
+    //     ;
+    std::unique_ptr<model::expression::Expression> visit(
+            Grammar::GroupByClauseContext *,
+            std::unique_ptr<model::expression::Expression>);
+
+    // groupingElementList
+    //     : groupingElement (',' groupingElement)*
+    //     ;
+    ptr_vector<model::expression::Expression> visit(Grammar::GroupingElementListContext *);
+
+    // groupingElement
+    //     : name
+    //     ;
+    std::unique_ptr<model::expression::Expression> visit(Grammar::GroupingElementContext *);
+
+    // havingClause
+    //     : K_HAVING searchCondition
+    //     ;
+    std::unique_ptr<model::expression::Expression> visit(
+            Grammar::HavingClauseContext *,
+            std::unique_ptr<model::expression::Expression>);
 
     // -- CREATE TABLE
     // createTableStatement

@@ -5,7 +5,9 @@ K_SELECT: S E L E C T;
 K_FROM: F R O M;
 
 K_WHERE: W H E R E;
+K_HAVING: H A V I N G;
 
+K_GROUP: G R O U P;
 K_ORDER: O R D E R;
 K_BY: B Y;
 
