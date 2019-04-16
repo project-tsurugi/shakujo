@@ -258,4 +258,35 @@ TEST_F(SyntaxValidatorRelationTest, DistinctExpression) {
     validate(f.DistinctExpression(literal()));
     should_error(f.DistinctExpression());
 }
+
+TEST_F(SyntaxValidatorRelationTest, GroupExpression) {
+    validate(f.GroupExpression(
+        literal(),
+        {
+            literal(),
+            literal(),
+            literal(),
+        }));
+    validate(f.GroupExpression(
+        literal(),
+        {
+            literal(),
+        }));
+    should_error(f.GroupExpression(
+        {},
+        {
+            literal(),
+            literal(),
+            literal(),
+        }));
+    should_error(f.GroupExpression(
+        literal(),
+        {
+        }));
+    should_error(f.GroupExpression(
+        {},
+        {
+            nullptr
+        }));
+}
 }  // namespace shakujo::analyzer
