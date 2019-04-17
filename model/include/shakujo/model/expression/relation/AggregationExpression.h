@@ -419,7 +419,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr ExpressionKind tag = ExpressionKind::AGGREGATION_EXPRESSION;
+    static inline constexpr auto tag = ExpressionKind::AGGREGATION_EXPRESSION;
 
     /**
      * @brief Returns the node kind.

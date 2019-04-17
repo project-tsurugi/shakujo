@@ -137,7 +137,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr ExpressionKind tag = ExpressionKind::VECTOR_LENGTH_EXPRESSION;
+    static inline constexpr auto tag = ExpressionKind::VECTOR_LENGTH_EXPRESSION;
 
     /**
      * @brief Returns the node kind.

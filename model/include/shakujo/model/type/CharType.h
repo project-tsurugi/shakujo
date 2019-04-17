@@ -102,7 +102,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr TypeKind tag = TypeKind::CHAR_TYPE;
+    static inline constexpr auto tag = TypeKind::CHAR_TYPE;
 
     /**
      * @brief Returns the node kind.

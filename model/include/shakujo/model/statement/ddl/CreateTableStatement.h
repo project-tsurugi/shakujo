@@ -491,7 +491,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr StatementKind tag = StatementKind::CREATE_TABLE_STATEMENT;
+    static inline constexpr auto tag = StatementKind::CREATE_TABLE_STATEMENT;
 
     /**
      * @brief Returns the node kind.

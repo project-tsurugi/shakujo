@@ -200,30 +200,30 @@ public:
      */
     Return dispatch(Type const* node, Args... args) {
         switch (node->kind()) {
-        case Type::Kind::INT:
-            return visit(dynamic_cast<Int const*>(node), args...);
-        case Type::Kind::FLOAT:
-            return visit(dynamic_cast<Float const*>(node), args...);
-        case Type::Kind::CHAR:
-            return visit(dynamic_cast<Char const*>(node), args...);
-        case Type::Kind::STRING:
-            return visit(dynamic_cast<String const*>(node), args...);
-        case Type::Kind::BOOL:
-            return visit(dynamic_cast<Bool const*>(node), args...);
-        case Type::Kind::NULL_:
-            return visit(dynamic_cast<Null const*>(node), args...);
-        case Type::Kind::TUPLE:
-            return visit(dynamic_cast<Tuple const*>(node), args...);
-        case Type::Kind::ARRAY:
-            return visit(dynamic_cast<Array const*>(node), args...);
-        case Type::Kind::VECTOR:
-            return visit(dynamic_cast<Vector const*>(node), args...);
-        case Type::Kind::RELATION:
-            return visit(dynamic_cast<Relation const*>(node), args...);
-        case Type::Kind::CURSOR:
-            return visit(dynamic_cast<Cursor const*>(node), args...);
-        case Type::Kind::ERROR:
-            return visit(dynamic_cast<Error const*>(node), args...);
+        case Int::tag:
+            return visit(static_cast<Int const*>(node), args...);  // NOLINT
+        case Float::tag:
+            return visit(static_cast<Float const*>(node), args...);  // NOLINT
+        case Char::tag:
+            return visit(static_cast<Char const*>(node), args...);  // NOLINT
+        case String::tag:
+            return visit(static_cast<String const*>(node), args...);  // NOLINT
+        case Bool::tag:
+            return visit(static_cast<Bool const*>(node), args...);  // NOLINT
+        case Null::tag:
+            return visit(static_cast<Null const*>(node), args...);  // NOLINT
+        case Tuple::tag:
+            return visit(static_cast<Tuple const*>(node), args...);  // NOLINT
+        case Array::tag:
+            return visit(static_cast<Array const*>(node), args...);  // NOLINT
+        case Vector::tag:
+            return visit(static_cast<Vector const*>(node), args...);  // NOLINT
+        case Relation::tag:
+            return visit(static_cast<Relation const*>(node), args...);  // NOLINT
+        case Cursor::tag:
+            return visit(static_cast<Cursor const*>(node), args...);  // NOLINT
+        case Error::tag:
+            return visit(static_cast<Error const*>(node), args...);  // NOLINT
         }
         // may not occur
         return visitDefault(node, args...);

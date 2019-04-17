@@ -170,7 +170,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr StatementKind tag = StatementKind::BRANCH_STATEMENT;
+    static inline constexpr auto tag = StatementKind::BRANCH_STATEMENT;
 
     /**
      * @brief Returns the node kind.

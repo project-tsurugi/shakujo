@@ -161,7 +161,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr ExpressionKind tag = ExpressionKind::VARIABLE_REFERENCE;
+    static inline constexpr auto tag = ExpressionKind::VARIABLE_REFERENCE;
 
     /**
      * @brief Returns the node kind.

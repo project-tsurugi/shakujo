@@ -145,7 +145,7 @@ public:
             ss << "require relation: " << binding->type();
             throw std::runtime_error(ss.str());
         }
-        return dynamic_cast<common::core::type::Relation const*>(binding->type());
+        return static_cast<common::core::type::Relation const*>(binding->type());  // NOLINT
     }
 
     binding::Id<binding::VariableBinding> const& add_variable(

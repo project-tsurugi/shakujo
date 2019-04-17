@@ -152,22 +152,22 @@ public:
      */
     Return dispatch(Value const* node, Args... args) {
         switch (node->kind()) {
-        case Value::Kind::BOOL:
-            return visit(dynamic_cast<Bool const*>(node), args...);
-        case Value::Kind::INT:
-            return visit(dynamic_cast<Int const*>(node), args...);
-        case Value::Kind::FLOAT:
-            return visit(dynamic_cast<Float const*>(node), args...);
-        case Value::Kind::PLACEHOLDER:
-            return visit(dynamic_cast<Placeholder const*>(node), args...);
-        case Value::Kind::STRING:
-            return visit(dynamic_cast<String const*>(node), args...);
-        case Value::Kind::TUPLE:
-            return visit(dynamic_cast<Tuple const*>(node), args...);
-        case Value::Kind::NULL_:
-            return visit(dynamic_cast<Null const*>(node), args...);
-        case Value::Kind::ERROR:
-            return visit(dynamic_cast<Error const*>(node), args...);
+        case Bool::tag:
+            return visit(static_cast<Bool const*>(node), args...);  // NOLINT
+        case Int::tag:
+            return visit(static_cast<Int const*>(node), args...);  // NOLINT
+        case Float::tag:
+            return visit(static_cast<Float const*>(node), args...);  // NOLINT
+        case Placeholder::tag:
+            return visit(static_cast<Placeholder const*>(node), args...);  // NOLINT
+        case String::tag:
+            return visit(static_cast<String const*>(node), args...);  // NOLINT
+        case Tuple::tag:
+            return visit(static_cast<Tuple const*>(node), args...);  // NOLINT
+        case Null::tag:
+            return visit(static_cast<Null const*>(node), args...);  // NOLINT
+        case Error::tag:
+            return visit(static_cast<Error const*>(node), args...);  // NOLINT
         }
         // may not occur
         return visitDefault(node, args...);

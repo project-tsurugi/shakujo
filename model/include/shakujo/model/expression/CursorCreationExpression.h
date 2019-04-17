@@ -137,7 +137,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr ExpressionKind tag = ExpressionKind::CURSOR_CREATION_EXPRESSION;
+    static inline constexpr auto tag = ExpressionKind::CURSOR_CREATION_EXPRESSION;
 
     /**
      * @brief Returns the node kind.

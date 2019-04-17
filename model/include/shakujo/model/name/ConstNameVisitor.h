@@ -79,10 +79,10 @@ public:
      */
     Return dispatch(Name const* node, Args... args) {
         switch (node->kind()) {
-        case NameKind::QUALIFIED_NAME:
-            return visit(dynamic_cast<QualifiedName const*>(node), std::forward<Args>(args)...);
-        case NameKind::SIMPLE_NAME:
-            return visit(dynamic_cast<SimpleName const*>(node), std::forward<Args>(args)...);
+        case QualifiedName::tag:
+            return visit(static_cast<QualifiedName const*>(node), std::forward<Args>(args)...);  // NOLINT
+        case SimpleName::tag:
+            return visit(static_cast<SimpleName const*>(node), std::forward<Args>(args)...);  // NOLINT
         }
         // may not occur
         return visitDefault(node, std::forward<Args>(args)...);

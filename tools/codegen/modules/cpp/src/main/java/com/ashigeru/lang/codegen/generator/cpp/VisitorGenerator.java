@@ -176,10 +176,10 @@ public class VisitorGenerator {
             for (ClassDeclaration target : targets) {
                 printer.getIncludes().add(target.getName());
                 printer.put("case %s::%s:",
-                        printer.getContextName(KindGenerator.getTypeName(baseClass)),
-                        KindGenerator.getConstantName(target));
+                        printer.getContextName(target),
+                        KindGenerator.NON_VIRTUAL_KIND_NAME);
                 printer.indent(() -> {
-                    printer.put("return visit(dynamic_cast<%s%s*>(node), std::forward<%s>(args)...);",
+                    printer.put("return visit(static_cast<%s%s*>(node), std::forward<%s>(args)...);  // NOLINT",
                             printer.getContextName(target),
                             isConst ? " const" : "",
                             TYPE_PARAMETERS);

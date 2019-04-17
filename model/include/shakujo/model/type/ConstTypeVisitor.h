@@ -211,32 +211,32 @@ public:
      */
     Return dispatch(Type const* node, Args... args) {
         switch (node->kind()) {
-        case TypeKind::ARRAY_TYPE:
-            return visit(dynamic_cast<ArrayType const*>(node), std::forward<Args>(args)...);
-        case TypeKind::BOOLEAN_TYPE:
-            return visit(dynamic_cast<BooleanType const*>(node), std::forward<Args>(args)...);
-        case TypeKind::CHAR_TYPE:
-            return visit(dynamic_cast<CharType const*>(node), std::forward<Args>(args)...);
-        case TypeKind::FLOAT32_TYPE:
-            return visit(dynamic_cast<Float32Type const*>(node), std::forward<Args>(args)...);
-        case TypeKind::FLOAT64_TYPE:
-            return visit(dynamic_cast<Float64Type const*>(node), std::forward<Args>(args)...);
-        case TypeKind::INT32_TYPE:
-            return visit(dynamic_cast<Int32Type const*>(node), std::forward<Args>(args)...);
-        case TypeKind::INT64_TYPE:
-            return visit(dynamic_cast<Int64Type const*>(node), std::forward<Args>(args)...);
-        case TypeKind::NULL_TYPE:
-            return visit(dynamic_cast<NullType const*>(node), std::forward<Args>(args)...);
-        case TypeKind::RELATION_TYPE:
-            return visit(dynamic_cast<RelationType const*>(node), std::forward<Args>(args)...);
-        case TypeKind::STRING_TYPE:
-            return visit(dynamic_cast<StringType const*>(node), std::forward<Args>(args)...);
-        case TypeKind::TUPLE_TYPE:
-            return visit(dynamic_cast<TupleType const*>(node), std::forward<Args>(args)...);
-        case TypeKind::VAR_CHAR_TYPE:
-            return visit(dynamic_cast<VarCharType const*>(node), std::forward<Args>(args)...);
-        case TypeKind::VECTOR_TYPE:
-            return visit(dynamic_cast<VectorType const*>(node), std::forward<Args>(args)...);
+        case ArrayType::tag:
+            return visit(static_cast<ArrayType const*>(node), std::forward<Args>(args)...);  // NOLINT
+        case BooleanType::tag:
+            return visit(static_cast<BooleanType const*>(node), std::forward<Args>(args)...);  // NOLINT
+        case CharType::tag:
+            return visit(static_cast<CharType const*>(node), std::forward<Args>(args)...);  // NOLINT
+        case Float32Type::tag:
+            return visit(static_cast<Float32Type const*>(node), std::forward<Args>(args)...);  // NOLINT
+        case Float64Type::tag:
+            return visit(static_cast<Float64Type const*>(node), std::forward<Args>(args)...);  // NOLINT
+        case Int32Type::tag:
+            return visit(static_cast<Int32Type const*>(node), std::forward<Args>(args)...);  // NOLINT
+        case Int64Type::tag:
+            return visit(static_cast<Int64Type const*>(node), std::forward<Args>(args)...);  // NOLINT
+        case NullType::tag:
+            return visit(static_cast<NullType const*>(node), std::forward<Args>(args)...);  // NOLINT
+        case RelationType::tag:
+            return visit(static_cast<RelationType const*>(node), std::forward<Args>(args)...);  // NOLINT
+        case StringType::tag:
+            return visit(static_cast<StringType const*>(node), std::forward<Args>(args)...);  // NOLINT
+        case TupleType::tag:
+            return visit(static_cast<TupleType const*>(node), std::forward<Args>(args)...);  // NOLINT
+        case VarCharType::tag:
+            return visit(static_cast<VarCharType const*>(node), std::forward<Args>(args)...);  // NOLINT
+        case VectorType::tag:
+            return visit(static_cast<VectorType const*>(node), std::forward<Args>(args)...);  // NOLINT
         }
         // may not occur
         return visitDefault(node, std::forward<Args>(args)...);

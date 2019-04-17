@@ -170,7 +170,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr StatementKind tag = StatementKind::VECTOR_ELEMENT_DELETE_STATEMENT;
+    static inline constexpr auto tag = StatementKind::VECTOR_ELEMENT_DELETE_STATEMENT;
 
     /**
      * @brief Returns the node kind.

@@ -340,7 +340,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr ExpressionKind tag = ExpressionKind::PROJECTION_EXPRESSION;
+    static inline constexpr auto tag = ExpressionKind::PROJECTION_EXPRESSION;
 
     /**
      * @brief Returns the node kind.

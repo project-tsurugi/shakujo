@@ -266,7 +266,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr ExpressionKind tag = ExpressionKind::CASE_EXPRESSION;
+    static inline constexpr auto tag = ExpressionKind::CASE_EXPRESSION;
 
     /**
      * @brief Returns the node kind.

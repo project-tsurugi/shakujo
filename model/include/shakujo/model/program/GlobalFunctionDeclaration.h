@@ -400,7 +400,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr GlobalDeclarationKind tag = GlobalDeclarationKind::GLOBAL_FUNCTION_DECLARATION;
+    static inline constexpr auto tag = GlobalDeclarationKind::GLOBAL_FUNCTION_DECLARATION;
 
     /**
      * @brief Returns the node kind.

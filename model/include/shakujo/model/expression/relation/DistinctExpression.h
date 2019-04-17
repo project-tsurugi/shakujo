@@ -160,7 +160,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr ExpressionKind tag = ExpressionKind::DISTINCT_EXPRESSION;
+    static inline constexpr auto tag = ExpressionKind::DISTINCT_EXPRESSION;
 
     /**
      * @brief Returns the node kind.

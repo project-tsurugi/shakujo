@@ -317,7 +317,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr ExpressionKind tag = ExpressionKind::ORDER_EXPRESSION;
+    static inline constexpr auto tag = ExpressionKind::ORDER_EXPRESSION;
 
     /**
      * @brief Returns the node kind.

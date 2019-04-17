@@ -80,7 +80,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr TypeKind tag = TypeKind::FLOAT32_TYPE;
+    static inline constexpr auto tag = TypeKind::FLOAT32_TYPE;
 
     /**
      * @brief Returns the node kind.

@@ -218,7 +218,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr ExpressionKind tag = ExpressionKind::FUNCTION_CALL;
+    static inline constexpr auto tag = ExpressionKind::FUNCTION_CALL;
 
     /**
      * @brief Returns the node kind.

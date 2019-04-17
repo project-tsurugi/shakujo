@@ -151,22 +151,22 @@ public:
      */
     Return dispatch(Value* node, Args... args) {  // NOLINT
         switch (node->kind()) {
-        case Value::Kind::BOOL:
-            return visit(dynamic_cast<Bool*>(node), std::forward<Args>(args)...);
-        case Value::Kind::INT:
-            return visit(dynamic_cast<Int*>(node), std::forward<Args>(args)...);
-        case Value::Kind::FLOAT:
-            return visit(dynamic_cast<Float*>(node), std::forward<Args>(args)...);
-        case Value::Kind::PLACEHOLDER:
-            return visit(dynamic_cast<Placeholder*>(node), std::forward<Args>(args)...);
-        case Value::Kind::STRING:
-            return visit(dynamic_cast<String*>(node), std::forward<Args>(args)...);
-        case Value::Kind::TUPLE:
-            return visit(dynamic_cast<Tuple*>(node), std::forward<Args>(args)...);
-        case Value::Kind::NULL_:
-            return visit(dynamic_cast<Null*>(node), std::forward<Args>(args)...);
-        case Value::Kind::ERROR:
-            return visit(dynamic_cast<Error*>(node), std::forward<Args>(args)...);
+        case Bool::tag:
+            return visit(static_cast<Bool*>(node), std::forward<Args>(args)...);  // NOLINT
+        case Int::tag:
+            return visit(static_cast<Int*>(node), std::forward<Args>(args)...);  // NOLINT
+        case Float::tag:
+            return visit(static_cast<Float*>(node), std::forward<Args>(args)...);  // NOLINT
+        case Placeholder::tag:
+            return visit(static_cast<Placeholder*>(node), std::forward<Args>(args)...);  // NOLINT
+        case String::tag:
+            return visit(static_cast<String*>(node), std::forward<Args>(args)...);  // NOLINT
+        case Tuple::tag:
+            return visit(static_cast<Tuple*>(node), std::forward<Args>(args)...);  // NOLINT
+        case Null::tag:
+            return visit(static_cast<Null*>(node), std::forward<Args>(args)...);  // NOLINT
+        case Error::tag:
+            return visit(static_cast<Error*>(node), std::forward<Args>(args)...);  // NOLINT
         }
         // may not occur
         return visitDefault(node, std::forward<Args>(args)...);

@@ -333,10 +333,10 @@ public class SerializerGenerator {
             for (ClassDeclaration child : children) {
                 printer.getIncludes().add(child.getName());
                 printer.put("case %s::%s:",
-                        printer.getContextName(KindGenerator.getTypeName(decl)),
-                        KindGenerator.getConstantName(child));
+                        printer.getContextName(child),
+                        KindGenerator.NON_VIRTUAL_KIND_NAME);
                 printer.indent(() -> {
-                    printer.put("serialize(printer, dynamic_cast<%s const*>(value));",
+                    printer.put("serialize(printer, static_cast<%s const*>(value));  // NOLINT",
                             printer.getContextName(child));
                     printer.put("return;");
                 });

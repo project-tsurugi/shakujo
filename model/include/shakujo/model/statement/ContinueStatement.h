@@ -116,7 +116,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr StatementKind tag = StatementKind::CONTINUE_STATEMENT;
+    static inline constexpr auto tag = StatementKind::CONTINUE_STATEMENT;
 
     /**
      * @brief Returns the node kind.
