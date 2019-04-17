@@ -508,106 +508,106 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
     }
     switch (value->kind()) {
     case expression::ExpressionKind::ARRAY_CREATION_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::ArrayCreationExpression const*>(value));
+        serialize(printer, static_cast<expression::ArrayCreationExpression const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::ARRAY_ELEMENT_LOAD_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::ArrayElementLoadExpression const*>(value));
+        serialize(printer, static_cast<expression::ArrayElementLoadExpression const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::ARRAY_ELEMENT_STORE_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::ArrayElementStoreExpression const*>(value));
+        serialize(printer, static_cast<expression::ArrayElementStoreExpression const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::ASSIGN_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::AssignExpression const*>(value));
+        serialize(printer, static_cast<expression::AssignExpression const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::BINARY_OPERATOR:
-        serialize(printer, dynamic_cast<expression::BinaryOperator const*>(value));
+        serialize(printer, static_cast<expression::BinaryOperator const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::BLOCK_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::BlockExpression const*>(value));
+        serialize(printer, static_cast<expression::BlockExpression const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::CASE_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::CaseExpression const*>(value));
+        serialize(printer, static_cast<expression::CaseExpression const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::CURSOR_ADVANCE_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::CursorAdvanceExpression const*>(value));
+        serialize(printer, static_cast<expression::CursorAdvanceExpression const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::CURSOR_CREATION_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::CursorCreationExpression const*>(value));
+        serialize(printer, static_cast<expression::CursorCreationExpression const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::CURSOR_ELEMENT_LOAD_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::CursorElementLoadExpression const*>(value));
+        serialize(printer, static_cast<expression::CursorElementLoadExpression const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::FUNCTION_CALL:
-        serialize(printer, dynamic_cast<expression::FunctionCall const*>(value));
+        serialize(printer, static_cast<expression::FunctionCall const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::IMPLICIT_CAST:
-        serialize(printer, dynamic_cast<expression::ImplicitCast const*>(value));
+        serialize(printer, static_cast<expression::ImplicitCast const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::LITERAL:
-        serialize(printer, dynamic_cast<expression::Literal const*>(value));
+        serialize(printer, static_cast<expression::Literal const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::PLACEHOLDER:
-        serialize(printer, dynamic_cast<expression::Placeholder const*>(value));
+        serialize(printer, static_cast<expression::Placeholder const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::STRING_OPERATOR:
-        serialize(printer, dynamic_cast<expression::StringOperator const*>(value));
+        serialize(printer, static_cast<expression::StringOperator const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::TUPLE_CREATION_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::TupleCreationExpression const*>(value));
+        serialize(printer, static_cast<expression::TupleCreationExpression const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::TUPLE_ELEMENT_LOAD_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::TupleElementLoadExpression const*>(value));
+        serialize(printer, static_cast<expression::TupleElementLoadExpression const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::TUPLE_ELEMENT_STORE_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::TupleElementStoreExpression const*>(value));
+        serialize(printer, static_cast<expression::TupleElementStoreExpression const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::TYPE_OPERATOR:
-        serialize(printer, dynamic_cast<expression::TypeOperator const*>(value));
+        serialize(printer, static_cast<expression::TypeOperator const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::UNARY_OPERATOR:
-        serialize(printer, dynamic_cast<expression::UnaryOperator const*>(value));
+        serialize(printer, static_cast<expression::UnaryOperator const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::VARIABLE_REFERENCE:
-        serialize(printer, dynamic_cast<expression::VariableReference const*>(value));
+        serialize(printer, static_cast<expression::VariableReference const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::VECTOR_CREATION_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::VectorCreationExpression const*>(value));
+        serialize(printer, static_cast<expression::VectorCreationExpression const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::VECTOR_ELEMENT_LOAD_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::VectorElementLoadExpression const*>(value));
+        serialize(printer, static_cast<expression::VectorElementLoadExpression const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::VECTOR_ELEMENT_STORE_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::VectorElementStoreExpression const*>(value));
+        serialize(printer, static_cast<expression::VectorElementStoreExpression const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::VECTOR_LENGTH_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::VectorLengthExpression const*>(value));
+        serialize(printer, static_cast<expression::VectorLengthExpression const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::AGGREGATION_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::relation::AggregationExpression const*>(value));
+        serialize(printer, static_cast<expression::relation::AggregationExpression const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::DISTINCT_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::relation::DistinctExpression const*>(value));
+        serialize(printer, static_cast<expression::relation::DistinctExpression const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::GROUP_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::relation::GroupExpression const*>(value));
+        serialize(printer, static_cast<expression::relation::GroupExpression const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::JOIN_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::relation::JoinExpression const*>(value));
+        serialize(printer, static_cast<expression::relation::JoinExpression const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::LIMIT_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::relation::LimitExpression const*>(value));
+        serialize(printer, static_cast<expression::relation::LimitExpression const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::ORDER_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::relation::OrderExpression const*>(value));
+        serialize(printer, static_cast<expression::relation::OrderExpression const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::PROJECTION_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::relation::ProjectionExpression const*>(value));
+        serialize(printer, static_cast<expression::relation::ProjectionExpression const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::SCAN_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::relation::ScanExpression const*>(value));
+        serialize(printer, static_cast<expression::relation::ScanExpression const*>(value));  // NOLINT
         return;
     case expression::ExpressionKind::SELECTION_EXPRESSION:
-        serialize(printer, dynamic_cast<expression::relation::SelectionExpression const*>(value));
+        serialize(printer, static_cast<expression::relation::SelectionExpression const*>(value));  // NOLINT
         return;
     }
     std::ostringstream ss;
@@ -1621,10 +1621,10 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, name::
     }
     switch (value->kind()) {
     case name::NameKind::QUALIFIED_NAME:
-        serialize(printer, dynamic_cast<name::QualifiedName const*>(value));
+        serialize(printer, static_cast<name::QualifiedName const*>(value));  // NOLINT
         return;
     case name::NameKind::SIMPLE_NAME:
-        serialize(printer, dynamic_cast<name::SimpleName const*>(value));
+        serialize(printer, static_cast<name::SimpleName const*>(value));  // NOLINT
         return;
     }
     std::ostringstream ss;
@@ -1672,10 +1672,10 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, progra
     }
     switch (value->kind()) {
     case program::GlobalDeclarationKind::GLOBAL_FUNCTION_DECLARATION:
-        serialize(printer, dynamic_cast<program::GlobalFunctionDeclaration const*>(value));
+        serialize(printer, static_cast<program::GlobalFunctionDeclaration const*>(value));  // NOLINT
         return;
     case program::GlobalDeclarationKind::GLOBAL_VARIABLE_DECLARATION:
-        serialize(printer, dynamic_cast<program::GlobalVariableDeclaration const*>(value));
+        serialize(printer, static_cast<program::GlobalVariableDeclaration const*>(value));  // NOLINT
         return;
     }
     std::ostringstream ss;
@@ -2225,76 +2225,76 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, statem
     }
     switch (value->kind()) {
     case statement::StatementKind::ANCHOR_DECLARATION:
-        serialize(printer, dynamic_cast<statement::AnchorDeclaration const*>(value));
+        serialize(printer, static_cast<statement::AnchorDeclaration const*>(value));  // NOLINT
         return;
     case statement::StatementKind::BLOCK_STATEMENT:
-        serialize(printer, dynamic_cast<statement::BlockStatement const*>(value));
+        serialize(printer, static_cast<statement::BlockStatement const*>(value));  // NOLINT
         return;
     case statement::StatementKind::BRANCH_STATEMENT:
-        serialize(printer, dynamic_cast<statement::BranchStatement const*>(value));
+        serialize(printer, static_cast<statement::BranchStatement const*>(value));  // NOLINT
         return;
     case statement::StatementKind::BREAK_STATEMENT:
-        serialize(printer, dynamic_cast<statement::BreakStatement const*>(value));
+        serialize(printer, static_cast<statement::BreakStatement const*>(value));  // NOLINT
         return;
     case statement::StatementKind::CONTINUE_STATEMENT:
-        serialize(printer, dynamic_cast<statement::ContinueStatement const*>(value));
+        serialize(printer, static_cast<statement::ContinueStatement const*>(value));  // NOLINT
         return;
     case statement::StatementKind::EMPTY_STATEMENT:
-        serialize(printer, dynamic_cast<statement::EmptyStatement const*>(value));
+        serialize(printer, static_cast<statement::EmptyStatement const*>(value));  // NOLINT
         return;
     case statement::StatementKind::EXPRESSION_STATEMENT:
-        serialize(printer, dynamic_cast<statement::ExpressionStatement const*>(value));
+        serialize(printer, static_cast<statement::ExpressionStatement const*>(value));  // NOLINT
         return;
     case statement::StatementKind::FOR_EACH_STATEMENT:
-        serialize(printer, dynamic_cast<statement::ForEachStatement const*>(value));
+        serialize(printer, static_cast<statement::ForEachStatement const*>(value));  // NOLINT
         return;
     case statement::StatementKind::FOR_STATEMENT:
-        serialize(printer, dynamic_cast<statement::ForStatement const*>(value));
+        serialize(printer, static_cast<statement::ForStatement const*>(value));  // NOLINT
         return;
     case statement::StatementKind::LOCAL_VARIABLE_DECLARATION:
-        serialize(printer, dynamic_cast<statement::LocalVariableDeclaration const*>(value));
+        serialize(printer, static_cast<statement::LocalVariableDeclaration const*>(value));  // NOLINT
         return;
     case statement::StatementKind::LOG_STATEMENT:
-        serialize(printer, dynamic_cast<statement::LogStatement const*>(value));
+        serialize(printer, static_cast<statement::LogStatement const*>(value));  // NOLINT
         return;
     case statement::StatementKind::RAISE_STATEMENT:
-        serialize(printer, dynamic_cast<statement::RaiseStatement const*>(value));
+        serialize(printer, static_cast<statement::RaiseStatement const*>(value));  // NOLINT
         return;
     case statement::StatementKind::RETURN_STATEMENT:
-        serialize(printer, dynamic_cast<statement::ReturnStatement const*>(value));
+        serialize(printer, static_cast<statement::ReturnStatement const*>(value));  // NOLINT
         return;
     case statement::StatementKind::VECTOR_ELEMENT_DELETE_STATEMENT:
-        serialize(printer, dynamic_cast<statement::VectorElementDeleteStatement const*>(value));
+        serialize(printer, static_cast<statement::VectorElementDeleteStatement const*>(value));  // NOLINT
         return;
     case statement::StatementKind::VECTOR_ELEMENT_INSERT_STATEMENT:
-        serialize(printer, dynamic_cast<statement::VectorElementInsertStatement const*>(value));
+        serialize(printer, static_cast<statement::VectorElementInsertStatement const*>(value));  // NOLINT
         return;
     case statement::StatementKind::WHILE_STATEMENT:
-        serialize(printer, dynamic_cast<statement::WhileStatement const*>(value));
+        serialize(printer, static_cast<statement::WhileStatement const*>(value));  // NOLINT
         return;
     case statement::StatementKind::CREATE_TABLE_STATEMENT:
-        serialize(printer, dynamic_cast<statement::ddl::CreateTableStatement const*>(value));
+        serialize(printer, static_cast<statement::ddl::CreateTableStatement const*>(value));  // NOLINT
         return;
     case statement::StatementKind::DROP_TABLE_STATEMENT:
-        serialize(printer, dynamic_cast<statement::ddl::DropTableStatement const*>(value));
+        serialize(printer, static_cast<statement::ddl::DropTableStatement const*>(value));  // NOLINT
         return;
     case statement::StatementKind::DELETE_STATEMENT:
-        serialize(printer, dynamic_cast<statement::dml::DeleteStatement const*>(value));
+        serialize(printer, static_cast<statement::dml::DeleteStatement const*>(value));  // NOLINT
         return;
     case statement::StatementKind::EMIT_STATEMENT:
-        serialize(printer, dynamic_cast<statement::dml::EmitStatement const*>(value));
+        serialize(printer, static_cast<statement::dml::EmitStatement const*>(value));  // NOLINT
         return;
     case statement::StatementKind::INSERT_RELATION_STATEMENT:
-        serialize(printer, dynamic_cast<statement::dml::InsertRelationStatement const*>(value));
+        serialize(printer, static_cast<statement::dml::InsertRelationStatement const*>(value));  // NOLINT
         return;
     case statement::StatementKind::INSERT_VALUES_STATEMENT:
-        serialize(printer, dynamic_cast<statement::dml::InsertValuesStatement const*>(value));
+        serialize(printer, static_cast<statement::dml::InsertValuesStatement const*>(value));  // NOLINT
         return;
     case statement::StatementKind::UPDATE_STATEMENT:
-        serialize(printer, dynamic_cast<statement::dml::UpdateStatement const*>(value));
+        serialize(printer, static_cast<statement::dml::UpdateStatement const*>(value));  // NOLINT
         return;
     case statement::StatementKind::TRANSACTION_BLOCK_STATEMENT:
-        serialize(printer, dynamic_cast<statement::transaction::TransactionBlockStatement const*>(value));
+        serialize(printer, static_cast<statement::transaction::TransactionBlockStatement const*>(value));  // NOLINT
         return;
     }
     std::ostringstream ss;
@@ -3014,43 +3014,43 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, type::
     }
     switch (value->kind()) {
     case type::TypeKind::ARRAY_TYPE:
-        serialize(printer, dynamic_cast<type::ArrayType const*>(value));
+        serialize(printer, static_cast<type::ArrayType const*>(value));  // NOLINT
         return;
     case type::TypeKind::BOOLEAN_TYPE:
-        serialize(printer, dynamic_cast<type::BooleanType const*>(value));
+        serialize(printer, static_cast<type::BooleanType const*>(value));  // NOLINT
         return;
     case type::TypeKind::CHAR_TYPE:
-        serialize(printer, dynamic_cast<type::CharType const*>(value));
+        serialize(printer, static_cast<type::CharType const*>(value));  // NOLINT
         return;
     case type::TypeKind::FLOAT32_TYPE:
-        serialize(printer, dynamic_cast<type::Float32Type const*>(value));
+        serialize(printer, static_cast<type::Float32Type const*>(value));  // NOLINT
         return;
     case type::TypeKind::FLOAT64_TYPE:
-        serialize(printer, dynamic_cast<type::Float64Type const*>(value));
+        serialize(printer, static_cast<type::Float64Type const*>(value));  // NOLINT
         return;
     case type::TypeKind::INT32_TYPE:
-        serialize(printer, dynamic_cast<type::Int32Type const*>(value));
+        serialize(printer, static_cast<type::Int32Type const*>(value));  // NOLINT
         return;
     case type::TypeKind::INT64_TYPE:
-        serialize(printer, dynamic_cast<type::Int64Type const*>(value));
+        serialize(printer, static_cast<type::Int64Type const*>(value));  // NOLINT
         return;
     case type::TypeKind::NULL_TYPE:
-        serialize(printer, dynamic_cast<type::NullType const*>(value));
+        serialize(printer, static_cast<type::NullType const*>(value));  // NOLINT
         return;
     case type::TypeKind::RELATION_TYPE:
-        serialize(printer, dynamic_cast<type::RelationType const*>(value));
+        serialize(printer, static_cast<type::RelationType const*>(value));  // NOLINT
         return;
     case type::TypeKind::STRING_TYPE:
-        serialize(printer, dynamic_cast<type::StringType const*>(value));
+        serialize(printer, static_cast<type::StringType const*>(value));  // NOLINT
         return;
     case type::TypeKind::TUPLE_TYPE:
-        serialize(printer, dynamic_cast<type::TupleType const*>(value));
+        serialize(printer, static_cast<type::TupleType const*>(value));  // NOLINT
         return;
     case type::TypeKind::VAR_CHAR_TYPE:
-        serialize(printer, dynamic_cast<type::VarCharType const*>(value));
+        serialize(printer, static_cast<type::VarCharType const*>(value));  // NOLINT
         return;
     case type::TypeKind::VECTOR_TYPE:
-        serialize(printer, dynamic_cast<type::VectorType const*>(value));
+        serialize(printer, static_cast<type::VectorType const*>(value));  // NOLINT
         return;
     }
     std::ostringstream ss;

@@ -344,53 +344,53 @@ public:
     Return dispatch(Statement const* node, Args... args) {
         switch (node->kind()) {
         case StatementKind::ANCHOR_DECLARATION:
-            return visit(dynamic_cast<AnchorDeclaration const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<AnchorDeclaration const*>(node), std::forward<Args>(args)...);  // NOLINT
         case StatementKind::BLOCK_STATEMENT:
-            return visit(dynamic_cast<BlockStatement const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<BlockStatement const*>(node), std::forward<Args>(args)...);  // NOLINT
         case StatementKind::BRANCH_STATEMENT:
-            return visit(dynamic_cast<BranchStatement const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<BranchStatement const*>(node), std::forward<Args>(args)...);  // NOLINT
         case StatementKind::BREAK_STATEMENT:
-            return visit(dynamic_cast<BreakStatement const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<BreakStatement const*>(node), std::forward<Args>(args)...);  // NOLINT
         case StatementKind::CONTINUE_STATEMENT:
-            return visit(dynamic_cast<ContinueStatement const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<ContinueStatement const*>(node), std::forward<Args>(args)...);  // NOLINT
         case StatementKind::EMPTY_STATEMENT:
-            return visit(dynamic_cast<EmptyStatement const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<EmptyStatement const*>(node), std::forward<Args>(args)...);  // NOLINT
         case StatementKind::EXPRESSION_STATEMENT:
-            return visit(dynamic_cast<ExpressionStatement const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<ExpressionStatement const*>(node), std::forward<Args>(args)...);  // NOLINT
         case StatementKind::FOR_EACH_STATEMENT:
-            return visit(dynamic_cast<ForEachStatement const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<ForEachStatement const*>(node), std::forward<Args>(args)...);  // NOLINT
         case StatementKind::FOR_STATEMENT:
-            return visit(dynamic_cast<ForStatement const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<ForStatement const*>(node), std::forward<Args>(args)...);  // NOLINT
         case StatementKind::LOCAL_VARIABLE_DECLARATION:
-            return visit(dynamic_cast<LocalVariableDeclaration const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<LocalVariableDeclaration const*>(node), std::forward<Args>(args)...);  // NOLINT
         case StatementKind::LOG_STATEMENT:
-            return visit(dynamic_cast<LogStatement const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<LogStatement const*>(node), std::forward<Args>(args)...);  // NOLINT
         case StatementKind::RAISE_STATEMENT:
-            return visit(dynamic_cast<RaiseStatement const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<RaiseStatement const*>(node), std::forward<Args>(args)...);  // NOLINT
         case StatementKind::RETURN_STATEMENT:
-            return visit(dynamic_cast<ReturnStatement const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<ReturnStatement const*>(node), std::forward<Args>(args)...);  // NOLINT
         case StatementKind::VECTOR_ELEMENT_DELETE_STATEMENT:
-            return visit(dynamic_cast<VectorElementDeleteStatement const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<VectorElementDeleteStatement const*>(node), std::forward<Args>(args)...);  // NOLINT
         case StatementKind::VECTOR_ELEMENT_INSERT_STATEMENT:
-            return visit(dynamic_cast<VectorElementInsertStatement const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<VectorElementInsertStatement const*>(node), std::forward<Args>(args)...);  // NOLINT
         case StatementKind::WHILE_STATEMENT:
-            return visit(dynamic_cast<WhileStatement const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<WhileStatement const*>(node), std::forward<Args>(args)...);  // NOLINT
         case StatementKind::CREATE_TABLE_STATEMENT:
-            return visit(dynamic_cast<ddl::CreateTableStatement const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<ddl::CreateTableStatement const*>(node), std::forward<Args>(args)...);  // NOLINT
         case StatementKind::DROP_TABLE_STATEMENT:
-            return visit(dynamic_cast<ddl::DropTableStatement const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<ddl::DropTableStatement const*>(node), std::forward<Args>(args)...);  // NOLINT
         case StatementKind::DELETE_STATEMENT:
-            return visit(dynamic_cast<dml::DeleteStatement const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<dml::DeleteStatement const*>(node), std::forward<Args>(args)...);  // NOLINT
         case StatementKind::EMIT_STATEMENT:
-            return visit(dynamic_cast<dml::EmitStatement const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<dml::EmitStatement const*>(node), std::forward<Args>(args)...);  // NOLINT
         case StatementKind::INSERT_RELATION_STATEMENT:
-            return visit(dynamic_cast<dml::InsertRelationStatement const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<dml::InsertRelationStatement const*>(node), std::forward<Args>(args)...);  // NOLINT
         case StatementKind::INSERT_VALUES_STATEMENT:
-            return visit(dynamic_cast<dml::InsertValuesStatement const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<dml::InsertValuesStatement const*>(node), std::forward<Args>(args)...);  // NOLINT
         case StatementKind::UPDATE_STATEMENT:
-            return visit(dynamic_cast<dml::UpdateStatement const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<dml::UpdateStatement const*>(node), std::forward<Args>(args)...);  // NOLINT
         case StatementKind::TRANSACTION_BLOCK_STATEMENT:
-            return visit(dynamic_cast<transaction::TransactionBlockStatement const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<transaction::TransactionBlockStatement const*>(node), std::forward<Args>(args)...);  // NOLINT
         }
         // may not occur
         return visitDefault(node, std::forward<Args>(args)...);

@@ -179,7 +179,7 @@ public class VisitorGenerator {
                         printer.getContextName(KindGenerator.getTypeName(baseClass)),
                         KindGenerator.getConstantName(target));
                 printer.indent(() -> {
-                    printer.put("return visit(dynamic_cast<%s%s*>(node), std::forward<%s>(args)...);",
+                    printer.put("return visit(static_cast<%s%s*>(node), std::forward<%s>(args)...);  // NOLINT",
                             printer.getContextName(target),
                             isConst ? " const" : "",
                             TYPE_PARAMETERS);

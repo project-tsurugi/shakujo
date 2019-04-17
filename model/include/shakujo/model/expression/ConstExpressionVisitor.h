@@ -464,73 +464,73 @@ public:
     Return dispatch(Expression const* node, Args... args) {
         switch (node->kind()) {
         case ExpressionKind::ARRAY_CREATION_EXPRESSION:
-            return visit(dynamic_cast<ArrayCreationExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<ArrayCreationExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::ARRAY_ELEMENT_LOAD_EXPRESSION:
-            return visit(dynamic_cast<ArrayElementLoadExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<ArrayElementLoadExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::ARRAY_ELEMENT_STORE_EXPRESSION:
-            return visit(dynamic_cast<ArrayElementStoreExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<ArrayElementStoreExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::ASSIGN_EXPRESSION:
-            return visit(dynamic_cast<AssignExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<AssignExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::BINARY_OPERATOR:
-            return visit(dynamic_cast<BinaryOperator const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<BinaryOperator const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::BLOCK_EXPRESSION:
-            return visit(dynamic_cast<BlockExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<BlockExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::CASE_EXPRESSION:
-            return visit(dynamic_cast<CaseExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<CaseExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::CURSOR_ADVANCE_EXPRESSION:
-            return visit(dynamic_cast<CursorAdvanceExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<CursorAdvanceExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::CURSOR_CREATION_EXPRESSION:
-            return visit(dynamic_cast<CursorCreationExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<CursorCreationExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::CURSOR_ELEMENT_LOAD_EXPRESSION:
-            return visit(dynamic_cast<CursorElementLoadExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<CursorElementLoadExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::FUNCTION_CALL:
-            return visit(dynamic_cast<FunctionCall const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<FunctionCall const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::IMPLICIT_CAST:
-            return visit(dynamic_cast<ImplicitCast const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<ImplicitCast const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::LITERAL:
-            return visit(dynamic_cast<Literal const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<Literal const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::PLACEHOLDER:
-            return visit(dynamic_cast<Placeholder const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<Placeholder const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::STRING_OPERATOR:
-            return visit(dynamic_cast<StringOperator const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<StringOperator const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::TUPLE_CREATION_EXPRESSION:
-            return visit(dynamic_cast<TupleCreationExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<TupleCreationExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::TUPLE_ELEMENT_LOAD_EXPRESSION:
-            return visit(dynamic_cast<TupleElementLoadExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<TupleElementLoadExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::TUPLE_ELEMENT_STORE_EXPRESSION:
-            return visit(dynamic_cast<TupleElementStoreExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<TupleElementStoreExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::TYPE_OPERATOR:
-            return visit(dynamic_cast<TypeOperator const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<TypeOperator const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::UNARY_OPERATOR:
-            return visit(dynamic_cast<UnaryOperator const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<UnaryOperator const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::VARIABLE_REFERENCE:
-            return visit(dynamic_cast<VariableReference const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<VariableReference const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::VECTOR_CREATION_EXPRESSION:
-            return visit(dynamic_cast<VectorCreationExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<VectorCreationExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::VECTOR_ELEMENT_LOAD_EXPRESSION:
-            return visit(dynamic_cast<VectorElementLoadExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<VectorElementLoadExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::VECTOR_ELEMENT_STORE_EXPRESSION:
-            return visit(dynamic_cast<VectorElementStoreExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<VectorElementStoreExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::VECTOR_LENGTH_EXPRESSION:
-            return visit(dynamic_cast<VectorLengthExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<VectorLengthExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::AGGREGATION_EXPRESSION:
-            return visit(dynamic_cast<relation::AggregationExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<relation::AggregationExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::DISTINCT_EXPRESSION:
-            return visit(dynamic_cast<relation::DistinctExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<relation::DistinctExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::GROUP_EXPRESSION:
-            return visit(dynamic_cast<relation::GroupExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<relation::GroupExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::JOIN_EXPRESSION:
-            return visit(dynamic_cast<relation::JoinExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<relation::JoinExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::LIMIT_EXPRESSION:
-            return visit(dynamic_cast<relation::LimitExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<relation::LimitExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::ORDER_EXPRESSION:
-            return visit(dynamic_cast<relation::OrderExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<relation::OrderExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::PROJECTION_EXPRESSION:
-            return visit(dynamic_cast<relation::ProjectionExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<relation::ProjectionExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::SCAN_EXPRESSION:
-            return visit(dynamic_cast<relation::ScanExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<relation::ScanExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case ExpressionKind::SELECTION_EXPRESSION:
-            return visit(dynamic_cast<relation::SelectionExpression const*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<relation::SelectionExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         }
         // may not occur
         return visitDefault(node, std::forward<Args>(args)...);

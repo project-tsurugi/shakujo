@@ -336,7 +336,7 @@ public class SerializerGenerator {
                         printer.getContextName(KindGenerator.getTypeName(decl)),
                         KindGenerator.getConstantName(child));
                 printer.indent(() -> {
-                    printer.put("serialize(printer, dynamic_cast<%s const*>(value));",
+                    printer.put("serialize(printer, static_cast<%s const*>(value));  // NOLINT",
                             printer.getContextName(child));
                     printer.put("return;");
                 });

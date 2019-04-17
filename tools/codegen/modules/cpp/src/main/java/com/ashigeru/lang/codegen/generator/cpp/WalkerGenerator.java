@@ -310,7 +310,7 @@ public class WalkerGenerator {
                         printer.getContextName(KindGenerator.getTypeName(target)),
                         KindGenerator.getConstantName(child));
                 printer.indent(() -> {
-                    printer.put("walk(dynamic_cast<%s%s*>(node));",
+                    printer.put("walk(static_cast<%s%s*>(node));  // NOLINT",
                             printer.getContextName(child),
                             isConst ? " const" : "");
                     printer.put("return;");

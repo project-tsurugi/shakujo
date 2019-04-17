@@ -153,21 +153,21 @@ public:
     Return dispatch(Value const* node, Args... args) {
         switch (node->kind()) {
         case Value::Kind::BOOL:
-            return visit(dynamic_cast<Bool const*>(node), args...);
+            return visit(static_cast<Bool const*>(node), args...);  // NOLINT
         case Value::Kind::INT:
-            return visit(dynamic_cast<Int const*>(node), args...);
+            return visit(static_cast<Int const*>(node), args...);  // NOLINT
         case Value::Kind::FLOAT:
-            return visit(dynamic_cast<Float const*>(node), args...);
+            return visit(static_cast<Float const*>(node), args...);  // NOLINT
         case Value::Kind::PLACEHOLDER:
-            return visit(dynamic_cast<Placeholder const*>(node), args...);
+            return visit(static_cast<Placeholder const*>(node), args...);  // NOLINT
         case Value::Kind::STRING:
-            return visit(dynamic_cast<String const*>(node), args...);
+            return visit(static_cast<String const*>(node), args...);  // NOLINT
         case Value::Kind::TUPLE:
-            return visit(dynamic_cast<Tuple const*>(node), args...);
+            return visit(static_cast<Tuple const*>(node), args...);  // NOLINT
         case Value::Kind::NULL_:
-            return visit(dynamic_cast<Null const*>(node), args...);
+            return visit(static_cast<Null const*>(node), args...);  // NOLINT
         case Value::Kind::ERROR:
-            return visit(dynamic_cast<Error const*>(node), args...);
+            return visit(static_cast<Error const*>(node), args...);  // NOLINT
         }
         // may not occur
         return visitDefault(node, args...);

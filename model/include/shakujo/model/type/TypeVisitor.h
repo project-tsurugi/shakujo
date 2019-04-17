@@ -212,31 +212,31 @@ public:
     Return dispatch(Type* node, Args... args) {  // NOLINT
         switch (node->kind()) {
         case TypeKind::ARRAY_TYPE:
-            return visit(dynamic_cast<ArrayType*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<ArrayType*>(node), std::forward<Args>(args)...);  // NOLINT
         case TypeKind::BOOLEAN_TYPE:
-            return visit(dynamic_cast<BooleanType*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<BooleanType*>(node), std::forward<Args>(args)...);  // NOLINT
         case TypeKind::CHAR_TYPE:
-            return visit(dynamic_cast<CharType*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<CharType*>(node), std::forward<Args>(args)...);  // NOLINT
         case TypeKind::FLOAT32_TYPE:
-            return visit(dynamic_cast<Float32Type*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<Float32Type*>(node), std::forward<Args>(args)...);  // NOLINT
         case TypeKind::FLOAT64_TYPE:
-            return visit(dynamic_cast<Float64Type*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<Float64Type*>(node), std::forward<Args>(args)...);  // NOLINT
         case TypeKind::INT32_TYPE:
-            return visit(dynamic_cast<Int32Type*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<Int32Type*>(node), std::forward<Args>(args)...);  // NOLINT
         case TypeKind::INT64_TYPE:
-            return visit(dynamic_cast<Int64Type*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<Int64Type*>(node), std::forward<Args>(args)...);  // NOLINT
         case TypeKind::NULL_TYPE:
-            return visit(dynamic_cast<NullType*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<NullType*>(node), std::forward<Args>(args)...);  // NOLINT
         case TypeKind::RELATION_TYPE:
-            return visit(dynamic_cast<RelationType*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<RelationType*>(node), std::forward<Args>(args)...);  // NOLINT
         case TypeKind::STRING_TYPE:
-            return visit(dynamic_cast<StringType*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<StringType*>(node), std::forward<Args>(args)...);  // NOLINT
         case TypeKind::TUPLE_TYPE:
-            return visit(dynamic_cast<TupleType*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<TupleType*>(node), std::forward<Args>(args)...);  // NOLINT
         case TypeKind::VAR_CHAR_TYPE:
-            return visit(dynamic_cast<VarCharType*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<VarCharType*>(node), std::forward<Args>(args)...);  // NOLINT
         case TypeKind::VECTOR_TYPE:
-            return visit(dynamic_cast<VectorType*>(node), std::forward<Args>(args)...);
+            return visit(static_cast<VectorType*>(node), std::forward<Args>(args)...);  // NOLINT
         }
         // may not occur
         return visitDefault(node, std::forward<Args>(args)...);
