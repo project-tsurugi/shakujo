@@ -151,21 +151,21 @@ public:
      */
     Return dispatch(Value* node, Args... args) {  // NOLINT
         switch (node->kind()) {
-        case Value::Kind::BOOL:
+        case Bool::tag:
             return visit(static_cast<Bool*>(node), std::forward<Args>(args)...);  // NOLINT
-        case Value::Kind::INT:
+        case Int::tag:
             return visit(static_cast<Int*>(node), std::forward<Args>(args)...);  // NOLINT
-        case Value::Kind::FLOAT:
+        case Float::tag:
             return visit(static_cast<Float*>(node), std::forward<Args>(args)...);  // NOLINT
-        case Value::Kind::PLACEHOLDER:
+        case Placeholder::tag:
             return visit(static_cast<Placeholder*>(node), std::forward<Args>(args)...);  // NOLINT
-        case Value::Kind::STRING:
+        case String::tag:
             return visit(static_cast<String*>(node), std::forward<Args>(args)...);  // NOLINT
-        case Value::Kind::TUPLE:
+        case Tuple::tag:
             return visit(static_cast<Tuple*>(node), std::forward<Args>(args)...);  // NOLINT
-        case Value::Kind::NULL_:
+        case Null::tag:
             return visit(static_cast<Null*>(node), std::forward<Args>(args)...);  // NOLINT
-        case Value::Kind::ERROR:
+        case Error::tag:
             return visit(static_cast<Error*>(node), std::forward<Args>(args)...);  // NOLINT
         }
         // may not occur

@@ -152,21 +152,21 @@ public:
      */
     Return dispatch(Value const* node, Args... args) {
         switch (node->kind()) {
-        case Value::Kind::BOOL:
+        case Bool::tag:
             return visit(static_cast<Bool const*>(node), args...);  // NOLINT
-        case Value::Kind::INT:
+        case Int::tag:
             return visit(static_cast<Int const*>(node), args...);  // NOLINT
-        case Value::Kind::FLOAT:
+        case Float::tag:
             return visit(static_cast<Float const*>(node), args...);  // NOLINT
-        case Value::Kind::PLACEHOLDER:
+        case Placeholder::tag:
             return visit(static_cast<Placeholder const*>(node), args...);  // NOLINT
-        case Value::Kind::STRING:
+        case String::tag:
             return visit(static_cast<String const*>(node), args...);  // NOLINT
-        case Value::Kind::TUPLE:
+        case Tuple::tag:
             return visit(static_cast<Tuple const*>(node), args...);  // NOLINT
-        case Value::Kind::NULL_:
+        case Null::tag:
             return visit(static_cast<Null const*>(node), args...);  // NOLINT
-        case Value::Kind::ERROR:
+        case Error::tag:
             return visit(static_cast<Error const*>(node), args...);  // NOLINT
         }
         // may not occur

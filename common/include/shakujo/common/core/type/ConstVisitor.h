@@ -200,29 +200,29 @@ public:
      */
     Return dispatch(Type const* node, Args... args) {
         switch (node->kind()) {
-        case Type::Kind::INT:
+        case Int::tag:
             return visit(static_cast<Int const*>(node), args...);  // NOLINT
-        case Type::Kind::FLOAT:
+        case Float::tag:
             return visit(static_cast<Float const*>(node), args...);  // NOLINT
-        case Type::Kind::CHAR:
+        case Char::tag:
             return visit(static_cast<Char const*>(node), args...);  // NOLINT
-        case Type::Kind::STRING:
+        case String::tag:
             return visit(static_cast<String const*>(node), args...);  // NOLINT
-        case Type::Kind::BOOL:
+        case Bool::tag:
             return visit(static_cast<Bool const*>(node), args...);  // NOLINT
-        case Type::Kind::NULL_:
+        case Null::tag:
             return visit(static_cast<Null const*>(node), args...);  // NOLINT
-        case Type::Kind::TUPLE:
+        case Tuple::tag:
             return visit(static_cast<Tuple const*>(node), args...);  // NOLINT
-        case Type::Kind::ARRAY:
+        case Array::tag:
             return visit(static_cast<Array const*>(node), args...);  // NOLINT
-        case Type::Kind::VECTOR:
+        case Vector::tag:
             return visit(static_cast<Vector const*>(node), args...);  // NOLINT
-        case Type::Kind::RELATION:
+        case Relation::tag:
             return visit(static_cast<Relation const*>(node), args...);  // NOLINT
-        case Type::Kind::CURSOR:
+        case Cursor::tag:
             return visit(static_cast<Cursor const*>(node), args...);  // NOLINT
-        case Type::Kind::ERROR:
+        case Error::tag:
             return visit(static_cast<Error const*>(node), args...);  // NOLINT
         }
         // may not occur

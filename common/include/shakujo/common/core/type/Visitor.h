@@ -199,29 +199,29 @@ public:
      */
     Return dispatch(Type* node, Args... args) {  // NOLINT
         switch (node->kind()) {
-        case Type::Kind::INT:
+        case Int::tag:
             return visit(static_cast<Int*>(node), std::forward<Args>(args)...);  // NOLINT
-        case Type::Kind::FLOAT:
+        case Float::tag:
             return visit(static_cast<Float*>(node), std::forward<Args>(args)...);  // NOLINT
-        case Type::Kind::CHAR:
+        case Char::tag:
             return visit(static_cast<Char*>(node), std::forward<Args>(args)...);  // NOLINT
-        case Type::Kind::STRING:
+        case String::tag:
             return visit(static_cast<String*>(node), std::forward<Args>(args)...);  // NOLINT
-        case Type::Kind::BOOL:
+        case Bool::tag:
             return visit(static_cast<Bool*>(node), std::forward<Args>(args)...);  // NOLINT
-        case Type::Kind::NULL_:
+        case Null::tag:
             return visit(static_cast<Null*>(node), std::forward<Args>(args)...);  // NOLINT
-        case Type::Kind::TUPLE:
+        case Tuple::tag:
             return visit(static_cast<Tuple*>(node), std::forward<Args>(args)...);  // NOLINT
-        case Type::Kind::ARRAY:
+        case Array::tag:
             return visit(static_cast<Array*>(node), std::forward<Args>(args)...);  // NOLINT
-        case Type::Kind::VECTOR:
+        case Vector::tag:
             return visit(static_cast<Vector*>(node), std::forward<Args>(args)...);  // NOLINT
-        case Type::Kind::RELATION:
+        case Relation::tag:
             return visit(static_cast<Relation*>(node), std::forward<Args>(args)...);  // NOLINT
-        case Type::Kind::CURSOR:
+        case Cursor::tag:
             return visit(static_cast<Cursor*>(node), std::forward<Args>(args)...);  // NOLINT
-        case Type::Kind::ERROR:
+        case Error::tag:
             return visit(static_cast<Error*>(node), std::forward<Args>(args)...);  // NOLINT
         }
         // may not occur
