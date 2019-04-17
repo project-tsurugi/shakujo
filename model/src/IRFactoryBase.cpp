@@ -438,6 +438,19 @@ std::unique_ptr<expression::relation::DistinctExpression> IRFactoryBase::Distinc
     return ret;
 }
 
+std::unique_ptr<expression::relation::GroupExpression> IRFactoryBase::GroupExpression() {
+    return std::make_unique<expression::relation::GroupExpression>();
+}
+
+std::unique_ptr<expression::relation::GroupExpression> IRFactoryBase::GroupExpression(
+        std::unique_ptr<expression::Expression> operand,
+        common::util::MoveInitializerList<std::unique_ptr<expression::Expression>> keys) {
+    auto ret = GroupExpression();
+    ret->operand(std::move(operand));
+    ret->keys() = std::move(keys).build();
+    return ret;
+}
+
 std::unique_ptr<expression::relation::JoinExpression> IRFactoryBase::JoinExpression() {
     return std::make_unique<expression::relation::JoinExpression>();
 }

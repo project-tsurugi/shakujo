@@ -504,6 +504,21 @@ protected:
         return true;
     }
 
+    bool enter(model::expression::relation::GroupExpression const* node) override {
+        if (!is_defined(node->operand())) {
+            report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "group-by clause must have a valid operand");
+        }
+        if (node->keys().empty()) {
+            report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "group-by clause must have one or more keys");
+        }
+        for (auto* key : node->keys()) {
+            if (!is_defined(key)) {
+                report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "group-by key must be a valid expression");
+            }
+        }
+        return true;
+    }
+
     //bool enter(model::expression::relation::LimitExpression const* node) override {
     //    // FIXME: impl
     //    return true;

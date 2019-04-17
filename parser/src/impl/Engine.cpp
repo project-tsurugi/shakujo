@@ -240,8 +240,8 @@ ptr_vector<model::statement::dml::UpdateStatement::Column> Engine::visit(
     if (auto&& cs = c->setClause(); !cs.empty()) {
         ptr_vector<model::statement::dml::UpdateStatement::Column> results;
         results.reserve(c->setClause().size());
-        for (auto&& c : cs) {
-            auto column = visit(c);
+        for (auto&& set : cs) {
+            auto column = visit(set);
             results.emplace_back(std::move(column));
         }
         return results;
@@ -304,7 +304,6 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::QuerySpeci
     check(c);
     if (auto table = c->tableExpression(); is_defined(table)) {
         std::unique_ptr<model::expression::Expression> result { visit(table) };
-        // FIXME: check lexical scope of order-by clause
         if (auto o = c->orderByClause(); is_defined(o)) {
             result = visit(o, std::move(result));
         }
@@ -388,7 +387,12 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::TableExpre
         if (auto where = c->whereClause(); is_defined(where)) {
             result = visit(where, std::move(result));
         }
-
+        if (auto group = c->groupByClause(); is_defined(group)) {
+            result = visit(group, std::move(result));
+        }
+        if (auto having = c->havingClause(); is_defined(having)) {
+            result = visit(having, std::move(result));
+        }
         return result;
     }
     rule_error(c);
@@ -727,6 +731,51 @@ model::expression::relation::OrderExpression::Direction Engine::visit(Grammar::O
     }
     if (is_defined(c->K_DESC())) {
         return Direction::DESCENDANT;
+    }
+    rule_error(c);
+}
+
+std::unique_ptr<model::expression::Expression> Engine::visit(
+        Grammar::GroupByClauseContext *c,
+        std::unique_ptr<model::expression::Expression> source) {
+    check(c);
+    if (auto* l = c->groupingElementList(); is_defined(l)) {
+        auto elements = visit(l);
+        return f.GroupExpression(std::move(source), std::move(elements)) << region(c);
+    }
+    rule_error(c);
+}
+
+ptr_vector<model::expression::Expression> Engine::visit(Grammar::GroupingElementListContext *c) {
+    check(c);
+    if (auto&& list = c->groupingElement(); !list.empty()) {
+        ptr_vector<shakujo::model::expression::Expression> results;
+        results.reserve(list.size());
+        for (auto* s : list) {
+            auto element = visit(s);
+            results.emplace_back(std::move(element));
+        }
+        return results;
+    }
+    rule_error(c);
+}
+
+std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::GroupingElementContext *c) {
+    check(c);
+    if (auto* n = c->name(); is_defined(n)) {
+        auto name = visit(n);
+        return f.VariableReference(std::move(name)) << region(c);
+    }
+    rule_error(c);
+}
+
+std::unique_ptr<model::expression::Expression> Engine::visit(
+        Grammar::HavingClauseContext *c,
+        std::unique_ptr<model::expression::Expression> source) {
+    check(c);
+    if (auto e = c->searchCondition(); is_defined(e)) {
+        auto expr = visit(e);
+        return f.SelectionExpression(std::move(source), std::move(expr)) << region(c);
     }
     rule_error(c);
 }

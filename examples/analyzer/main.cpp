@@ -29,6 +29,111 @@
 
 namespace shakujo::example::analyzer {
 
+static void initialize_functions(shakujo::analyzer::AnalyzerContext& context) {
+    using FunctionBinding = shakujo::analyzer::binding::FunctionBinding;
+    namespace t = shakujo::common::core::type;
+    std::vector<std::shared_ptr<FunctionBinding>> overload_candidates{};
+    {
+        // INT SUM(C1 INT)
+        std::vector<FunctionBinding::Parameter> params{};
+        auto resolved = std::make_shared<FunctionBinding>(
+                context.binding_context().next_function_id(),
+                shakujo::common::core::Name("SUM"),
+                std::make_unique<t::Int>(32U),
+                FunctionBinding::Quantifier::ALL,
+                std::vector{
+                        FunctionBinding::Parameter("arg",
+                                                   std::make_unique<t::Int>(32U))
+                }
+        );
+        overload_candidates.emplace_back(std::move(resolved));
+    }
+    {
+        // DOUBLE SUM(C1 DOUBLE)
+        std::vector<FunctionBinding::Parameter> params{};
+        auto resolved = std::make_shared<FunctionBinding>(
+                context.binding_context().next_function_id(),
+                shakujo::common::core::Name("SUM"),
+                std::make_unique<t::Float>(64U),
+                FunctionBinding::Quantifier::ALL,
+                std::vector{
+                        FunctionBinding::Parameter("arg",
+                                                   std::make_unique<t::Float>(64U))
+                }
+        );
+        overload_candidates.emplace_back(std::move(resolved));
+    }
+    context.register_builtin(
+            std::make_unique<FunctionBinding>(
+                    context.binding_context().next_function_id(),
+                    shakujo::common::core::Name("SUM"),
+                    overload_candidates)
+    );
+}
+
+static std::shared_ptr<common::schema::ConfigurableStorageInfoProvider> table_definitions() {
+    auto tables = std::make_shared<common::schema::ConfigurableStorageInfoProvider>();
+    tables->add(common::schema::TableInfo {
+            "example",
+            {
+                    { // C1 INT64 NOT NULL
+                            "C1",
+                            common::core::type::Int(64U, common::core::Type::Nullity::NEVER_NULL),
+                    },
+                    { // C2 FLOAT64 NULL
+                            "C2",
+                            common::core::type::Float(64U),
+                    },
+                    { // C3 CHAR(20) NOT NULL DEFAULT "Hello, shakujo!"
+                            "C3",
+                            common::core::type::Char(20U, common::core::Type::Nullity::NEVER_NULL),
+                            common::core::value::String("Hello, shakujo!"),
+                    },
+            },
+            {  // primary key
+                    {
+                            { "C1" }
+                    }
+            },
+            {  // secondary keys
+                    {
+                            "example_C2",
+                            {
+                                    { "C2" }
+                            },
+                    },
+            }
+    });
+    tables->add(common::schema::TableInfo {
+            "side",
+            {
+                    { // K INT64 NOT NULL
+                            "K",
+                            common::core::type::Int(64U, common::core::Type::Nullity::NEVER_NULL),
+                    },
+                    { // C2 FLOAT64 NOT NULL
+                            "VALUE",
+                            common::core::type::Float(64U),
+                            common::core::value::Float(0.0),
+                    },
+            },
+            {  // primary key
+                    {
+                            { "K" }
+                    }
+            },
+            {  // secondary keys
+                    {
+                            "side_VALUE",
+                            {
+                                    { "VALUE" }
+                            },
+                    },
+            }
+    });
+    return tables;
+}
+
 static int run(std::vector<char*> const& args) {
     if (args.size() != 2U) {
         std::cout << "usage: " << args[0] << " <shakujo program text>" << std::endl;
@@ -48,66 +153,8 @@ static int run(std::vector<char*> const& args) {
     }
 
     // semantic analysis
-    auto tables = std::make_shared<common::schema::ConfigurableStorageInfoProvider>();
-    tables->add(common::schema::TableInfo {
-        "example",
-        {
-            { // C1 INT64 NOT NULL
-                "C1",
-                common::core::type::Int(64U, common::core::Type::Nullity::NEVER_NULL),
-            },
-            { // C2 FLOAT64 NULL
-                "C2",
-                common::core::type::Float(64U),
-            },
-            { // C3 CHAR(20) NOT NULL DEFAULT "Hello, shakujo!"
-                "C3",
-                common::core::type::Char(20U, common::core::Type::Nullity::NEVER_NULL),
-                common::core::value::String("Hello, shakujo!"),
-            },
-        },
-        {  // primary key
-            {
-                { "C1" }
-            }
-        },
-        {  // secondary keys
-            {
-                "example_C2",
-                {
-                    { "C2" }
-                },
-            },
-        }
-    });
-    tables->add(common::schema::TableInfo {
-        "side",
-        {
-            { // K INT64 NOT NULL
-                "K",
-                common::core::type::Int(64U, common::core::Type::Nullity::NEVER_NULL),
-            },
-            { // C2 FLOAT64 NOT NULL
-                "VALUE",
-                common::core::type::Float(64U),
-                common::core::value::Float(0.0),
-            },
-        },
-        {  // primary key
-            {
-                { "K" }
-            }
-        },
-        {  // secondary keys
-            {
-                "side_VALUE",
-                {
-                    { "VALUE" }
-                },
-            },
-        }
-    });
-    shakujo::analyzer::AnalyzerContext context { tables };
+    shakujo::analyzer::AnalyzerContext context { table_definitions() };
+    initialize_functions(context);
     shakujo::analyzer::Analyzer analyzer;
     analyzer.analyze(context, program.get());
 

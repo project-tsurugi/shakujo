@@ -202,6 +202,9 @@ void NodeWalker::walk(expression::Expression* node) {
     case expression::ExpressionKind::DISTINCT_EXPRESSION:
         walk(dynamic_cast<expression::relation::DistinctExpression*>(node));
         return;
+    case expression::ExpressionKind::GROUP_EXPRESSION:
+        walk(dynamic_cast<expression::relation::GroupExpression*>(node));
+        return;
     case expression::ExpressionKind::JOIN_EXPRESSION:
         walk(dynamic_cast<expression::relation::JoinExpression*>(node));
         return;
@@ -423,6 +426,15 @@ void NodeWalker::walk(expression::relation::AggregationExpression* node) {
 void NodeWalker::walk(expression::relation::DistinctExpression* node) {
     if (!enter(node)) return;
     if (node->operand()) walk(node->operand());
+    exit(node);
+}
+
+void NodeWalker::walk(expression::relation::GroupExpression* node) {
+    if (!enter(node)) return;
+    if (node->operand()) walk(node->operand());
+    for (auto child : node->keys()) {
+        if (child) walk(child);
+    }
     exit(node);
 }
 

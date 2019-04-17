@@ -164,6 +164,11 @@ enum class ExpressionKind {
      */
     DISTINCT_EXPRESSION,
     /**
+     * @brief tag for GroupExpression.
+     * @see relation::GroupExpression
+     */
+    GROUP_EXPRESSION,
+    /**
      * @brief tag for JoinExpression.
      * @see relation::JoinExpression
      */
@@ -230,6 +235,7 @@ inline constexpr std::string_view to_string_view(ExpressionKind value) {
         case ExpressionKind::VECTOR_LENGTH_EXPRESSION: return "VECTOR_LENGTH_EXPRESSION";
         case ExpressionKind::AGGREGATION_EXPRESSION: return "AGGREGATION_EXPRESSION";
         case ExpressionKind::DISTINCT_EXPRESSION: return "DISTINCT_EXPRESSION";
+        case ExpressionKind::GROUP_EXPRESSION: return "GROUP_EXPRESSION";
         case ExpressionKind::JOIN_EXPRESSION: return "JOIN_EXPRESSION";
         case ExpressionKind::LIMIT_EXPRESSION: return "LIMIT_EXPRESSION";
         case ExpressionKind::ORDER_EXPRESSION: return "ORDER_EXPRESSION";

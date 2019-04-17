@@ -53,6 +53,7 @@
 #include "shakujo/model/expression/VectorLengthExpression.h"
 #include "shakujo/model/expression/relation/AggregationExpression.h"
 #include "shakujo/model/expression/relation/DistinctExpression.h"
+#include "shakujo/model/expression/relation/GroupExpression.h"
 #include "shakujo/model/expression/relation/JoinExpression.h"
 #include "shakujo/model/expression/relation/LimitExpression.h"
 #include "shakujo/model/expression/relation/OrderExpression.h"
@@ -586,6 +587,9 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         return;
     case expression::ExpressionKind::DISTINCT_EXPRESSION:
         serialize(printer, dynamic_cast<expression::relation::DistinctExpression const*>(value));
+        return;
+    case expression::ExpressionKind::GROUP_EXPRESSION:
+        serialize(printer, dynamic_cast<expression::relation::GroupExpression const*>(value));
         return;
     case expression::ExpressionKind::JOIN_EXPRESSION:
         serialize(printer, dynamic_cast<expression::relation::JoinExpression const*>(value));
@@ -1209,6 +1213,41 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         printer.exit_property("relation_key");
     }
     printer.exit_object("DistinctExpression");
+}
+
+void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expression::relation::GroupExpression const* value) {
+    if (value == nullptr) {
+        printer.value(nullptr);
+        return;
+    }
+    printer.enter_object("GroupExpression");
+    {
+        printer.enter_property("operand");
+        serialize(printer, value->operand());
+        printer.exit_property("operand");
+    }
+    {
+        printer.enter_property("keys");
+        auto& list = value->keys();
+        auto size = list.size();
+        printer.enter_array(size);
+        for (auto element : list) {
+            serialize(printer, element);
+        }
+        printer.exit_array(size);
+        printer.exit_property("keys");
+    }
+    {
+        printer.enter_property("expression_key");
+        serialize(printer, value->expression_key());
+        printer.exit_property("expression_key");
+    }
+    {
+        printer.enter_property("relation_key");
+        serialize(printer, value->relation_key());
+        printer.exit_property("relation_key");
+    }
+    printer.exit_object("GroupExpression");
 }
 
 void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expression::relation::JoinExpression const* value) {

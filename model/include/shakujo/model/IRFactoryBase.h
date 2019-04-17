@@ -53,6 +53,7 @@
 #include "shakujo/model/expression/VectorLengthExpression.h"
 #include "shakujo/model/expression/relation/AggregationExpression.h"
 #include "shakujo/model/expression/relation/DistinctExpression.h"
+#include "shakujo/model/expression/relation/GroupExpression.h"
 #include "shakujo/model/expression/relation/JoinExpression.h"
 #include "shakujo/model/expression/relation/LimitExpression.h"
 #include "shakujo/model/expression/relation/OrderExpression.h"
@@ -642,6 +643,24 @@ public:
      */
     std::unique_ptr<expression::relation::DistinctExpression> DistinctExpression(
             std::unique_ptr<expression::Expression> operand);
+
+    /**
+     * @brief returns a new empty expression::relation::GroupExpression.
+     * @return a created empty node
+     * @see expression::relation::GroupExpression
+     */
+    virtual std::unique_ptr<expression::relation::GroupExpression> GroupExpression();
+
+    /**
+     * @brief returns a new expression::relation::GroupExpression.
+     * @param operand source relation
+     * @param keys group keys
+     * @return a created node
+     * @see expression::relation::GroupExpression
+     */
+    std::unique_ptr<expression::relation::GroupExpression> GroupExpression(
+            std::unique_ptr<expression::Expression> operand,
+            common::util::MoveInitializerList<std::unique_ptr<expression::Expression>> keys);
 
     /**
      * @brief returns a new empty expression::relation::JoinExpression.

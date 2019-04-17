@@ -965,6 +965,7 @@ TEST_F(AnalyzerRelationTest, aggregation) {
     ASSERT_EQ(scan_out.columns()[0], agg_in.columns()[0]);
     ASSERT_EQ(agg_out.columns()[0], proj_in.columns()[0]);
 
+    ASSERT_EQ(agg->keys().size(), 0U);
     ASSERT_EQ(agg->columns().size(), 1U);
     {
         auto c = agg->columns()[0];
@@ -1045,6 +1046,7 @@ TEST_F(AnalyzerRelationTest, aggregation_direct_table) {
 
     EXPECT_EQ(scan_out.columns()[0], agg_in.columns()[0]);
 
+    ASSERT_EQ(agg->keys().size(), 0U);
     ASSERT_EQ(agg->columns().size(), 1U);
     {
         auto c = agg->columns()[0];
@@ -1055,6 +1057,97 @@ TEST_F(AnalyzerRelationTest, aggregation_direct_table) {
 
         auto v = extract_var(c->operand());
         EXPECT_EQ(v, agg_in.columns()[0]);
+    }
+}
+
+TEST_F(AnalyzerRelationTest, aggregation_group_by) {
+    using Quantifier = binding::FunctionBinding::Quantifier;
+    auto fid = [&] { return env.binding_context().next_function_id(); };
+    auto count = std::make_shared<binding::FunctionBinding>(
+        fid(),
+        common::core::Name { "count" },
+        std::make_unique<t::Int>(32U, NON_NULL),
+        Quantifier::ALL,
+        std::vector<binding::FunctionBinding::Parameter> {
+            { "count", std::make_unique<t::Int>(32U, NON_NULL), }
+        });
+    env.register_builtin(count);
+    add(schema::TableInfo { "testing", {
+        { "K", t::Int(32U, NON_NULL), },
+        { "C1", t::Int(32U, NON_NULL), },
+    }});
+    auto expr = analyze(f.ProjectionExpression(
+        f.GroupExpression(
+            f.ScanExpression(f.Name("testing")),
+            {
+                var("K")
+            }),
+        {
+            f.ProjectionExpressionColumn(var("K")),
+            f.ProjectionExpressionColumn(f.FunctionCall(
+                f.Name("COUNT"),
+                {
+                    var("C1")
+                })),
+        }
+    ));
+    success();
+
+    auto agg = dynamic_pointer_cast<expression::relation::AggregationExpression>(expr->operand());
+    auto scan = dynamic_pointer_cast<expression::relation::ScanExpression>(agg->operand());
+
+    auto&& scan_out = extract_relation(scan)->output();
+    auto&& agg_in = extract_relation(agg)->process();
+    auto&& agg_out = extract_relation(agg)->output();
+    auto&& proj_in = extract_relation(expr.get())->process();
+
+    ASSERT_EQ(scan_out.columns().size(), 2);
+    ASSERT_EQ(agg_in.columns().size(), 2);
+    ASSERT_EQ(agg_out.columns().size(), 2);
+    ASSERT_EQ(proj_in.columns().size(), 2);
+
+    ASSERT_EQ(scan_out.columns()[0], agg_in.columns()[0]);
+    ASSERT_EQ(scan_out.columns()[1], agg_in.columns()[1]);
+    ASSERT_EQ(agg_out.columns()[0], proj_in.columns()[0]);
+    ASSERT_EQ(agg_out.columns()[1], proj_in.columns()[1]);
+
+    ASSERT_EQ(agg->keys().size(), 1U);
+    {
+        auto k = agg->keys()[0];
+        auto v = extract_var(k);
+        EXPECT_EQ(v, agg_in.columns()[0]);
+    }
+    ASSERT_EQ(agg->columns().size(), 2U);
+    {
+        auto c = agg->columns()[0];
+        EXPECT_EQ(agg_out.columns()[0], extract_var(c));
+
+        EXPECT_EQ(c->function(), nullptr);
+
+        auto v = extract_var(c->operand());
+        EXPECT_EQ(v, agg_in.columns()[0]);
+    }
+    {
+        auto c = agg->columns()[1];
+        EXPECT_EQ(agg_out.columns()[1], extract_var(c));
+
+        auto f = extract_func(c);
+        EXPECT_EQ(f, count);
+
+        auto v = extract_var(c->operand());
+        EXPECT_EQ(v, agg_in.columns()[1]);
+    }
+
+    ASSERT_EQ(expr->columns().size(), 2);
+    {
+        auto c = expr->columns()[0];
+        auto v = extract_var(c->value());
+        EXPECT_EQ(v, proj_in.columns()[0]);
+    }
+    {
+        auto c = expr->columns()[1];
+        auto v = extract_var(c->value());
+        EXPECT_EQ(v, proj_in.columns()[1]);
     }
 }
 

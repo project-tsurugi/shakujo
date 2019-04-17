@@ -51,6 +51,7 @@
 #include "shakujo/model/expression/VectorLengthExpression.h"
 #include "shakujo/model/expression/relation/AggregationExpression.h"
 #include "shakujo/model/expression/relation/DistinctExpression.h"
+#include "shakujo/model/expression/relation/GroupExpression.h"
 #include "shakujo/model/expression/relation/JoinExpression.h"
 #include "shakujo/model/expression/relation/LimitExpression.h"
 #include "shakujo/model/expression/relation/OrderExpression.h"
@@ -462,6 +463,13 @@ public:
      * @param value the target value
      */
     virtual void serialize(common::util::DataSerializer& printer, expression::relation::DistinctExpression const* value);  // NOLINT
+
+    /**
+     * @brief serializes the value into given printer.
+     * @param printer the destination printer
+     * @param value the target value
+     */
+    virtual void serialize(common::util::DataSerializer& printer, expression::relation::GroupExpression const* value);  // NOLINT
 
     /**
      * @brief serializes the value into given printer.

@@ -1548,6 +1548,46 @@ void Engine::visit(model::expression::relation::AggregationExpression* node, Sco
     bless(node, std::make_unique<common::core::type::Relation>(std::move(columns)));
 }
 
+void Engine::visit(model::expression::relation::GroupExpression* node, ScopeContext& prev) {
+    dispatch(node->operand(), prev);
+    auto source_expr = extract_binding(node->operand());
+    if (!is_valid(source_expr)) {
+        bless_undefined<binding::ExpressionBinding>(node);
+        bless_undefined<binding::RelationBinding>(node);
+        return;
+    }
+    if (!require_relation(node->operand())) {
+        bless_erroneous_expression(node);
+        bless_undefined<binding::RelationBinding>(node);
+        return;
+    }
+    auto source_relation = extract_relation(node->operand());
+    if (!source_relation->output().is_valid()) {
+        bless_undefined<binding::ExpressionBinding>(node);
+        bless_undefined<binding::RelationBinding>(node);
+        return;
+    }
+    auto relation = dynamic_pointer_cast<common::core::type::Relation>(source_expr->type());
+    RelationScope vars { bindings(), &prev.variables(), relation, source_relation->output().columns() };
+
+    bless(node, std::make_shared<binding::RelationBinding>(source_relation->output(), source_relation->output()));
+    ScopeContext scope { vars, prev.functions() };
+
+    bool saw_error = false;
+    for (auto* key : node->keys()) {
+        dispatch(key, scope);
+        if (!saw_error) {
+            auto key_expr = extract_binding(key);
+            saw_error = !is_valid(key_expr);
+        }
+    }
+    if (saw_error) {
+        bless_undefined<binding::ExpressionBinding>(node);
+        return;
+    }
+    bless(node, source_expr->type());
+}
+
 void Engine::visit(model::statement::dml::EmitStatement* node, ScopeContext& scope) {
     dispatch(node->source(), scope);
     auto expr = extract_binding(node->source());

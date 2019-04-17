@@ -100,7 +100,7 @@ derivedColumn
     ;
 
 tableExpression
-    : fromClause whereClause? /* TODO: groupByClause */ /* TODO: havingClause */
+    : fromClause whereClause? groupByClause? havingClause?
     ;
 
 fromClause
@@ -197,6 +197,22 @@ sortSpecification
 orderingSpecification
     : K_ASC
     | K_DESC
+    ;
+
+groupByClause
+    : K_GROUP K_BY groupingElementList
+    ;
+
+groupingElementList
+    : groupingElement (',' groupingElement)*
+    ;
+
+groupingElement
+    : name
+    ;
+
+havingClause
+    : K_HAVING searchCondition
     ;
 
 // create table
