@@ -99,11 +99,6 @@ enum class ExpressionKind {
      */
     PLACEHOLDER,
     /**
-     * @brief tag for StringOperator.
-     * @see StringOperator
-     */
-    STRING_OPERATOR,
-    /**
      * @brief tag for TupleCreationExpression.
      * @see TupleCreationExpression
      */
@@ -222,7 +217,6 @@ inline constexpr std::string_view to_string_view(ExpressionKind value) {
         case ExpressionKind::IMPLICIT_CAST: return "IMPLICIT_CAST";
         case ExpressionKind::LITERAL: return "LITERAL";
         case ExpressionKind::PLACEHOLDER: return "PLACEHOLDER";
-        case ExpressionKind::STRING_OPERATOR: return "STRING_OPERATOR";
         case ExpressionKind::TUPLE_CREATION_EXPRESSION: return "TUPLE_CREATION_EXPRESSION";
         case ExpressionKind::TUPLE_ELEMENT_LOAD_EXPRESSION: return "TUPLE_ELEMENT_LOAD_EXPRESSION";
         case ExpressionKind::TUPLE_ELEMENT_STORE_EXPRESSION: return "TUPLE_ELEMENT_STORE_EXPRESSION";

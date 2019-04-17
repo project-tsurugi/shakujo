@@ -33,7 +33,6 @@
 #include "shakujo/model/expression/ImplicitCast.h"
 #include "shakujo/model/expression/Literal.h"
 #include "shakujo/model/expression/Placeholder.h"
-#include "shakujo/model/expression/StringOperator.h"
 #include "shakujo/model/expression/TupleCreationExpression.h"
 #include "shakujo/model/expression/TupleElementLoadExpression.h"
 #include "shakujo/model/expression/TupleElementStoreExpression.h"
@@ -536,30 +535,6 @@ protected:
      * @see enter()
      */
     virtual void exit([[maybe_unused]] expression::Placeholder* node) {
-        exitDefault(node);
-    }
-
-    /**
-     * @brief callback on enter into StringOperator.
-     * @param node the processing target
-     * @return true if continue to enter into child elements of the given node
-     * @return false don't walk into child elements, also the corresponded exit() will not be called
-     * @see expression::StringOperator
-     * @see walk()
-     * @see exit()
-     */
-    virtual bool enter([[maybe_unused]] expression::StringOperator* node) {
-        return enterDefault(node);
-    }
-
-    /**
-     * @brief callback on exit from StringOperator.
-     * @param node the processing target
-     * @see expression::StringOperator
-     * @see walk()
-     * @see enter()
-     */
-    virtual void exit([[maybe_unused]] expression::StringOperator* node) {
         exitDefault(node);
     }
 
@@ -2215,13 +2190,6 @@ public:
      * @see expression::Placeholder
      */
     void walk(expression::Placeholder* node);
-
-    /**
-     * @brief Begins to walk StringOperator.
-     * @param node the processing target
-     * @see expression::StringOperator
-     */
-    void walk(expression::StringOperator* node);
 
     /**
      * @brief Begins to walk TupleCreationExpression.

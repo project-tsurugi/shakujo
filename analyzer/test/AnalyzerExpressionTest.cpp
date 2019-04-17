@@ -817,6 +817,113 @@ TEST_F(AnalyzerExpressionTest, binary_op_logical_inconsistent_right) {
     success(false);
 }
 
+TEST_F(AnalyzerExpressionTest, binary_op_concat) {
+    using Op = expression::BinaryOperator::Kind;
+    auto expr = analyze(f.BinaryOperator(
+        Op::CONCATENATION,
+        literal("A", NON_NULL),
+        literal("BC", NON_NULL)));
+    success();
+
+    auto binding = extract(expr.get());
+
+    EXPECT_EQ(t::String(NON_NULL), type(expr.get()));
+    EXPECT_EQ(binding->constant(), true);
+
+    EXPECT_EQ(constant<v::String>(expr.get()), "ABC");
+}
+
+TEST_F(AnalyzerExpressionTest, binary_op_concat_promotion) {
+    using Op = expression::BinaryOperator::Kind;
+    auto expr = analyze(f.BinaryOperator(
+        Op::CONCATENATION,
+        literal("A", NON_NULL),
+        literal("BC", NULLABLE)));
+    success();
+
+    auto binding = extract(expr.get());
+
+    EXPECT_EQ(t::String(NULLABLE), type(expr.get()));
+    EXPECT_EQ(binding->constant(), true);
+
+    EXPECT_EQ(constant<v::String>(expr.get()), "ABC");
+}
+
+TEST_F(AnalyzerExpressionTest, binary_op_concat_not_constant) {
+    add_variable("a", t::String(NON_NULL));
+    using Op = expression::BinaryOperator::Kind;
+    auto expr = analyze(f.BinaryOperator(
+        Op::CONCATENATION,
+        var("a"),
+        literal("B", NON_NULL)));
+    success();
+
+    auto binding = extract(expr.get());
+
+    EXPECT_EQ(t::String(NON_NULL), type(expr.get()));
+    EXPECT_EQ(binding->constant(), false);
+}
+
+TEST_F(AnalyzerExpressionTest, binary_op_concat_chain) {
+    using Op = expression::BinaryOperator::Kind;
+    auto expr = analyze(f.BinaryOperator(
+        Op::CONCATENATION,
+        f.BinaryOperator(
+            Op::CONCATENATION,
+            literal("A", NON_NULL),
+            literal("B", NON_NULL)),
+        literal("C", NON_NULL)));
+    success();
+
+    auto binding = extract(expr.get());
+
+    EXPECT_EQ(t::String(NON_NULL), type(expr.get()));
+    EXPECT_EQ(binding->constant(), true);
+
+    EXPECT_EQ(constant<v::String>(expr.get()), "ABC");
+}
+
+TEST_F(AnalyzerExpressionTest, like) {
+    add_variable("a", t::String(NON_NULL));
+    using Op = expression::BinaryOperator::Kind;
+    auto expr = analyze(f.BinaryOperator(
+        Op::LIKE,
+        var("a"),
+        literal("A%", NON_NULL)));
+    success();
+
+    auto binding = extract(expr.get());
+
+    EXPECT_EQ(t::Bool(NON_NULL), type(expr.get()));
+    EXPECT_EQ(binding->constant(), false);
+}
+
+TEST_F(AnalyzerExpressionTest, like_nullable) {
+    add_variable("a", t::String(NULLABLE));
+    using Op = expression::BinaryOperator::Kind;
+    auto expr = analyze(f.BinaryOperator(
+        Op::LIKE,
+        var("a"),
+        literal("A%", NON_NULL)));
+    success();
+
+    auto binding = extract(expr.get());
+
+    EXPECT_EQ(t::Bool(NULLABLE), type(expr.get()));
+    EXPECT_EQ(binding->constant(), false);
+}
+
+TEST_F(AnalyzerExpressionTest, like_not_constant) {
+    add_variable("a", t::String(NON_NULL));
+    add_variable("b", t::String(NON_NULL));
+    using Op = expression::BinaryOperator::Kind;
+    auto expr = analyze(f.BinaryOperator(
+        Op::LIKE,
+        var("a"),
+        var("b")));
+    success(false);
+}
+
 TEST_F(AnalyzerExpressionTest, binary_op_in_not_impl) {
     using Op = expression::BinaryOperator::Kind;
     auto expr = analyze(f.BinaryOperator(Op::IN, literal(1), literal(2)));

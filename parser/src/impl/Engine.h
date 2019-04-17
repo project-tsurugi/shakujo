@@ -466,26 +466,23 @@ public:
     std::unique_ptr<model::expression::Expression> visit(Grammar::ExclusiveOrExpressionContext *);
 
     // andExpression
-    //     : andExpression '&' equalityExpression
-    //     | equalityExpression
+    //     : andExpression '&' comparisonExpression
+    //     | comparisonExpression
     //     ;
     std::unique_ptr<model::expression::Expression> visit(Grammar::AndExpressionContext *);
 
-    // equalityExpression
-    //     : equalityExpression op='=' relationalExpression
-    //     | equalityExpression op='<>' relationalExpression
-    //     | relationalExpression
-    //     ;
-    std::unique_ptr<model::expression::Expression> visit(Grammar::EqualityExpressionContext *);
-
-    // relationalExpression
-    //     : relationalExpression '<' shiftExpression
-    //     | relationalExpression '>' shiftExpression
-    //     | relationalExpression '<=' shiftExpression
-    //     | relationalExpression '>=' shiftExpression
+    // comparisonExpression
+    //     : shiftExpression op='=' shiftExpression
+    //     | shiftExpression op='<>' shiftExpression
+    //     | shiftExpression op='<' shiftExpression
+    //     | shiftExpression op='>' shiftExpression
+    //     | shiftExpression op='<=' shiftExpression
+    //     | shiftExpression op='>=' shiftExpression
+    //     | shiftExpression op=K_LIKE shiftExpression
+    //     | shiftExpression K_NOT op=K_LIKE shiftExpression
     //     | shiftExpression
     //     ;
-    std::unique_ptr<model::expression::Expression> visit(Grammar::RelationalExpressionContext *);
+    std::unique_ptr<model::expression::Expression> visit(Grammar::ComparisonExpressionContext *);
 
     // shiftExpression
     //     : shiftExpression '<<' additiveExpression
@@ -498,6 +495,7 @@ public:
     // additiveExpression
     //     : additiveExpression '+' multiplicativeExpression
     //     | additiveExpression '-' multiplicativeExpression
+    //     | additiveExpression '||' multiplicativeExpression
     //     | multiplicativeExpression
     //     ;
     std::unique_ptr<model::expression::Expression> visit(Grammar::AdditiveExpressionContext *);

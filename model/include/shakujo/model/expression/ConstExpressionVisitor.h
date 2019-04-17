@@ -36,7 +36,6 @@
 #include "shakujo/model/expression/ImplicitCast.h"
 #include "shakujo/model/expression/Literal.h"
 #include "shakujo/model/expression/Placeholder.h"
-#include "shakujo/model/expression/StringOperator.h"
 #include "shakujo/model/expression/TupleCreationExpression.h"
 #include "shakujo/model/expression/TupleElementLoadExpression.h"
 #include "shakujo/model/expression/TupleElementStoreExpression.h"
@@ -232,17 +231,6 @@ public:
      * @see Placeholder
      */
     virtual Return visit(Placeholder const* node, Args... args) {
-        return visitDefault(node, std::forward<Args>(args)...);
-    }
-
-    /**
-     * @brief Processes StringOperator.
-     * @param node the processing target
-     * @param args the processing arguments
-     * @return the result
-     * @see StringOperator
-     */
-    virtual Return visit(StringOperator const* node, Args... args) {
         return visitDefault(node, std::forward<Args>(args)...);
     }
 
@@ -491,8 +479,6 @@ public:
             return visit(static_cast<Literal const*>(node), std::forward<Args>(args)...);  // NOLINT
         case Placeholder::tag:
             return visit(static_cast<Placeholder const*>(node), std::forward<Args>(args)...);  // NOLINT
-        case StringOperator::tag:
-            return visit(static_cast<StringOperator const*>(node), std::forward<Args>(args)...);  // NOLINT
         case TupleCreationExpression::tag:
             return visit(static_cast<TupleCreationExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case TupleElementLoadExpression::tag:

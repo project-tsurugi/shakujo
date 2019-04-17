@@ -105,6 +105,15 @@ public class BinaryOperator extends MetaClass {
 
         @Description("conditional or")
         CONDITIONAL_OR,
+        
+        @Description("string concatenation")
+        CONCATENATION,
+        
+        @Description("like")
+        LIKE,
+        
+        @Description("not like")
+        NOT_LIKE,
 
         @Description("relational membership")
         RELATION_IN,

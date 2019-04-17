@@ -158,9 +158,6 @@ void NodeWalker::walk(expression::Expression* node) {
     case expression::Placeholder::tag:
         walk(static_cast<expression::Placeholder*>(node));  // NOLINT
         return;
-    case expression::StringOperator::tag:
-        walk(static_cast<expression::StringOperator*>(node));  // NOLINT
-        return;
     case expression::TupleCreationExpression::tag:
         walk(static_cast<expression::TupleCreationExpression*>(node));  // NOLINT
         return;
@@ -321,12 +318,6 @@ void NodeWalker::walk(expression::Literal* node) {
 
 void NodeWalker::walk(expression::Placeholder* node) {
     if (!enter(node)) return;
-    exit(node);
-}
-
-void NodeWalker::walk(expression::StringOperator* node) {
-    if (!enter(node)) return;
-    if (node->operand()) walk(node->operand());
     exit(node);
 }
 

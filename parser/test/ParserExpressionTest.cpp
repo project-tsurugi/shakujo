@@ -233,6 +233,13 @@ TEST_F(ParserExpressionTest, additive_subtract) {
     EXPECT_EQ(2, as_int(v->right()));
 }
 
+TEST_F(ParserExpressionTest, additive_concat) {
+    auto v = parse_expression<BinaryOperator>("'A' || 'B'");
+    EXPECT_EQ(BinaryOperator::Kind::CONCATENATION, v->operator_kind());
+    EXPECT_EQ("A", as_string(v->left()));
+    EXPECT_EQ("B", as_string(v->right()));
+}
+
 TEST_F(ParserExpressionTest, shift_left) {
     auto v = parse_expression<BinaryOperator>("1 << 2");
     EXPECT_EQ(BinaryOperator::Kind::SHIFT_LEFT, v->operator_kind());
@@ -294,6 +301,20 @@ TEST_F(ParserExpressionTest, equality_not_equal) {
     EXPECT_EQ(BinaryOperator::Kind::NOT_EQUAL, v->operator_kind());
     EXPECT_EQ(1, as_int(v->left()));
     EXPECT_EQ(2, as_int(v->right()));
+}
+
+TEST_F(ParserExpressionTest, comparison_like) {
+    auto v = parse_expression<BinaryOperator>("'VALUE' LIKE 'V%'");
+    EXPECT_EQ(BinaryOperator::Kind::LIKE, v->operator_kind());
+    EXPECT_EQ("VALUE", as_string(v->left()));
+    EXPECT_EQ("V%", as_string(v->right()));
+}
+
+TEST_F(ParserExpressionTest, comparison_not_like) {
+    auto v = parse_expression<BinaryOperator>("'VALUE' NOT LIKE '%V'");
+    EXPECT_EQ(BinaryOperator::Kind::NOT_LIKE, v->operator_kind());
+    EXPECT_EQ("VALUE", as_string(v->left()));
+    EXPECT_EQ("%V", as_string(v->right()));
 }
 
 TEST_F(ParserExpressionTest, logical_and) {

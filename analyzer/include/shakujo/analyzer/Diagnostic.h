@@ -174,6 +174,11 @@ public:
         INVALID_VARIABLE_TYPE,
 
         /**
+         * @brief the string pattern must be constant.
+         */
+        INVALID_STRING_PATTERN,
+
+        /**
          * @brief conflict symbol in the block.
          */
         DUPLICATE_SYMBOL_IN_BLOCK,
@@ -382,6 +387,8 @@ inline constexpr std::string_view to_string_view(Diagnostic::Code value) {
             return "target function is ambiguous";
         case Code::TUPLE_ELEMENT_NOT_FOUND:
             return "tuple element is not found";
+        case Code::INVALID_STRING_PATTERN:
+            return "string pattern is not valid";
         case Code::DUPLICATE_SYMBOL_IN_BLOCK:
             return "duplicate symbol in block";
         case Code::RESTRICTED_VARIABLE_DECLARATION:

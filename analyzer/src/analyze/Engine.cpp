@@ -783,20 +783,21 @@ void Engine::visit(model::expression::BinaryOperator* node, ScopeContext& scope)
     }
 
     // first, we resolves overloading of some operators
+    using Op = model::expression::BinaryOperator::Kind;
     switch (node->operator_kind()) {
-    case model::expression::BinaryOperator::Kind::LOGICAL_AND:
+    case Op::LOGICAL_AND:
         if (typing::is_integral(l_expr->type()) && typing::is_integral(r_expr->type())) {
-            node->operator_kind(model::expression::BinaryOperator::Kind::BITWISE_AND);
+            node->operator_kind(Op::BITWISE_AND);
         }
         break;
-    case model::expression::BinaryOperator::Kind::LOGICAL_OR:
+    case Op::LOGICAL_OR:
         if (typing::is_integral(l_expr->type()) && typing::is_integral(r_expr->type())) {
-            node->operator_kind(model::expression::BinaryOperator::Kind::BITWISE_OR);
+            node->operator_kind(Op::BITWISE_OR);
         }
         break;
-    case model::expression::BinaryOperator::Kind::LOGICAL_XOR:
+    case Op::LOGICAL_XOR:
         if (typing::is_integral(l_expr->type()) && typing::is_integral(r_expr->type())) {
-            node->operator_kind(model::expression::BinaryOperator::Kind::BITWISE_XOR);
+            node->operator_kind(Op::BITWISE_XOR);
         }
         break;
     default:
@@ -804,11 +805,11 @@ void Engine::visit(model::expression::BinaryOperator* node, ScopeContext& scope)
     }
 
     switch (node->operator_kind()) {
-    case model::expression::BinaryOperator::Kind::ADD:
-    case model::expression::BinaryOperator::Kind::SUBTRACT:
-    case model::expression::BinaryOperator::Kind::MULTIPLY:
-    case model::expression::BinaryOperator::Kind::DIVIDE:
-    case model::expression::BinaryOperator::Kind::REMAINDER:
+    case Op::ADD:
+    case Op::SUBTRACT:
+    case Op::MULTIPLY:
+    case Op::DIVIDE:
+    case Op::REMAINDER:
     {
         if (!require(require_numeric(node->left()), require_numeric(node->right()))) {
             bless_erroneous_expression(node);
@@ -818,9 +819,9 @@ void Engine::visit(model::expression::BinaryOperator* node, ScopeContext& scope)
         break;
     }
 
-    case model::expression::BinaryOperator::Kind::BITWISE_AND:
-    case model::expression::BinaryOperator::Kind::BITWISE_OR:
-    case model::expression::BinaryOperator::Kind::BITWISE_XOR:
+    case Op::BITWISE_AND:
+    case Op::BITWISE_OR:
+    case Op::BITWISE_XOR:
     {
         if (!require(require_integral(node->left()), require_integral(node->right()))) {
             bless_erroneous_expression(node);
@@ -830,21 +831,21 @@ void Engine::visit(model::expression::BinaryOperator* node, ScopeContext& scope)
         break;
     }
 
-    case model::expression::BinaryOperator::Kind::SHIFT_LEFT:
-    case model::expression::BinaryOperator::Kind::SHIFT_RIGHT_ARITHMETIC:
-    case model::expression::BinaryOperator::Kind::SHIFT_RIGHT_LOGICAL:
+    case Op::SHIFT_LEFT:
+    case Op::SHIFT_RIGHT_ARITHMETIC:
+    case Op::SHIFT_RIGHT_LOGICAL:
     {
         if (!require(require_integral(node->left()), require_integral(node->right()))) {
             bless_erroneous_expression(node);
         } else {
             auto t = dynamic_pointer_cast<common::core::type::Int>(l_expr->type());
-            bless(node, common::core::type::Int(t->size(), t->nullity() | r_expr->type()->nullity()));
+            bless(node, std::make_unique<common::core::type::Int>(t->size(), t->nullity() | r_expr->type()->nullity()));
         }
         break;
     }
 
-    case model::expression::BinaryOperator::Kind::EQUAL:
-    case model::expression::BinaryOperator::Kind::NOT_EQUAL:
+    case Op::EQUAL:
+    case Op::NOT_EQUAL:
     {
         if (!typing::is_equality_comparable(l_expr->type(), r_expr->type())) {
             report(node->right(), Diagnostic::Code::INCOMPATIBLE_EXPRESSION_TYPE, to_string(
@@ -857,15 +858,15 @@ void Engine::visit(model::expression::BinaryOperator* node, ScopeContext& scope)
             assert(is_defined(promoted));  // NOLINT
             insert_cast(node->left(), promoted.get());
             insert_cast(node->right(), promoted.get());
-            bless(node, common::core::type::Bool(common::core::Type::Nullity::NEVER_NULL));
+            bless(node, std::make_unique<common::core::type::Bool>(common::core::Type::Nullity::NEVER_NULL));
         }
         break;
     }
 
-    case model::expression::BinaryOperator::Kind::LESS_THAN:
-    case model::expression::BinaryOperator::Kind::GREATER_THAN:
-    case model::expression::BinaryOperator::Kind::LESS_THAN_OR_EQUAL:
-    case model::expression::BinaryOperator::Kind::GREATER_THAN_OR_EQUAL:
+    case Op::LESS_THAN:
+    case Op::GREATER_THAN:
+    case Op::LESS_THAN_OR_EQUAL:
+    case Op::GREATER_THAN_OR_EQUAL:
     {
         if (!typing::is_order_comparable(l_expr->type(), r_expr->type())) {
             report(node->right(), Diagnostic::Code::INCOMPATIBLE_EXPRESSION_TYPE, to_string(
@@ -878,47 +879,87 @@ void Engine::visit(model::expression::BinaryOperator* node, ScopeContext& scope)
             assert(is_defined(promoted));  // NOLINT
             insert_cast(node->left(), promoted.get());
             insert_cast(node->right(), promoted.get());
-            bless(node, common::core::type::Bool(promoted->nullity()));
+            bless(node, std::make_unique<common::core::type::Bool>(promoted->nullity()));
         }
         break;
     }
 
-    case model::expression::BinaryOperator::Kind::LOGICAL_AND:
-    case model::expression::BinaryOperator::Kind::LOGICAL_OR:
-    case model::expression::BinaryOperator::Kind::LOGICAL_XOR:
-    case model::expression::BinaryOperator::Kind::CONDITIONAL_AND:
-    case model::expression::BinaryOperator::Kind::CONDITIONAL_OR:
+    case Op::LOGICAL_AND:
+    case Op::LOGICAL_OR:
+    case Op::LOGICAL_XOR:
+    case Op::CONDITIONAL_AND:
+    case Op::CONDITIONAL_OR:
     {
         if (!require(require_boolean(node->left()), require_boolean(node->right()))) {
             bless_erroneous_expression(node);
         } else {
             auto promoted = apply_binary_promotion(node->left(), node->right());
-            bless(node, common::core::type::Bool(promoted->nullity()));
+            bless(node, std::make_unique<common::core::type::Bool>(promoted->nullity()));
         }
         break;
     }
 
-    case model::expression::BinaryOperator::Kind::IN:
-    case model::expression::BinaryOperator::Kind::RELATION_IN:
+    case Op::CONCATENATION:
+    {
+        if (!require(require_textual(node->left()), require_textual(node->right()))) {
+            bless_erroneous_expression(node);
+        } else {
+            auto target = std::make_unique<common::core::type::String>(l_expr->type()->nullity() | r_expr->type()->nullity());
+            insert_cast(node->left(), target.get());
+            insert_cast(node->right(), target.get());
+
+            std::unique_ptr<common::core::value::String> value {};
+            if (l_expr->constant() && r_expr->constant()) {
+                auto l_str = dynamic_pointer_cast_if<common::core::value::String>(l_expr->value());
+                auto r_str = dynamic_pointer_cast_if<common::core::value::String>(r_expr->value());
+                if (is_defined(l_str) && is_defined(r_str)) {
+                    value = std::make_unique<common::core::value::String>(l_str->get() + r_str->get());
+                }
+            }
+            auto constant = is_defined(value);
+            bless(node, std::move(target), std::move(value), constant);
+        }
+        break;
+    }
+
+    case Op::LIKE:
+    case Op::NOT_LIKE:
+    {
+        if (!require(require_textual(node->left()), require_textual(node->right()))) {
+            bless_erroneous_expression(node);
+        } else if (!r_expr->constant()) {
+            report(node->right(), Diagnostic::Code::INVALID_STRING_PATTERN,
+                to_string("character pattern must be a constant expression"));
+            bless_erroneous_expression(node);
+        } else {
+            auto target = std::make_unique<common::core::type::String>(l_expr->type()->nullity());
+            insert_cast(node->left(), target.get());
+            bless(node, std::make_unique<common::core::type::Bool>(l_expr->type()->nullity()));
+        }
+        break;
+    }
+
+    case Op::IN:
+    case Op::RELATION_IN:
     {
         report(node, Diagnostic::Code::NOT_IMPLEMENTED, "IN");
         bless_erroneous_expression(node);
         break;
     }
 
-    case model::expression::BinaryOperator::Kind::RELATION_UNION:
-    case model::expression::BinaryOperator::Kind::RELATION_INTERSECTION:
-    case model::expression::BinaryOperator::Kind::RELATION_DIFFERENCE:
-    case model::expression::BinaryOperator::Kind::RELATION_UNION_ALL:
-    case model::expression::BinaryOperator::Kind::RELATION_INTERSECTION_ALL:
-    case model::expression::BinaryOperator::Kind::RELATION_DIFFERENCE_ALL:
+    case Op::RELATION_UNION:
+    case Op::RELATION_INTERSECTION:
+    case Op::RELATION_DIFFERENCE:
+    case Op::RELATION_UNION_ALL:
+    case Op::RELATION_INTERSECTION_ALL:
+    case Op::RELATION_DIFFERENCE_ALL:
     {
         report(node, Diagnostic::Code::NOT_IMPLEMENTED, "relational binary operators");
         bless_erroneous_expression(node);
         break;
     }
 
-    case model::expression::BinaryOperator::Kind::INVALID:
+    case Op::INVALID:
         throw std::domain_error("invalid syntax");
     }
 }

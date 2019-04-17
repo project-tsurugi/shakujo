@@ -38,7 +38,6 @@
 #include "shakujo/model/expression/ImplicitCast.h"
 #include "shakujo/model/expression/Literal.h"
 #include "shakujo/model/expression/Placeholder.h"
-#include "shakujo/model/expression/StringOperator.h"
 #include "shakujo/model/expression/TupleCreationExpression.h"
 #include "shakujo/model/expression/TupleElementLoadExpression.h"
 #include "shakujo/model/expression/TupleElementStoreExpression.h"
@@ -344,20 +343,6 @@ public:
      * @param value the target value
      */
     virtual void serialize(common::util::DataSerializer& printer, expression::Placeholder const* value);  // NOLINT
-
-    /**
-     * @brief serializes the value into given printer.
-     * @param printer the destination printer
-     * @param value the target value
-     */
-    virtual void serialize(common::util::DataSerializer& printer, expression::StringOperator const* value);  // NOLINT
-
-    /**
-     * @brief serializes the value into given printer.
-     * @param printer the destination printer
-     * @param value the target value
-     */
-    virtual void serialize(common::util::DataSerializer& printer, expression::StringOperator::Kind value);  // NOLINT
 
     /**
      * @brief serializes the value into given printer.

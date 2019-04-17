@@ -1088,7 +1088,7 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::AndExpress
     check(c);
     auto operator_token = c->op;
     auto left_context = c->andExpression();
-    auto right_context = c->equalityExpression();
+    auto right_context = c->comparisonExpression();
     if (is_defined(left_context) && is_defined(operator_token) && is_defined(right_context)) {
         auto left = visit(left_context);
         auto right = visit(right_context);
@@ -1103,61 +1103,40 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::AndExpress
     rule_error(c);
 }
 
-static model::expression::BinaryOperator::Kind equality_operator(antlr4::Token *token) {
+static model::expression::BinaryOperator::Kind comparison_operator(antlr4::Token *token) {
     switch (token->getType()) {
         case Grammar::EQUAL: return model::expression::BinaryOperator::Kind::EQUAL;
         case Grammar::LEFT_ANGLE_RIGHT_ANGLE: return model::expression::BinaryOperator::Kind::NOT_EQUAL;
         case Grammar::EXCLAMATION_MARK_EQUAL: return model::expression::BinaryOperator::Kind::NOT_EQUAL;
-        default: return model::expression::BinaryOperator::Kind::INVALID;
-    }
-}
 
-std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::EqualityExpressionContext *c) {
-    check(c);
-    auto operator_token = c->op;
-    auto left_context = c->equalityExpression();
-    auto right_context = c->relationalExpression();
-    if (is_defined(left_context) && is_defined(operator_token) && is_defined(right_context)) {
-        auto left = visit(left_context);
-        auto kind = equality_operator(operator_token);
-        auto right = visit(right_context);
-        return f.BinaryOperator(
-                kind,
-                std::move(left),
-                std::move(right)) << region(c);
-    }
-    if (is_defined(right_context)) {
-        return visit(right_context);
-    }
-    rule_error(c);
-}
-
-static model::expression::BinaryOperator::Kind relational_operator(antlr4::Token *token) {
-    switch (token->getType()) {
         case Grammar::LEFT_ANGLE: return model::expression::BinaryOperator::Kind::LESS_THAN;
         case Grammar::RIGHT_ANGLE: return model::expression::BinaryOperator::Kind::GREATER_THAN;
         case Grammar::LEFT_ANGLE_EQUAL: return model::expression::BinaryOperator::Kind::LESS_THAN_OR_EQUAL;
         case Grammar::RIGHT_ANGLE_EQUAL: return model::expression::BinaryOperator::Kind::GREATER_THAN_OR_EQUAL;
+
+        case Grammar::K_LIKE: return model::expression::BinaryOperator::Kind::LIKE;
+
         default: return model::expression::BinaryOperator::Kind::INVALID;
     }
 }
 
-std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::RelationalExpressionContext *c) {
+std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::ComparisonExpressionContext *c) {
     check(c);
     auto operator_token = c->op;
-    auto left_context = c->relationalExpression();
-    auto right_context = c->shiftExpression();
-    if (is_defined(left_context) && is_defined(operator_token) && is_defined(right_context)) {
-        auto left = visit(left_context);
-        auto kind = relational_operator(operator_token);
-        auto right = visit(right_context);
+    if (c->shiftExpression().size() == 2 && is_defined(operator_token)) {
+        auto left = visit(c->shiftExpression().at(0));
+        auto kind = comparison_operator(operator_token);
+        if (is_defined(c->K_NOT()) && kind == model::expression::BinaryOperator::Kind::LIKE) {
+            kind = model::expression::BinaryOperator::Kind::NOT_LIKE;
+        }
+        auto right = visit(c->shiftExpression().at(1));
         return f.BinaryOperator(
                 kind,
                 std::move(left),
                 std::move(right)) << region(c);
     }
-    if (is_defined(right_context)) {
-        return visit(right_context);
+    if (c->shiftExpression().size() == 1) {
+        return visit(c->shiftExpression().at(0));
     }
     rule_error(c);
 }
@@ -1195,6 +1174,7 @@ static model::expression::BinaryOperator::Kind additive_operator(antlr4::Token *
     switch (token->getType()) {
         case Grammar::PLUS: return model::expression::BinaryOperator::Kind::ADD;
         case Grammar::MINUS: return model::expression::BinaryOperator::Kind::SUBTRACT;
+        case Grammar::VERTICAL_BAR_2: return model::expression::BinaryOperator::Kind::CONCATENATION;
         default: return model::expression::BinaryOperator::Kind::INVALID;
     }
 }
