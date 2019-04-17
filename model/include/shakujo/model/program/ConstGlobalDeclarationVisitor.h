@@ -79,9 +79,9 @@ public:
      */
     Return dispatch(GlobalDeclaration const* node, Args... args) {
         switch (node->kind()) {
-        case GlobalDeclarationKind::GLOBAL_FUNCTION_DECLARATION:
+        case GlobalFunctionDeclaration::tag:
             return visit(static_cast<GlobalFunctionDeclaration const*>(node), std::forward<Args>(args)...);  // NOLINT
-        case GlobalDeclarationKind::GLOBAL_VARIABLE_DECLARATION:
+        case GlobalVariableDeclaration::tag:
             return visit(static_cast<GlobalVariableDeclaration const*>(node), std::forward<Args>(args)...);  // NOLINT
         }
         // may not occur

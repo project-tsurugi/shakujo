@@ -182,7 +182,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr StatementKind tag = StatementKind::INSERT_RELATION_STATEMENT;
+    static inline constexpr auto tag = StatementKind::INSERT_RELATION_STATEMENT;
 
     /**
      * @brief Returns the node kind.

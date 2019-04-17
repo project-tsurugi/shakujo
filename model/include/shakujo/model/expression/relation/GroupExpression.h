@@ -174,7 +174,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr ExpressionKind tag = ExpressionKind::GROUP_EXPRESSION;
+    static inline constexpr auto tag = ExpressionKind::GROUP_EXPRESSION;
 
     /**
      * @brief Returns the node kind.

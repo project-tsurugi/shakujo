@@ -143,7 +143,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr StatementKind tag = StatementKind::WHILE_STATEMENT;
+    static inline constexpr auto tag = StatementKind::WHILE_STATEMENT;
 
     /**
      * @brief Returns the node kind.

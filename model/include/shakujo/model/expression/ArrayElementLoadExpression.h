@@ -164,7 +164,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr ExpressionKind tag = ExpressionKind::ARRAY_ELEMENT_LOAD_EXPRESSION;
+    static inline constexpr auto tag = ExpressionKind::ARRAY_ELEMENT_LOAD_EXPRESSION;
 
     /**
      * @brief Returns the node kind.

@@ -29,6 +29,11 @@ import com.ashigeru.lang.codegen.ir.model.TypeDeclarationRepository;
  */
 public class KindGenerator {
 
+    /**
+     * the non-virtual kind value name.
+     */
+    public static final Object NON_VIRTUAL_KIND_NAME = "tag";
+
     private static final String KIND_SUFFIX = "Kind";
 
     private final TypeDeclarationRepository repository;

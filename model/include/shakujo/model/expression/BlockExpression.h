@@ -152,7 +152,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr ExpressionKind tag = ExpressionKind::BLOCK_EXPRESSION;
+    static inline constexpr auto tag = ExpressionKind::BLOCK_EXPRESSION;
 
     /**
      * @brief Returns the node kind.

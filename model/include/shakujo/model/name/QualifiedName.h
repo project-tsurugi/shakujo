@@ -143,7 +143,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr NameKind tag = NameKind::QUALIFIED_NAME;
+    static inline constexpr auto tag = NameKind::QUALIFIED_NAME;
 
     /**
      * @brief Returns the node kind.

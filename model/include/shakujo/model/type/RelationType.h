@@ -116,7 +116,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr TypeKind tag = TypeKind::RELATION_TYPE;
+    static inline constexpr auto tag = TypeKind::RELATION_TYPE;
 
     /**
      * @brief Returns the node kind.

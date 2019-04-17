@@ -154,7 +154,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr ExpressionKind tag = ExpressionKind::LITERAL;
+    static inline constexpr auto tag = ExpressionKind::LITERAL;
 
     /**
      * @brief Returns the node kind.

@@ -224,7 +224,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr StatementKind tag = StatementKind::LOCAL_VARIABLE_DECLARATION;
+    static inline constexpr auto tag = StatementKind::LOCAL_VARIABLE_DECLARATION;
 
     /**
      * @brief Returns the node kind.

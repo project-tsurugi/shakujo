@@ -342,7 +342,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr ExpressionKind tag = ExpressionKind::BINARY_OPERATOR;
+    static inline constexpr auto tag = ExpressionKind::BINARY_OPERATOR;
 
     /**
      * @brief Returns the node kind.

@@ -304,11 +304,10 @@ public class WalkerGenerator {
                 isConst ? " const" : "");
         printer.indent(() -> {
             printer.put("switch (node->kind()) {");
-            printer.getIncludes().add(KindGenerator.getTypeName(target));
             for (ClassDeclaration child : children) {
                 printer.put("case %s::%s:",
-                        printer.getContextName(KindGenerator.getTypeName(target)),
-                        KindGenerator.getConstantName(child));
+                        printer.getContextName(child),
+                        KindGenerator.NON_VIRTUAL_KIND_NAME);
                 printer.indent(() -> {
                     printer.put("walk(static_cast<%s%s*>(node));  // NOLINT",
                             printer.getContextName(child),

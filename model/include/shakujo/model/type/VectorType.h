@@ -115,7 +115,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr TypeKind tag = TypeKind::VECTOR_TYPE;
+    static inline constexpr auto tag = TypeKind::VECTOR_TYPE;
 
     /**
      * @brief Returns the node kind.

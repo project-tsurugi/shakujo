@@ -207,8 +207,8 @@ public class CppGen {
                 printer.put("/**");
                 printer.put(" * @brief the node kind.");
                 printer.put(" */");
-                printer.put("static inline constexpr %s tag = %s::%s;",
-                        printer.getContextName(typeName),
+                printer.put("static inline constexpr auto %s = %s::%s;",
+                        KindGenerator.NON_VIRTUAL_KIND_NAME,
                         printer.getContextName(typeName),
                         KindGenerator.getConstantName(decl));
                 printer.put();
@@ -229,7 +229,7 @@ public class CppGen {
             } else {
                 printer.append(" override {");
                 printer.indent(() -> {
-                    printer.put("return tag;");
+                    printer.put("return %s;", KindGenerator.NON_VIRTUAL_KIND_NAME);
                 });
                 printer.put("}");
             }

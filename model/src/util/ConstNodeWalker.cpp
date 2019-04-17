@@ -20,11 +20,6 @@
 #include <stdexcept>
 #include <sstream>
 
-#include "shakujo/model/expression/ExpressionKind.h"
-#include "shakujo/model/name/NameKind.h"
-#include "shakujo/model/program/GlobalDeclarationKind.h"
-#include "shakujo/model/statement/StatementKind.h"
-#include "shakujo/model/type/TypeKind.h"
 
 namespace shakujo::model::util {
 void ConstNodeWalker::walk(Node const* node) {
@@ -61,10 +56,10 @@ void ConstNodeWalker::walk(Node const* node) {
 
 void ConstNodeWalker::walk(program::GlobalDeclaration const* node) {
     switch (node->kind()) {
-    case program::GlobalDeclarationKind::GLOBAL_FUNCTION_DECLARATION:
+    case program::GlobalFunctionDeclaration::tag:
         walk(static_cast<program::GlobalFunctionDeclaration const*>(node));  // NOLINT
         return;
-    case program::GlobalDeclarationKind::GLOBAL_VARIABLE_DECLARATION:
+    case program::GlobalVariableDeclaration::tag:
         walk(static_cast<program::GlobalVariableDeclaration const*>(node));  // NOLINT
         return;
     }
@@ -95,10 +90,10 @@ void ConstNodeWalker::walk(program::GlobalVariableDeclaration const* node) {
 
 void ConstNodeWalker::walk(name::Name const* node) {
     switch (node->kind()) {
-    case name::NameKind::QUALIFIED_NAME:
+    case name::QualifiedName::tag:
         walk(static_cast<name::QualifiedName const*>(node));  // NOLINT
         return;
-    case name::NameKind::SIMPLE_NAME:
+    case name::SimpleName::tag:
         walk(static_cast<name::SimpleName const*>(node));  // NOLINT
         return;
     }
@@ -121,106 +116,106 @@ void ConstNodeWalker::walk(name::SimpleName const* node) {
 
 void ConstNodeWalker::walk(expression::Expression const* node) {
     switch (node->kind()) {
-    case expression::ExpressionKind::ARRAY_CREATION_EXPRESSION:
+    case expression::ArrayCreationExpression::tag:
         walk(static_cast<expression::ArrayCreationExpression const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::ARRAY_ELEMENT_LOAD_EXPRESSION:
+    case expression::ArrayElementLoadExpression::tag:
         walk(static_cast<expression::ArrayElementLoadExpression const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::ARRAY_ELEMENT_STORE_EXPRESSION:
+    case expression::ArrayElementStoreExpression::tag:
         walk(static_cast<expression::ArrayElementStoreExpression const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::ASSIGN_EXPRESSION:
+    case expression::AssignExpression::tag:
         walk(static_cast<expression::AssignExpression const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::BINARY_OPERATOR:
+    case expression::BinaryOperator::tag:
         walk(static_cast<expression::BinaryOperator const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::BLOCK_EXPRESSION:
+    case expression::BlockExpression::tag:
         walk(static_cast<expression::BlockExpression const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::CASE_EXPRESSION:
+    case expression::CaseExpression::tag:
         walk(static_cast<expression::CaseExpression const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::CURSOR_ADVANCE_EXPRESSION:
+    case expression::CursorAdvanceExpression::tag:
         walk(static_cast<expression::CursorAdvanceExpression const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::CURSOR_CREATION_EXPRESSION:
+    case expression::CursorCreationExpression::tag:
         walk(static_cast<expression::CursorCreationExpression const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::CURSOR_ELEMENT_LOAD_EXPRESSION:
+    case expression::CursorElementLoadExpression::tag:
         walk(static_cast<expression::CursorElementLoadExpression const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::FUNCTION_CALL:
+    case expression::FunctionCall::tag:
         walk(static_cast<expression::FunctionCall const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::IMPLICIT_CAST:
+    case expression::ImplicitCast::tag:
         walk(static_cast<expression::ImplicitCast const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::LITERAL:
+    case expression::Literal::tag:
         walk(static_cast<expression::Literal const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::PLACEHOLDER:
+    case expression::Placeholder::tag:
         walk(static_cast<expression::Placeholder const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::STRING_OPERATOR:
+    case expression::StringOperator::tag:
         walk(static_cast<expression::StringOperator const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::TUPLE_CREATION_EXPRESSION:
+    case expression::TupleCreationExpression::tag:
         walk(static_cast<expression::TupleCreationExpression const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::TUPLE_ELEMENT_LOAD_EXPRESSION:
+    case expression::TupleElementLoadExpression::tag:
         walk(static_cast<expression::TupleElementLoadExpression const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::TUPLE_ELEMENT_STORE_EXPRESSION:
+    case expression::TupleElementStoreExpression::tag:
         walk(static_cast<expression::TupleElementStoreExpression const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::TYPE_OPERATOR:
+    case expression::TypeOperator::tag:
         walk(static_cast<expression::TypeOperator const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::UNARY_OPERATOR:
+    case expression::UnaryOperator::tag:
         walk(static_cast<expression::UnaryOperator const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::VARIABLE_REFERENCE:
+    case expression::VariableReference::tag:
         walk(static_cast<expression::VariableReference const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::VECTOR_CREATION_EXPRESSION:
+    case expression::VectorCreationExpression::tag:
         walk(static_cast<expression::VectorCreationExpression const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::VECTOR_ELEMENT_LOAD_EXPRESSION:
+    case expression::VectorElementLoadExpression::tag:
         walk(static_cast<expression::VectorElementLoadExpression const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::VECTOR_ELEMENT_STORE_EXPRESSION:
+    case expression::VectorElementStoreExpression::tag:
         walk(static_cast<expression::VectorElementStoreExpression const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::VECTOR_LENGTH_EXPRESSION:
+    case expression::VectorLengthExpression::tag:
         walk(static_cast<expression::VectorLengthExpression const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::AGGREGATION_EXPRESSION:
+    case expression::relation::AggregationExpression::tag:
         walk(static_cast<expression::relation::AggregationExpression const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::DISTINCT_EXPRESSION:
+    case expression::relation::DistinctExpression::tag:
         walk(static_cast<expression::relation::DistinctExpression const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::GROUP_EXPRESSION:
+    case expression::relation::GroupExpression::tag:
         walk(static_cast<expression::relation::GroupExpression const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::JOIN_EXPRESSION:
+    case expression::relation::JoinExpression::tag:
         walk(static_cast<expression::relation::JoinExpression const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::LIMIT_EXPRESSION:
+    case expression::relation::LimitExpression::tag:
         walk(static_cast<expression::relation::LimitExpression const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::ORDER_EXPRESSION:
+    case expression::relation::OrderExpression::tag:
         walk(static_cast<expression::relation::OrderExpression const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::PROJECTION_EXPRESSION:
+    case expression::relation::ProjectionExpression::tag:
         walk(static_cast<expression::relation::ProjectionExpression const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::SCAN_EXPRESSION:
+    case expression::relation::ScanExpression::tag:
         walk(static_cast<expression::relation::ScanExpression const*>(node));  // NOLINT
         return;
-    case expression::ExpressionKind::SELECTION_EXPRESSION:
+    case expression::relation::SelectionExpression::tag:
         walk(static_cast<expression::relation::SelectionExpression const*>(node));  // NOLINT
         return;
     }
@@ -488,76 +483,76 @@ void ConstNodeWalker::walk(expression::relation::SelectionExpression const* node
 
 void ConstNodeWalker::walk(statement::Statement const* node) {
     switch (node->kind()) {
-    case statement::StatementKind::ANCHOR_DECLARATION:
+    case statement::AnchorDeclaration::tag:
         walk(static_cast<statement::AnchorDeclaration const*>(node));  // NOLINT
         return;
-    case statement::StatementKind::BLOCK_STATEMENT:
+    case statement::BlockStatement::tag:
         walk(static_cast<statement::BlockStatement const*>(node));  // NOLINT
         return;
-    case statement::StatementKind::BRANCH_STATEMENT:
+    case statement::BranchStatement::tag:
         walk(static_cast<statement::BranchStatement const*>(node));  // NOLINT
         return;
-    case statement::StatementKind::BREAK_STATEMENT:
+    case statement::BreakStatement::tag:
         walk(static_cast<statement::BreakStatement const*>(node));  // NOLINT
         return;
-    case statement::StatementKind::CONTINUE_STATEMENT:
+    case statement::ContinueStatement::tag:
         walk(static_cast<statement::ContinueStatement const*>(node));  // NOLINT
         return;
-    case statement::StatementKind::EMPTY_STATEMENT:
+    case statement::EmptyStatement::tag:
         walk(static_cast<statement::EmptyStatement const*>(node));  // NOLINT
         return;
-    case statement::StatementKind::EXPRESSION_STATEMENT:
+    case statement::ExpressionStatement::tag:
         walk(static_cast<statement::ExpressionStatement const*>(node));  // NOLINT
         return;
-    case statement::StatementKind::FOR_EACH_STATEMENT:
+    case statement::ForEachStatement::tag:
         walk(static_cast<statement::ForEachStatement const*>(node));  // NOLINT
         return;
-    case statement::StatementKind::FOR_STATEMENT:
+    case statement::ForStatement::tag:
         walk(static_cast<statement::ForStatement const*>(node));  // NOLINT
         return;
-    case statement::StatementKind::LOCAL_VARIABLE_DECLARATION:
+    case statement::LocalVariableDeclaration::tag:
         walk(static_cast<statement::LocalVariableDeclaration const*>(node));  // NOLINT
         return;
-    case statement::StatementKind::LOG_STATEMENT:
+    case statement::LogStatement::tag:
         walk(static_cast<statement::LogStatement const*>(node));  // NOLINT
         return;
-    case statement::StatementKind::RAISE_STATEMENT:
+    case statement::RaiseStatement::tag:
         walk(static_cast<statement::RaiseStatement const*>(node));  // NOLINT
         return;
-    case statement::StatementKind::RETURN_STATEMENT:
+    case statement::ReturnStatement::tag:
         walk(static_cast<statement::ReturnStatement const*>(node));  // NOLINT
         return;
-    case statement::StatementKind::VECTOR_ELEMENT_DELETE_STATEMENT:
+    case statement::VectorElementDeleteStatement::tag:
         walk(static_cast<statement::VectorElementDeleteStatement const*>(node));  // NOLINT
         return;
-    case statement::StatementKind::VECTOR_ELEMENT_INSERT_STATEMENT:
+    case statement::VectorElementInsertStatement::tag:
         walk(static_cast<statement::VectorElementInsertStatement const*>(node));  // NOLINT
         return;
-    case statement::StatementKind::WHILE_STATEMENT:
+    case statement::WhileStatement::tag:
         walk(static_cast<statement::WhileStatement const*>(node));  // NOLINT
         return;
-    case statement::StatementKind::CREATE_TABLE_STATEMENT:
+    case statement::ddl::CreateTableStatement::tag:
         walk(static_cast<statement::ddl::CreateTableStatement const*>(node));  // NOLINT
         return;
-    case statement::StatementKind::DROP_TABLE_STATEMENT:
+    case statement::ddl::DropTableStatement::tag:
         walk(static_cast<statement::ddl::DropTableStatement const*>(node));  // NOLINT
         return;
-    case statement::StatementKind::DELETE_STATEMENT:
+    case statement::dml::DeleteStatement::tag:
         walk(static_cast<statement::dml::DeleteStatement const*>(node));  // NOLINT
         return;
-    case statement::StatementKind::EMIT_STATEMENT:
+    case statement::dml::EmitStatement::tag:
         walk(static_cast<statement::dml::EmitStatement const*>(node));  // NOLINT
         return;
-    case statement::StatementKind::INSERT_RELATION_STATEMENT:
+    case statement::dml::InsertRelationStatement::tag:
         walk(static_cast<statement::dml::InsertRelationStatement const*>(node));  // NOLINT
         return;
-    case statement::StatementKind::INSERT_VALUES_STATEMENT:
+    case statement::dml::InsertValuesStatement::tag:
         walk(static_cast<statement::dml::InsertValuesStatement const*>(node));  // NOLINT
         return;
-    case statement::StatementKind::UPDATE_STATEMENT:
+    case statement::dml::UpdateStatement::tag:
         walk(static_cast<statement::dml::UpdateStatement const*>(node));  // NOLINT
         return;
-    case statement::StatementKind::TRANSACTION_BLOCK_STATEMENT:
+    case statement::transaction::TransactionBlockStatement::tag:
         walk(static_cast<statement::transaction::TransactionBlockStatement const*>(node));  // NOLINT
         return;
     }
@@ -763,43 +758,43 @@ void ConstNodeWalker::walk(statement::transaction::TransactionBlockStatement con
 
 void ConstNodeWalker::walk(type::Type const* node) {
     switch (node->kind()) {
-    case type::TypeKind::ARRAY_TYPE:
+    case type::ArrayType::tag:
         walk(static_cast<type::ArrayType const*>(node));  // NOLINT
         return;
-    case type::TypeKind::BOOLEAN_TYPE:
+    case type::BooleanType::tag:
         walk(static_cast<type::BooleanType const*>(node));  // NOLINT
         return;
-    case type::TypeKind::CHAR_TYPE:
+    case type::CharType::tag:
         walk(static_cast<type::CharType const*>(node));  // NOLINT
         return;
-    case type::TypeKind::FLOAT32_TYPE:
+    case type::Float32Type::tag:
         walk(static_cast<type::Float32Type const*>(node));  // NOLINT
         return;
-    case type::TypeKind::FLOAT64_TYPE:
+    case type::Float64Type::tag:
         walk(static_cast<type::Float64Type const*>(node));  // NOLINT
         return;
-    case type::TypeKind::INT32_TYPE:
+    case type::Int32Type::tag:
         walk(static_cast<type::Int32Type const*>(node));  // NOLINT
         return;
-    case type::TypeKind::INT64_TYPE:
+    case type::Int64Type::tag:
         walk(static_cast<type::Int64Type const*>(node));  // NOLINT
         return;
-    case type::TypeKind::NULL_TYPE:
+    case type::NullType::tag:
         walk(static_cast<type::NullType const*>(node));  // NOLINT
         return;
-    case type::TypeKind::RELATION_TYPE:
+    case type::RelationType::tag:
         walk(static_cast<type::RelationType const*>(node));  // NOLINT
         return;
-    case type::TypeKind::STRING_TYPE:
+    case type::StringType::tag:
         walk(static_cast<type::StringType const*>(node));  // NOLINT
         return;
-    case type::TypeKind::TUPLE_TYPE:
+    case type::TupleType::tag:
         walk(static_cast<type::TupleType const*>(node));  // NOLINT
         return;
-    case type::TypeKind::VAR_CHAR_TYPE:
+    case type::VarCharType::tag:
         walk(static_cast<type::VarCharType const*>(node));  // NOLINT
         return;
-    case type::TypeKind::VECTOR_TYPE:
+    case type::VectorType::tag:
         walk(static_cast<type::VectorType const*>(node));  // NOLINT
         return;
     }

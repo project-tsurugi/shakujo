@@ -101,7 +101,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr NameKind tag = NameKind::SIMPLE_NAME;
+    static inline constexpr auto tag = NameKind::SIMPLE_NAME;
 
     /**
      * @brief Returns the node kind.

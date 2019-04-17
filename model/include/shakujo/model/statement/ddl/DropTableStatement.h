@@ -168,7 +168,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr StatementKind tag = StatementKind::DROP_TABLE_STATEMENT;
+    static inline constexpr auto tag = StatementKind::DROP_TABLE_STATEMENT;
 
     /**
      * @brief Returns the node kind.

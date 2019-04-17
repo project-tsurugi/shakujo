@@ -302,7 +302,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr ExpressionKind tag = ExpressionKind::JOIN_EXPRESSION;
+    static inline constexpr auto tag = ExpressionKind::JOIN_EXPRESSION;
 
     /**
      * @brief Returns the node kind.

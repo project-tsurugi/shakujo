@@ -245,7 +245,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr ExpressionKind tag = ExpressionKind::UNARY_OPERATOR;
+    static inline constexpr auto tag = ExpressionKind::UNARY_OPERATOR;
 
     /**
      * @brief Returns the node kind.

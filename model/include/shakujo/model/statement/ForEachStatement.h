@@ -222,7 +222,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr StatementKind tag = StatementKind::FOR_EACH_STATEMENT;
+    static inline constexpr auto tag = StatementKind::FOR_EACH_STATEMENT;
 
     /**
      * @brief Returns the node kind.

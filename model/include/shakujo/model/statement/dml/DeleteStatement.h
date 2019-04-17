@@ -167,7 +167,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr StatementKind tag = StatementKind::DELETE_STATEMENT;
+    static inline constexpr auto tag = StatementKind::DELETE_STATEMENT;
 
     /**
      * @brief Returns the node kind.

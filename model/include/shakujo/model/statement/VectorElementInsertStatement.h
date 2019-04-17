@@ -157,7 +157,7 @@ public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr StatementKind tag = StatementKind::VECTOR_ELEMENT_INSERT_STATEMENT;
+    static inline constexpr auto tag = StatementKind::VECTOR_ELEMENT_INSERT_STATEMENT;
 
     /**
      * @brief Returns the node kind.
