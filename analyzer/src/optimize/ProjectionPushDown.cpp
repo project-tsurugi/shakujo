@@ -283,6 +283,9 @@ public:
         }
 
         Requirements next { *relation_of(node->operand()) };
+        for (auto* key : node->keys()) {
+            collect(next, key);
+        }
         for (auto* column : columns) {
             if (is_defined(column->operand())) {
                 collect(next, column->operand());

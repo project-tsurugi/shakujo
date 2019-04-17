@@ -16,9 +16,11 @@
 #include "AggregationAnalyzer.h"
 
 #include <algorithm>
+#include <set>
 
 #include <cassert>
-#include <shakujo/common/core/type/Relation.h>
+
+#include "shakujo/common/core/type/Relation.h"
 
 #include "shakujo/model/IRFactory.h"
 #include "shakujo/model/util/NodeWalker.h"
@@ -29,17 +31,43 @@ namespace shakujo::analyzer::analyze {
 
 using common::util::is_defined;
 using common::util::dynamic_pointer_cast;
+using common::util::dynamic_pointer_cast_if;
 using common::util::make_clone;
 using common::util::to_string;
-
-// FIXME: support having
 
 class AggregationAnalyzer::Impl : public model::util::NodeWalker {
 public:
     bool enter(model::expression::VariableReference* node) override {
         auto variable = bindings().get(node->variable_key());
-        if (source_profile_.index_of(*variable).has_value()) {
-            // FIXME: impl - move bare variables
+        if (group_keys_.find(variable) != group_keys_.end()) {
+            // bare group key expression
+
+            auto&& f = ir_factory;
+            auto column = f.AggregationExpressionColumn(
+                {},
+                model::expression::FunctionCall::Quantifier::ABSENT,
+                {});
+
+            auto variable_id = bindings().next_variable_id();
+            auto variable_name = to_string('#', variable_id.get());
+            auto column_binding = std::make_shared<binding::VariableBinding>(
+                std::move(variable_id),
+                common::core::Name { variable_name },
+                make_clone(variable->type()));
+
+            column->variable_key(bindings().create_key(column_binding));
+            column->function_key(bindings().create_key<binding::FunctionBinding>());  // no aggregation
+
+            auto replacement = f.VariableReference(f.Name(std::move(variable_name)));
+            replacement->variable_key(bindings().create_key(std::move(column_binding)));
+            replacement->expression_key(bindings().create_key<binding::ExpressionBinding>(make_clone(variable->type())));
+
+            node->replace([&](auto origin) {
+                column->operand(std::move(origin));
+                return std::move(replacement);
+            });
+
+            columns_.emplace_back(std::move(column));
         }
         return false;
     }
@@ -85,7 +113,18 @@ public:
             .binding_context()
             .get(dynamic_pointer_cast<model::key::RelationKey::Provider>(source)->relation_key())
             ->output())
-    {}
+    {
+        if (auto* group = dynamic_pointer_cast_if<model::expression::relation::GroupExpression>(source); is_defined(group)) {
+            group_ = group;
+            for (auto* key : group->keys()) {
+                if (auto* ref = dynamic_pointer_cast_if<model::expression::VariableReference>(key); is_defined(ref)) {
+                    auto variable = bindings().get(ref->variable_key());
+                    group_keys_.emplace(std::move(variable));
+                }
+            }
+        }
+        // FIXME: pick up having
+    }
 
     virtual ~Impl() = default;
     Impl(const Impl&) = delete;
@@ -102,6 +141,15 @@ public:
                 auto&& f = ir_factory;
                 return f.AggregationExpression(std::move(orig), {}, std::move(columns_));
             }));
+        if (is_defined(group_)) {
+            aggregation->keys().reserve(group_->keys().size());
+            while (!group_->keys().empty()) {
+                auto first = group_->keys().release(0);
+                aggregation->keys().push_back(first.release());
+            }
+            group_->replace_with(group_->release_operand());
+            group_ = nullptr;
+        }
 
         std::vector<std::shared_ptr<binding::VariableBinding>> agg_columns {};
         std::vector<common::core::type::Relation::Column> type_columns {};
@@ -134,6 +182,8 @@ public:
     AnalyzerContext& env_;
     model::expression::Expression* source_;
     binding::RelationBinding::Profile const& source_profile_;
+    model::expression::relation::GroupExpression* group_ {};
+    std::set<std::shared_ptr<binding::VariableBinding>> group_keys_ {};
     std::vector<std::unique_ptr<model::expression::relation::AggregationExpression::Column>> columns_ {};
     model::IRFactory ir_factory {};
 };
