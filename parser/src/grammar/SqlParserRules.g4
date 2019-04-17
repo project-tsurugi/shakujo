@@ -318,21 +318,19 @@ exclusiveOrExpression
     ;
 
 andExpression
-    : andExpression op='&' equalityExpression
-    | equalityExpression
+    : andExpression op='&' comparisonExpression
+    | comparisonExpression
     ;
 
-equalityExpression
-    : equalityExpression op='=' relationalExpression
-    | equalityExpression op='<>' relationalExpression
-    | relationalExpression
-    ;
-
-relationalExpression
-    : relationalExpression op='<' shiftExpression
-    | relationalExpression op='>' shiftExpression
-    | relationalExpression op='<=' shiftExpression
-    | relationalExpression op='>=' shiftExpression
+comparisonExpression
+    : shiftExpression op='=' shiftExpression
+    | shiftExpression op='<>' shiftExpression
+    | shiftExpression op='<' shiftExpression
+    | shiftExpression op='>' shiftExpression
+    | shiftExpression op='<=' shiftExpression
+    | shiftExpression op='>=' shiftExpression
+    | shiftExpression op=K_LIKE shiftExpression
+    | shiftExpression K_NOT op=K_LIKE shiftExpression
     | shiftExpression
     ;
 
@@ -346,6 +344,7 @@ shiftExpression
 additiveExpression
     : additiveExpression op='+' multiplicativeExpression
     | additiveExpression op='-' multiplicativeExpression
+    | additiveExpression op='||' multiplicativeExpression
     | multiplicativeExpression
     ;
 

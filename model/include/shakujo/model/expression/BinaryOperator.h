@@ -159,6 +159,21 @@ public:
         CONDITIONAL_OR,
 
         /**
+         * @brief string concatenation.
+         */
+        CONCATENATION,
+
+        /**
+         * @brief like.
+         */
+        LIKE,
+
+        /**
+         * @brief not like.
+         */
+        NOT_LIKE,
+
+        /**
          * @brief relational membership.
          */
         RELATION_IN,
@@ -384,6 +399,9 @@ inline constexpr std::string_view to_string_view(BinaryOperator::Kind value) {
         case BinaryOperator::Kind::LOGICAL_XOR: return "LOGICAL_XOR";
         case BinaryOperator::Kind::CONDITIONAL_AND: return "CONDITIONAL_AND";
         case BinaryOperator::Kind::CONDITIONAL_OR: return "CONDITIONAL_OR";
+        case BinaryOperator::Kind::CONCATENATION: return "CONCATENATION";
+        case BinaryOperator::Kind::LIKE: return "LIKE";
+        case BinaryOperator::Kind::NOT_LIKE: return "NOT_LIKE";
         case BinaryOperator::Kind::RELATION_IN: return "RELATION_IN";
         case BinaryOperator::Kind::RELATION_UNION: return "RELATION_UNION";
         case BinaryOperator::Kind::RELATION_INTERSECTION: return "RELATION_INTERSECTION";

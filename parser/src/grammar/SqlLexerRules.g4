@@ -30,6 +30,7 @@ K_KEY: K E Y;
 K_AND: A N D;
 K_OR: O R;
 K_NOT: N O T;
+K_LIKE: L I K E;
 K_IS: I S;
 K_AS: A S;
 K_INTO: I N T O;

@@ -40,7 +40,6 @@
 #include "shakujo/model/expression/ImplicitCast.h"
 #include "shakujo/model/expression/Literal.h"
 #include "shakujo/model/expression/Placeholder.h"
-#include "shakujo/model/expression/StringOperator.h"
 #include "shakujo/model/expression/TupleCreationExpression.h"
 #include "shakujo/model/expression/TupleElementLoadExpression.h"
 #include "shakujo/model/expression/TupleElementStoreExpression.h"
@@ -381,26 +380,6 @@ public:
      */
     std::unique_ptr<expression::Placeholder> Placeholder(
             std::string name);
-
-    /**
-     * @brief returns a new empty expression::StringOperator.
-     * @return a created empty node
-     * @see expression::StringOperator
-     */
-    virtual std::unique_ptr<expression::StringOperator> StringOperator();
-
-    /**
-     * @brief returns a new expression::StringOperator.
-     * @param operator_kind string operator kind
-     * @param string string argument
-     * @param operand operand
-     * @return a created node
-     * @see expression::StringOperator
-     */
-    std::unique_ptr<expression::StringOperator> StringOperator(
-            expression::StringOperator::Kind operator_kind,
-            std::string string,
-            std::unique_ptr<expression::Expression> operand);
 
     /**
      * @brief returns a new empty expression::TupleCreationExpression.

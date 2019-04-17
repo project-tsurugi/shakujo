@@ -40,7 +40,6 @@
 #include "shakujo/model/expression/ImplicitCast.h"
 #include "shakujo/model/expression/Literal.h"
 #include "shakujo/model/expression/Placeholder.h"
-#include "shakujo/model/expression/StringOperator.h"
 #include "shakujo/model/expression/TupleCreationExpression.h"
 #include "shakujo/model/expression/TupleElementLoadExpression.h"
 #include "shakujo/model/expression/TupleElementStoreExpression.h"
@@ -549,9 +548,6 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
     case expression::Placeholder::tag:
         serialize(printer, static_cast<expression::Placeholder const*>(value));  // NOLINT
         return;
-    case expression::StringOperator::tag:
-        serialize(printer, static_cast<expression::StringOperator const*>(value));  // NOLINT
-        return;
     case expression::TupleCreationExpression::tag:
         serialize(printer, static_cast<expression::TupleCreationExpression const*>(value));  // NOLINT
         return;
@@ -740,55 +736,6 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         printer.exit_property("expression_key");
     }
     printer.exit_object("Placeholder");
-}
-
-void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expression::StringOperator const* value) {
-    if (value == nullptr) {
-        printer.value(nullptr);
-        return;
-    }
-    printer.enter_object("StringOperator");
-    {
-        printer.enter_property("operator_kind");
-        serialize(printer, value->operator_kind());
-        printer.exit_property("operator_kind");
-    }
-    {
-        printer.enter_property("string");
-        printer.value(value->string());
-        printer.exit_property("string");
-    }
-    {
-        printer.enter_property("operand");
-        serialize(printer, value->operand());
-        printer.exit_property("operand");
-    }
-    {
-        printer.enter_property("expression_key");
-        serialize(printer, value->expression_key());
-        printer.exit_property("expression_key");
-    }
-    printer.exit_object("StringOperator");
-}
-
-void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expression::StringOperator::Kind value) {
-    if (show_enum_kind()) {
-        if (show_qualified_kind()) {
-            printer.enter_object("Kind");
-        } else {
-            printer.enter_object("StringOperator::Kind");
-        }
-        printer.enter_property("value");
-        printer.value(impl_->to_string(value));
-        printer.exit_property("value");
-        if (show_qualified_kind()) {
-            printer.exit_object("Kind");
-        } else {
-            printer.exit_object("StringOperator::Kind");
-        }
-    } else {
-        printer.value(impl_->to_string(value));
-    }
 }
 
 void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expression::TupleCreationExpression const* value) {

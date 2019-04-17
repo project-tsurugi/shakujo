@@ -158,9 +158,6 @@ void ConstNodeWalker::walk(expression::Expression const* node) {
     case expression::Placeholder::tag:
         walk(static_cast<expression::Placeholder const*>(node));  // NOLINT
         return;
-    case expression::StringOperator::tag:
-        walk(static_cast<expression::StringOperator const*>(node));  // NOLINT
-        return;
     case expression::TupleCreationExpression::tag:
         walk(static_cast<expression::TupleCreationExpression const*>(node));  // NOLINT
         return;
@@ -321,12 +318,6 @@ void ConstNodeWalker::walk(expression::Literal const* node) {
 
 void ConstNodeWalker::walk(expression::Placeholder const* node) {
     if (!enter(node)) return;
-    exit(node);
-}
-
-void ConstNodeWalker::walk(expression::StringOperator const* node) {
-    if (!enter(node)) return;
-    if (node->operand()) walk(node->operand());
     exit(node);
 }
 

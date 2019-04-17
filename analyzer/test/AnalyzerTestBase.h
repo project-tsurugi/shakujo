@@ -45,6 +45,7 @@ static const common::core::Type::Nullity NON_NULL = common::core::Type::Nullity:
 static const common::core::type::Error ERROR_TYPE;
 
 using common::util::dynamic_pointer_cast;
+using common::util::dynamic_pointer_cast_if;
 using common::util::is_defined;
 using common::util::is_valid;
 using common::util::make_clone;
@@ -88,7 +89,7 @@ public:
         return ret;
     }
 
-    std::shared_ptr<binding::ExpressionBinding> extract(model::key::ExpressionKey::Provider* provider, bool force = false) {
+    std::shared_ptr<binding::ExpressionBinding> extract(model::key::ExpressionKey::Provider const* provider, bool force = false) {
         auto ptr = env.binding_context().get(provider->expression_key());
         if (!is_defined(ptr)) {
             throw std::runtime_error("yet not resolved");
@@ -331,8 +332,9 @@ public:
         return f.Literal(common::core::type::Bool(nullity), value);
     }
 
-    std::unique_ptr<model::expression::Expression> literal(const char* value, common::core::Type::Nullity nullity = NON_NULL) {
-        return f.Literal(common::core::type::String(nullity), value);
+    template<std::size_t N>
+    std::unique_ptr<model::expression::Expression> literal(char const (&value)[N], common::core::Type::Nullity nullity = NON_NULL) {
+        return f.Literal(common::core::type::String(nullity), std::string { value });
     }
 
     std::unique_ptr<model::expression::Expression> literal(std::nullptr_t) {
@@ -349,6 +351,16 @@ public:
             throw std::bad_cast();
         }
         EXPECT_TRUE(false) << "not a literal: " << literal->kind();
+        throw std::bad_cast();
+    }
+
+    template<typename T>
+    typename T::type constant(model::expression::Expression const* expression) {
+        auto binding = extract(expression);
+        if (auto* value = dynamic_pointer_cast_if<T>(binding->value()); is_defined(value)) {
+            return value->get();
+        }
+        EXPECT_TRUE(false) << "not constant";
         throw std::bad_cast();
     }
 

@@ -29,7 +29,6 @@
 #include "shakujo/model/expression/CaseExpression.h"
 #include "shakujo/model/expression/Expression.h"
 #include "shakujo/model/expression/FunctionCall.h"
-#include "shakujo/model/expression/StringOperator.h"
 #include "shakujo/model/expression/TypeOperator.h"
 #include "shakujo/model/expression/UnaryOperator.h"
 #include "shakujo/model/expression/relation/AggregationExpression.h"
@@ -243,21 +242,6 @@ std::unique_ptr<expression::Placeholder> IRFactoryBase::Placeholder(
         std::string name) {
     auto ret = Placeholder();
     ret->name(std::move(name));
-    return ret;
-}
-
-std::unique_ptr<expression::StringOperator> IRFactoryBase::StringOperator() {
-    return std::make_unique<expression::StringOperator>();
-}
-
-std::unique_ptr<expression::StringOperator> IRFactoryBase::StringOperator(
-        expression::StringOperator::Kind operator_kind,
-        std::string string,
-        std::unique_ptr<expression::Expression> operand) {
-    auto ret = StringOperator();
-    ret->operator_kind(operator_kind);
-    ret->string(std::move(string));
-    ret->operand(std::move(operand));
     return ret;
 }
 
