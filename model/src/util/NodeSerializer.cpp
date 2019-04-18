@@ -195,6 +195,11 @@ void NodeSerializer::serialize(common::util::DataSerializer& printer, common::co
         serialize(printer, value->nullity());
         printer.exit_property("nullity");
     }
+    {
+        printer.enter_property("varying");
+        printer.value(value->varying());
+        printer.exit_property("varying");
+    }
     printer.exit_object("Char");
 }
 

@@ -187,7 +187,7 @@ inline std::unique_ptr<Type> nullity(Type const* type, Type::Nullity nullity) {
             return std::make_unique<Float>(node->size(), nullity);
         }
         std::unique_ptr<Type> visit(Char const* node, Type::Nullity nullity) override {
-            return std::make_unique<Char>(node->size(), nullity);
+            return std::make_unique<Char>(node->varying(), node->size(), nullity);
         }
         std::unique_ptr<Type> visit(String const* , Type::Nullity nullity) override {
             return std::make_unique<String>(nullity);
