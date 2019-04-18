@@ -35,6 +35,10 @@ void NodeWalker::walk(Node* node) {
         walk(ptr);
         return;
     }
+    if (auto ptr = dynamic_cast<program::Comment*>(node)) {
+        walk(ptr);
+        return;
+    }
     if (auto ptr = dynamic_cast<program::GlobalDeclaration*>(node)) {
         walk(ptr);
         return;
@@ -882,12 +886,20 @@ void NodeWalker::walk(name::Index* node) {
     exit(node);
 }
 
+void NodeWalker::walk(program::Comment* node) {
+    if (!enter(node)) return;
+    exit(node);
+}
+
 void NodeWalker::walk(program::Program* node) {
     if (!enter(node)) return;
     for (auto child : node->declarations()) {
         if (child) walk(child);
     }
     if (node->main()) walk(node->main());
+    for (auto child : node->comments()) {
+        if (child) walk(child);
+    }
     exit(node);
 }
 

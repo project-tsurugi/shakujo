@@ -39,9 +39,14 @@ public:
     parser::Parser parser;
     model::IRFactory f;
 
+    std::unique_ptr<model::program::Program> parse_program(std::string const& text) {
+        std::cout << "== INPUT ==" << std::endl << text << std::endl << "===========" << std::endl;
+        return parser.parse_program("<testing>", text);
+    }
+
     template<typename T = model::statement::Statement>
     std::unique_ptr<T> parse_program_main(std::string const& text) {
-        auto program = parser.parse_program("<testing>", text);
+        auto program = parse_program(text);
         auto result = dynamic_pointer_cast<T>(program->release_main());
         return result;
     }

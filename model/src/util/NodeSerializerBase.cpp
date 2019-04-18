@@ -69,6 +69,7 @@
 #include "shakujo/model/name/NameKind.h"
 #include "shakujo/model/name/QualifiedName.h"
 #include "shakujo/model/name/SimpleName.h"
+#include "shakujo/model/program/Comment.h"
 #include "shakujo/model/program/GlobalDeclaration.h"
 #include "shakujo/model/program/GlobalDeclarationKind.h"
 #include "shakujo/model/program/GlobalFunctionDeclaration.h"
@@ -1641,6 +1642,20 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, name::
     printer.exit_object("SimpleName");
 }
 
+void NodeSerializerBase::serialize(common::util::DataSerializer& printer, program::Comment const* value) {
+    if (value == nullptr) {
+        printer.value(nullptr);
+        return;
+    }
+    printer.enter_object("Comment");
+    {
+        printer.enter_property("contents");
+        printer.value(value->contents());
+        printer.exit_property("contents");
+    }
+    printer.exit_object("Comment");
+}
+
 void NodeSerializerBase::serialize(common::util::DataSerializer& printer, program::GlobalDeclaration const* value) {
     if (value == nullptr) {
         printer.value(nullptr);
@@ -1874,6 +1889,17 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, progra
         printer.enter_property("main");
         serialize(printer, value->main());
         printer.exit_property("main");
+    }
+    {
+        printer.enter_property("comments");
+        auto& list = value->comments();
+        auto size = list.size();
+        printer.enter_array(size);
+        for (auto element : list) {
+            serialize(printer, element);
+        }
+        printer.exit_array(size);
+        printer.exit_property("comments");
     }
     printer.exit_object("Program");
 }

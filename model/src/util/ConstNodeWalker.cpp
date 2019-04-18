@@ -35,6 +35,10 @@ void ConstNodeWalker::walk(Node const* node) {
         walk(ptr);
         return;
     }
+    if (auto ptr = dynamic_cast<program::Comment const*>(node)) {
+        walk(ptr);
+        return;
+    }
     if (auto ptr = dynamic_cast<program::GlobalDeclaration const*>(node)) {
         walk(ptr);
         return;
@@ -882,12 +886,20 @@ void ConstNodeWalker::walk(name::Index const* node) {
     exit(node);
 }
 
+void ConstNodeWalker::walk(program::Comment const* node) {
+    if (!enter(node)) return;
+    exit(node);
+}
+
 void ConstNodeWalker::walk(program::Program const* node) {
     if (!enter(node)) return;
     for (auto child : node->declarations()) {
         if (child) walk(child);
     }
     if (node->main()) walk(node->main());
+    for (auto child : node->comments()) {
+        if (child) walk(child);
+    }
     exit(node);
 }
 

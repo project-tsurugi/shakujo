@@ -57,6 +57,7 @@
 #include "shakujo/model/name/Name.h"
 #include "shakujo/model/name/QualifiedName.h"
 #include "shakujo/model/name/SimpleName.h"
+#include "shakujo/model/program/Comment.h"
 #include "shakujo/model/program/GlobalDeclaration.h"
 #include "shakujo/model/program/GlobalFunctionDeclaration.h"
 #include "shakujo/model/program/GlobalVariableDeclaration.h"
@@ -1930,6 +1931,28 @@ protected:
     virtual void exit([[maybe_unused]] name::Index* node) {}
 
     /**
+     * @brief callback on enter into Comment.
+     * @param node the processing target
+     * @return true if continue to enter into child elements of the given node
+     * @return false don't walk into child elements, also the corresponded exit() will not be called
+     * @see program::Comment
+     * @see walk()
+     * @see exit()
+     */
+    virtual bool enter([[maybe_unused]] program::Comment* node) {
+        return true;
+    }
+
+    /**
+     * @brief callback on exit from Comment.
+     * @param node the processing target
+     * @see program::Comment
+     * @see walk()
+     * @see enter()
+     */
+    virtual void exit([[maybe_unused]] program::Comment* node) {}
+
+    /**
      * @brief callback on enter into Program.
      * @param node the processing target
      * @return true if continue to enter into child elements of the given node
@@ -2635,6 +2658,13 @@ public:
      * @see name::Index
      */
     void walk(name::Index* node);
+
+    /**
+     * @brief Begins to walk Comment.
+     * @param node the processing target
+     * @see program::Comment
+     */
+    void walk(program::Comment* node);
 
     /**
      * @brief Begins to walk Program.

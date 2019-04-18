@@ -38,6 +38,7 @@
 #include "shakujo/model/name/Index.h"
 #include "shakujo/model/name/Name.h"
 #include "shakujo/model/name/SimpleName.h"
+#include "shakujo/model/program/Comment.h"
 #include "shakujo/model/program/GlobalDeclaration.h"
 #include "shakujo/model/program/GlobalFunctionDeclaration.h"
 #include "shakujo/model/program/GlobalVariableDeclaration.h"
@@ -591,6 +592,17 @@ std::unique_ptr<name::SimpleName> IRFactoryBase::SimpleName(
     return ret;
 }
 
+std::unique_ptr<program::Comment> IRFactoryBase::Comment() {
+    return std::make_unique<program::Comment>();
+}
+
+std::unique_ptr<program::Comment> IRFactoryBase::Comment(
+        std::string contents) {
+    auto ret = Comment();
+    ret->contents(std::move(contents));
+    return ret;
+}
+
 std::unique_ptr<program::GlobalFunctionDeclaration> IRFactoryBase::GlobalFunctionDeclaration() {
     return std::make_unique<program::GlobalFunctionDeclaration>();
 }
@@ -648,10 +660,12 @@ std::unique_ptr<program::Program> IRFactoryBase::Program() {
 
 std::unique_ptr<program::Program> IRFactoryBase::Program(
         common::util::MoveInitializerList<std::unique_ptr<program::GlobalDeclaration>> declarations,
-        std::unique_ptr<statement::Statement> main) {
+        std::unique_ptr<statement::Statement> main,
+        common::util::MoveInitializerList<std::unique_ptr<program::Comment>> comments) {
     auto ret = Program();
     ret->declarations() = std::move(declarations).build();
     ret->main(std::move(main));
+    ret->comments() = std::move(comments).build();
     return ret;
 }
 

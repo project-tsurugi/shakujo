@@ -21,6 +21,7 @@
 #include <memory>
 
 #include "shakujo/model/Node.h"
+#include "shakujo/model/program/Comment.h"
 #include "shakujo/model/program/GlobalDeclaration.h"
 #include "shakujo/model/statement/Statement.h"
 #include "shakujo/model/util/NodeList.h"
@@ -114,6 +115,19 @@ public:
      */
     std::unique_ptr<statement::Statement> release_main();
 
+    /**
+     * @brief Returns comments.
+     * @return comments.
+     */
+    util::NodeList<Comment>& comments();
+
+    /**
+     * @brief Returns comments.
+     * @return comments.
+     */
+    inline util::NodeList<Comment> const& comments() const {
+        return const_cast<Program*>(this)->comments();
+    }
     /**
      * @brief Returns a copy of this object.
      * @return a clone of this
