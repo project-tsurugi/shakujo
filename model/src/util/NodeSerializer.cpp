@@ -186,6 +186,11 @@ void NodeSerializer::serialize(common::util::DataSerializer& printer, common::co
 void NodeSerializer::serialize(common::util::DataSerializer& printer, common::core::type::Char const* value) {
     printer.enter_object("Char");
     {
+        printer.enter_property("varying");
+        printer.value(value->varying());
+        printer.exit_property("varying");
+    }
+    {
         printer.enter_property("size");
         printer.value(value->size());
         printer.exit_property("size");
@@ -194,11 +199,6 @@ void NodeSerializer::serialize(common::util::DataSerializer& printer, common::co
         printer.enter_property("nullity");
         serialize(printer, value->nullity());
         printer.exit_property("nullity");
-    }
-    {
-        printer.enter_property("varying");
-        printer.value(value->varying());
-        printer.exit_property("varying");
     }
     printer.exit_object("Char");
 }
