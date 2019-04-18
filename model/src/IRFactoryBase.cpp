@@ -384,13 +384,11 @@ std::unique_ptr<expression::relation::AggregationExpression> IRFactoryBase::Aggr
 std::unique_ptr<expression::relation::AggregationExpression> IRFactoryBase::AggregationExpression(
         std::unique_ptr<expression::Expression> operand,
         common::util::MoveInitializerList<std::unique_ptr<expression::Expression>> keys,
-        common::util::MoveInitializerList<std::unique_ptr<expression::relation::AggregationExpression::Column>> columns,
-        std::unique_ptr<name::SimpleName> alias) {
+        common::util::MoveInitializerList<std::unique_ptr<expression::relation::AggregationExpression::Column>> columns) {
     auto ret = AggregationExpression();
     ret->operand(std::move(operand));
     ret->keys() = std::move(keys).build();
     ret->columns() = std::move(columns).build();
-    ret->alias(std::move(alias));
     return ret;
 }
 
@@ -497,12 +495,10 @@ std::unique_ptr<expression::relation::ProjectionExpression> IRFactoryBase::Proje
 
 std::unique_ptr<expression::relation::ProjectionExpression> IRFactoryBase::ProjectionExpression(
         std::unique_ptr<expression::Expression> operand,
-        common::util::MoveInitializerList<std::unique_ptr<expression::relation::ProjectionExpression::Column>> columns,
-        std::unique_ptr<name::SimpleName> alias) {
+        common::util::MoveInitializerList<std::unique_ptr<expression::relation::ProjectionExpression::Column>> columns) {
     auto ret = ProjectionExpression();
     ret->operand(std::move(operand));
     ret->columns() = std::move(columns).build();
-    ret->alias(std::move(alias));
     return ret;
 }
 
@@ -519,16 +515,29 @@ std::unique_ptr<expression::relation::ProjectionExpression::Column> IRFactoryBas
     return ret;
 }
 
+std::unique_ptr<expression::relation::RenameExpression> IRFactoryBase::RenameExpression() {
+    return std::make_unique<expression::relation::RenameExpression>();
+}
+
+std::unique_ptr<expression::relation::RenameExpression> IRFactoryBase::RenameExpression(
+        std::unique_ptr<expression::Expression> operand,
+        std::unique_ptr<name::SimpleName> name,
+        common::util::MoveInitializerList<std::unique_ptr<name::SimpleName>> columns) {
+    auto ret = RenameExpression();
+    ret->operand(std::move(operand));
+    ret->name(std::move(name));
+    ret->columns() = std::move(columns).build();
+    return ret;
+}
+
 std::unique_ptr<expression::relation::ScanExpression> IRFactoryBase::ScanExpression() {
     return std::make_unique<expression::relation::ScanExpression>();
 }
 
 std::unique_ptr<expression::relation::ScanExpression> IRFactoryBase::ScanExpression(
-        std::unique_ptr<name::Name> table,
-        std::unique_ptr<name::SimpleName> alias) {
+        std::unique_ptr<name::Name> table) {
     auto ret = ScanExpression();
     ret->table(std::move(table));
-    ret->alias(std::move(alias));
     return ret;
 }
 

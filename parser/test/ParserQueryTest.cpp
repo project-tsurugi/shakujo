@@ -49,21 +49,22 @@ TEST_F(ParserQueryTest, select_simple) {
     auto select = parse_select("SELECT * FROM TBL");
     auto scan = dynamic_pointer_cast<ScanExpression>(select->source());
     EXPECT_TRUE(equals(f.Name("TBL"), scan->table()));
-    EXPECT_FALSE(scan->alias());
 }
 
 TEST_F(ParserQueryTest, select_alias) {
     auto select = parse_select("SELECT * FROM TBL A");
-    auto scan = dynamic_pointer_cast<ScanExpression>(select->source());
+    auto alias = dynamic_pointer_cast<RenameExpression>(select->source());
+    auto scan = dynamic_pointer_cast<ScanExpression>(alias->operand());
     EXPECT_TRUE(equals(f.Name("TBL"), scan->table()));
-    EXPECT_TRUE(equals(f.Name("A"), scan->alias()));
+    EXPECT_TRUE(equals(f.Name("A"), alias->name()));
 }
 
 TEST_F(ParserQueryTest, select_as_alias) {
     auto select = parse_select("SELECT * FROM TBL AS A");
-    auto scan = dynamic_pointer_cast<ScanExpression>(select->source());
+    auto alias = dynamic_pointer_cast<RenameExpression>(select->source());
+    auto scan = dynamic_pointer_cast<ScanExpression>(alias->operand());
     EXPECT_TRUE(equals(f.Name("TBL"), scan->table()));
-    EXPECT_TRUE(equals(f.Name("A"), scan->alias()));
+    EXPECT_TRUE(equals(f.Name("A"), alias->name()));
 }
 
 TEST_F(ParserQueryTest, select_condition) {
@@ -112,6 +113,15 @@ TEST_F(ParserQueryTest, select_projection_many) {
     EXPECT_EQ(3, value_of<v::Int>(c3->value()));
     EXPECT_EQ(4, value_of<v::Int>(c4->value()));
     EXPECT_EQ(5, value_of<v::Int>(c5->value()));
+}
+
+TEST_F(ParserQueryTest, select_subquery) {
+    auto select = parse_select("SELECT * FROM (SELECT * FROM TBL) AS T");
+    auto alias = dynamic_pointer_cast<RenameExpression>(select->source());
+    auto scan = dynamic_pointer_cast<ScanExpression>(alias->operand());
+
+    EXPECT_TRUE(equals(f.Name("TBL"), scan->table()));
+    EXPECT_TRUE(equals(f.Name("T"), alias->name()));
 }
 
 TEST_F(ParserQueryTest, join) {
@@ -282,6 +292,18 @@ TEST_F(ParserQueryTest, join_parenthesized) {
     EXPECT_EQ("C", scan_target(nest->right()));
 }
 
+TEST_F(ParserQueryTest, join_subquery) {
+    auto select = parse_select("SELECT * FROM A JOIN (SELECT * FROM B) AS X");
+    auto join = dynamic_pointer_cast<JoinExpression>(select->source());
+    auto right = dynamic_pointer_cast<RenameExpression>(join->right());
+
+    EXPECT_EQ(JoinExpression::Kind::INNER, join->operator_kind());
+    EXPECT_EQ("A", scan_target(join->left()));
+    EXPECT_EQ("B", scan_target(right->operand()));
+    EXPECT_TRUE(equals(f.Name("X"), right->name()));
+    EXPECT_FALSE(join->condition());
+}
+
 TEST_F(ParserQueryTest, order_by) {
     using Direction = OrderExpression::Direction;
     auto stmt = parse_select("SELECT * FROM A ORDER BY c");
@@ -369,7 +391,6 @@ TEST_F(ParserQueryTest, all) {
     auto select = parse_select("SELECT ALL * FROM TBL");
     auto scan = dynamic_pointer_cast<ScanExpression>(select->source());
     EXPECT_TRUE(equals(f.Name("TBL"), scan->table()));
-    EXPECT_FALSE(scan->alias());
 }
 
 TEST_F(ParserQueryTest, distinct) {
@@ -377,7 +398,6 @@ TEST_F(ParserQueryTest, distinct) {
     auto distinct = dynamic_pointer_cast<DistinctExpression>(select->source());
     auto scan = dynamic_pointer_cast<ScanExpression>(distinct->operand());
     EXPECT_TRUE(equals(f.Name("TBL"), scan->table()));
-    EXPECT_FALSE(scan->alias());
 }
 
 }  // namespace shakujo::parser

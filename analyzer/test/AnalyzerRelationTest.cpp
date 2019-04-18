@@ -88,11 +88,18 @@ TEST_F(AnalyzerRelationTest, scan) {
     EXPECT_EQ(strategy.kind(), binding::ScanStrategy::Kind::FULL);
 }
 
-TEST_F(AnalyzerRelationTest, scan_alias) {
+TEST_F(AnalyzerRelationTest, scan_not_found) {
+    auto expr = analyze(f.ScanExpression(f.Name("testing")));
+    success(false);
+}
+
+TEST_F(AnalyzerRelationTest, rename) {
     add(schema::TableInfo { "testing", {
-            { "C1", t::Int(32U, NON_NULL), },
+        { "C1", t::Int(32U, NON_NULL), },
     }});
-    auto expr = analyze(f.ScanExpression(f.Name("testing"), f.Name("TT")));
+    auto expr = analyze(f.RenameExpression(
+        f.ScanExpression(f.Name("testing")),
+        f.Name("A")));
     success();
 
     auto* relation = extract_relation_type(expr.get());
@@ -101,18 +108,41 @@ TEST_F(AnalyzerRelationTest, scan_alias) {
 
     EXPECT_EQ("C1", cols[0].name());
     EXPECT_EQ(t::Int(32, NON_NULL), *cols[0].type());
-    EXPECT_EQ(names({"TT"}), cols[0].qualifiers());
-
-    auto binding = extract_relation(expr.get());
-    auto&& strategy = binding->scan_strategy();
-    ASSERT_TRUE(strategy.is_valid());
-    EXPECT_EQ(strategy.table().name(), "testing");
-    EXPECT_FALSE(strategy.index());
-    EXPECT_EQ(strategy.kind(), binding::ScanStrategy::Kind::FULL);
+    EXPECT_EQ(names({"A"}), cols[0].qualifiers());
 }
 
-TEST_F(AnalyzerRelationTest, scan_not_found) {
-    auto expr = analyze(f.ScanExpression(f.Name("testing")));
+TEST_F(AnalyzerRelationTest, rename_columns) {
+    add(schema::TableInfo { "testing", {
+        { "C1", t::Int(32U, NON_NULL), },
+    }});
+    auto expr = analyze(f.RenameExpression(
+        f.ScanExpression(f.Name("testing")),
+        f.Name("A"),
+        {
+            f.Name("A1")
+        }));
+    success();
+
+    auto* relation = extract_relation_type(expr.get());
+    auto& cols = relation->columns();
+    ASSERT_EQ(1U, cols.size());
+
+    EXPECT_EQ("A1", cols[0].name());
+    EXPECT_EQ(t::Int(32, NON_NULL), *cols[0].type());
+    EXPECT_EQ(names({"A"}), cols[0].qualifiers());
+}
+
+TEST_F(AnalyzerRelationTest, rename_inconsistent) {
+    add(schema::TableInfo { "testing", {
+        { "C1", t::Int(32U, NON_NULL), },
+    }});
+    auto expr = analyze(f.RenameExpression(
+        f.ScanExpression(f.Name("testing")),
+        f.Name("A"),
+        {
+            f.Name("A1"),
+            f.Name("EXTRA"),
+        }));
     success(false);
 }
 
@@ -291,49 +321,6 @@ TEST_F(AnalyzerRelationTest, projection_propagate_error) {
     success(false);
     EXPECT_TRUE(is_propagated_error(expr.get()));
     EXPECT_FALSE(is_valid(extract_relation(expr.get(), true)));
-}
-
-TEST_F(AnalyzerRelationTest, projection_named_relation) {
-    add(schema::TableInfo { "testing", {
-        { "C1", t::Int(32U, NON_NULL), },
-        { "C2", t::Int(64U, NON_NULL), },
-        { "C3", t::Bool(NON_NULL), },
-    }});
-    auto expr = analyze(f.ProjectionExpression(
-        f.ScanExpression(f.Name("testing")),
-        {
-            f.ProjectionExpressionColumn(var("C1")),
-            f.ProjectionExpressionColumn(var("C3")),
-        },
-        f.SimpleName("X")
-    ));
-    success();
-
-    auto* relation = extract_relation_type(expr.get());
-    auto& cols = relation->columns();
-    ASSERT_EQ(2U, cols.size());
-
-    EXPECT_EQ("", cols[0].name());
-    EXPECT_EQ(t::Int(32, NON_NULL), *cols[0].type());
-    EXPECT_EQ(names({"X"}), cols[0].qualifiers());
-
-    EXPECT_EQ("", cols[1].name());
-    EXPECT_EQ(t::Bool(NON_NULL), *cols[1].type());
-    EXPECT_EQ(names({"X"}), cols[1].qualifiers());
-    {
-        auto& cols = expr->columns();
-        ASSERT_EQ(2U, cols.size());
-        {
-            auto var = extract_var(cols[0]);
-            EXPECT_EQ(var->name(), common::core::Name());
-            EXPECT_EQ(*var->type(), t::Int(32U, NON_NULL));
-        }
-        {
-            auto var = extract_var(cols[1]);
-            EXPECT_EQ(var->name(), common::core::Name());
-            EXPECT_EQ(*var->type(), t::Bool(NON_NULL));
-        }
-    }
 }
 
 TEST_F(AnalyzerRelationTest, projection_named_columns) {

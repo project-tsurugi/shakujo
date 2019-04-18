@@ -335,33 +335,6 @@ public:
         return const_cast<AggregationExpression*>(this)->columns();
     }
     /**
-     * @brief Returns alias name.
-     * @return alias name.
-     */
-    name::SimpleName* alias();
-
-    /**
-     * @brief Returns alias name.
-     * @return alias name.
-     */
-    inline name::SimpleName const* alias() const {
-        return const_cast<AggregationExpression*>(this)->alias();
-    }
-
-    /**
-     * @brief Sets alias name.
-     * @param alias alias name
-     * @return this
-     */
-    AggregationExpression& alias(std::unique_ptr<name::SimpleName> alias);
-
-    /**
-     * @brief Releases alias name from this node.
-     * @return the released node
-     */
-    std::unique_ptr<name::SimpleName> release_alias();
-
-    /**
      * @brief Returns expression key.
      * @return expression key.
      */

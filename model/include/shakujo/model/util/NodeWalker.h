@@ -50,6 +50,7 @@
 #include "shakujo/model/expression/relation/LimitExpression.h"
 #include "shakujo/model/expression/relation/OrderExpression.h"
 #include "shakujo/model/expression/relation/ProjectionExpression.h"
+#include "shakujo/model/expression/relation/RenameExpression.h"
 #include "shakujo/model/expression/relation/ScanExpression.h"
 #include "shakujo/model/expression/relation/SelectionExpression.h"
 #include "shakujo/model/name/Index.h"
@@ -943,6 +944,30 @@ protected:
      * @see enter()
      */
     virtual void exit([[maybe_unused]] expression::relation::ProjectionExpression* node) {
+        exitDefault(node);
+    }
+
+    /**
+     * @brief callback on enter into RenameExpression.
+     * @param node the processing target
+     * @return true if continue to enter into child elements of the given node
+     * @return false don't walk into child elements, also the corresponded exit() will not be called
+     * @see expression::relation::RenameExpression
+     * @see walk()
+     * @see exit()
+     */
+    virtual bool enter([[maybe_unused]] expression::relation::RenameExpression* node) {
+        return enterDefault(node);
+    }
+
+    /**
+     * @brief callback on exit from RenameExpression.
+     * @param node the processing target
+     * @see expression::relation::RenameExpression
+     * @see walk()
+     * @see enter()
+     */
+    virtual void exit([[maybe_unused]] expression::relation::RenameExpression* node) {
         exitDefault(node);
     }
 
@@ -2309,6 +2334,13 @@ public:
      * @see expression::relation::ProjectionExpression
      */
     void walk(expression::relation::ProjectionExpression* node);
+
+    /**
+     * @brief Begins to walk RenameExpression.
+     * @param node the processing target
+     * @see expression::relation::RenameExpression
+     */
+    void walk(expression::relation::RenameExpression* node);
 
     /**
      * @brief Begins to walk ScanExpression.

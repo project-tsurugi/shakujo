@@ -33,7 +33,6 @@ class ProjectionExpression::Impl {
 public:
     common::util::ManagedPtr<Expression> operand_;
     util::FragmentList<ProjectionExpression::Column> columns_;
-    std::unique_ptr<name::SimpleName> alias_;
     std::unique_ptr<key::ExpressionKey> expression_key_;
     std::unique_ptr<key::RelationKey> relation_key_;
 
@@ -53,7 +52,6 @@ public:
                 other->columns_.push_back(common::util::make_clone(e));
             }
         }
-        other->alias_ = common::util::make_clone(alias_);
         return other;
     }
 };
@@ -104,21 +102,6 @@ std::unique_ptr<Expression> ProjectionExpression::release_operand() {
 
 util::FragmentList<ProjectionExpression::Column>& ProjectionExpression::columns() {
     return impl_->columns_;
-}
-
-name::SimpleName* ProjectionExpression::alias() {
-    return impl_->alias_.get();
-}
-
-ProjectionExpression& ProjectionExpression::alias(std::unique_ptr<name::SimpleName> alias) {
-    impl_->alias_ = std::move(alias);
-    return *this;
-}
-
-std::unique_ptr<name::SimpleName> ProjectionExpression::release_alias() {
-    std::unique_ptr<name::SimpleName> ret { std::move(impl_->alias_) };
-    impl_->alias_ = {};
-    return ret;
 }
 
 key::ExpressionKey* ProjectionExpression::expression_key() {

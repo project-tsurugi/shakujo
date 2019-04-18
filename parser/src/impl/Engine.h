@@ -209,15 +209,18 @@ public:
     std::unique_ptr<model::expression::Expression> visit(Grammar::TableReferenceContext *);
 
     // tablePrimary
-    //     : tableName
+    //     : name correlationSpec?
+    //     | '(' querySpecification ')' correlationSpec
     //     | '(' joinedTable ')'
     //     ;
     std::unique_ptr<model::expression::Expression> visit(Grammar::TablePrimaryContext *);
 
-    // tableName
-    //     : name (K_AS simpleName)? // FIXME: correlation name wit derived columns
+    // correlationSpec
+    //     : K_AS? simpleName ( '(' columnName ( ',' columnName )* ')' )?
     //     ;
-    std::unique_ptr<model::expression::relation::ScanExpression> visit(Grammar::TableNameContext *);
+    std::unique_ptr<model::expression::Expression> visit(
+            Grammar::CorrelationSpecContext *,
+            std::unique_ptr<model::expression::Expression>);
 
     // joinedTable
     //     : tableReference joinedTableRest
@@ -230,8 +233,9 @@ public:
     //     | K_NATURAL joinType? K_JOIN tablePrimary
     //     | K_UNION K_JOIN  tablePrimary
     //     ;
-    std::unique_ptr<model::expression::relation::JoinExpression>
-    visit(Grammar::TableReferenceContext *, Grammar::JoinedTableRestContext *);
+    std::unique_ptr<model::expression::relation::JoinExpression> visit(
+            Grammar::TableReferenceContext *,
+            Grammar::JoinedTableRestContext *);
 
     // joinType
     //     : K_INNER

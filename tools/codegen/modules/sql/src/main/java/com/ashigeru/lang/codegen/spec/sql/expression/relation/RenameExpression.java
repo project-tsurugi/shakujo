@@ -22,44 +22,22 @@ import com.ashigeru.lang.codegen.ir.reflect.Extends;
 import com.ashigeru.lang.codegen.ir.reflect.MetaClass;
 import com.ashigeru.lang.codegen.ir.reflect.Opt;
 import com.ashigeru.lang.codegen.spec.sql.expression.Expression;
-import com.ashigeru.lang.codegen.spec.sql.expression.FunctionCall.Quantifier;
-import com.ashigeru.lang.codegen.spec.sql.key.FunctionKey;
 import com.ashigeru.lang.codegen.spec.sql.key.RelationKey;
-import com.ashigeru.lang.codegen.spec.sql.key.VariableKey;
-import com.ashigeru.lang.codegen.spec.sql.name.Name;
 import com.ashigeru.lang.codegen.spec.sql.name.SimpleName;
 
-@Description("aggregating relations")
+@Description("renaming relation and its columns")
 @Extends(Expression.class)
 @Extends(RelationKey.Provider.class)
 @SuppressWarnings("javadoc")
-public class AggregationExpression extends MetaClass {
+public class RenameExpression extends MetaClass {
 
     @Description("source relation")
     Property<Expression> operand = property();
 
-    @Description("group keys")
-    Property<List<Expression>> keys = property();
+    @Description("relation name")
+    Property<SimpleName> name = property();
 
-    @Description("aggregation columns")
-    Property<List<Column>> columns = property();
-
-    @Description("aggregation specification")
-    @Extends(FunctionKey.Provider.class)
-    @Extends(VariableKey.Provider.class)
-    public static class Column extends MetaClass {
-
-        @Description("aggregation function")
-        Property<Name> function = property();
-
-        @Description("set quantifier")
-        Property<Quantifier> quantifier = property();
-        
-        @Description("aggregation operand")
-        Property<Expression> operand = property();
-
-        @Description("column name")
-        @Opt
-        Property<SimpleName> alias = property();
-    }
+    @Description("column names")
+    @Opt
+    Property<List<SimpleName>> columns = property();
 }

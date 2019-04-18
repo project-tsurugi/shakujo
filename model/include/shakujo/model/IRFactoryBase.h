@@ -57,6 +57,7 @@
 #include "shakujo/model/expression/relation/LimitExpression.h"
 #include "shakujo/model/expression/relation/OrderExpression.h"
 #include "shakujo/model/expression/relation/ProjectionExpression.h"
+#include "shakujo/model/expression/relation/RenameExpression.h"
 #include "shakujo/model/expression/relation/ScanExpression.h"
 #include "shakujo/model/expression/relation/SelectionExpression.h"
 #include "shakujo/model/name/Index.h"
@@ -575,15 +576,13 @@ public:
      * @param operand source relation
      * @param keys group keys
      * @param columns aggregation columns
-     * @param alias alias name
      * @return a created node
      * @see expression::relation::AggregationExpression
      */
     std::unique_ptr<expression::relation::AggregationExpression> AggregationExpression(
             std::unique_ptr<expression::Expression> operand,
             common::util::MoveInitializerList<std::unique_ptr<expression::Expression>> keys,
-            common::util::MoveInitializerList<std::unique_ptr<expression::relation::AggregationExpression::Column>> columns,
-            std::unique_ptr<name::SimpleName> alias = {});
+            common::util::MoveInitializerList<std::unique_ptr<expression::relation::AggregationExpression::Column>> columns);
 
     /**
      * @brief returns a new empty expression::relation::AggregationExpression::Column.
@@ -728,14 +727,12 @@ public:
      * @brief returns a new expression::relation::ProjectionExpression.
      * @param operand source relation
      * @param columns projection columns
-     * @param alias alias name
      * @return a created node
      * @see expression::relation::ProjectionExpression
      */
     std::unique_ptr<expression::relation::ProjectionExpression> ProjectionExpression(
             std::unique_ptr<expression::Expression> operand,
-            common::util::MoveInitializerList<std::unique_ptr<expression::relation::ProjectionExpression::Column>> columns,
-            std::unique_ptr<name::SimpleName> alias = {});
+            common::util::MoveInitializerList<std::unique_ptr<expression::relation::ProjectionExpression::Column>> columns);
 
     /**
      * @brief returns a new empty expression::relation::ProjectionExpression::Column.
@@ -756,6 +753,26 @@ public:
             std::unique_ptr<name::SimpleName> alias = {});
 
     /**
+     * @brief returns a new empty expression::relation::RenameExpression.
+     * @return a created empty node
+     * @see expression::relation::RenameExpression
+     */
+    virtual std::unique_ptr<expression::relation::RenameExpression> RenameExpression();
+
+    /**
+     * @brief returns a new expression::relation::RenameExpression.
+     * @param operand source relation
+     * @param name relation name
+     * @param columns column names
+     * @return a created node
+     * @see expression::relation::RenameExpression
+     */
+    std::unique_ptr<expression::relation::RenameExpression> RenameExpression(
+            std::unique_ptr<expression::Expression> operand,
+            std::unique_ptr<name::SimpleName> name,
+            common::util::MoveInitializerList<std::unique_ptr<name::SimpleName>> columns = {});
+
+    /**
      * @brief returns a new empty expression::relation::ScanExpression.
      * @return a created empty node
      * @see expression::relation::ScanExpression
@@ -765,13 +782,11 @@ public:
     /**
      * @brief returns a new expression::relation::ScanExpression.
      * @param table table name
-     * @param alias alias name
      * @return a created node
      * @see expression::relation::ScanExpression
      */
     std::unique_ptr<expression::relation::ScanExpression> ScanExpression(
-            std::unique_ptr<name::Name> table,
-            std::unique_ptr<name::SimpleName> alias = {});
+            std::unique_ptr<name::Name> table);
 
     /**
      * @brief returns a new empty expression::relation::SelectionExpression.

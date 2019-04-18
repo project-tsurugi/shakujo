@@ -437,30 +437,45 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::TableRefer
     rule_error(c);
 }
 
-// tablePrimary
-//     : tableName
-//     | '(' joinedTable ')'
-//     ;
 std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::TablePrimaryContext *c) {
     check(c);
-    if (auto name = c->tableName(); is_defined(name)) {
-        return visit(name);
+    if (auto n = c->name(); is_defined(n)) {
+        auto name = visit(n);
+        std::unique_ptr<model::expression::Expression> ret = f.ScanExpression(std::move(name)) << region(c);
+        if (auto cor = c->correlationSpec(); is_defined(cor)) {
+            ret = visit(cor, std::move(ret));
+        }
+        return ret;
     }
-    if (auto join = c->joinedTable(); is_defined(join)) {
-        return visit(join);
+    if (auto s = c->querySpecification(); is_defined(s)) {
+        std::unique_ptr<model::expression::Expression> ret = visit(s);
+        if (auto cor = c->correlationSpec(); is_defined(cor)) {
+            ret = visit(cor, std::move(ret));
+        }
+        return ret;
+    }
+    if (auto j = c->joinedTable(); is_defined(j)) {
+        std::unique_ptr<model::expression::Expression> ret = visit(j);
+        return ret;
     }
     rule_error(c);
 }
 
-std::unique_ptr<model::expression::relation::ScanExpression> Engine::visit(Grammar::TableNameContext *c) {
+std::unique_ptr<model::expression::Expression> Engine::visit(
+        Grammar::CorrelationSpecContext *c,
+        std::unique_ptr<model::expression::Expression> source) {
     check(c);
-    if (auto q = c->name(); is_defined(q)) {
-        auto name = visit(q);
-        if (auto n = c->simpleName(); is_defined(n)) {
-            auto alias = visit(n);
-            return f.ScanExpression(std::move(name), std::move(alias)) << region(c);
+    if (auto n = c->simpleName(); is_defined(n)) {
+        auto name = visit(n);
+        ptr_vector<model::name::SimpleName> columns {};
+        if (auto&& cs = c->columnName(); !cs.empty()) {
+            columns.reserve(cs.size());
+            for (auto&& col : cs) {
+                auto column = visit(col);
+                columns.emplace_back(std::move(column));
+            }
         }
-        return f.ScanExpression(std::move(name)) << region(c);
+        return f.RenameExpression(std::move(source), std::move(name), std::move(columns)) << region(c);
     }
     rule_error(c);
 }

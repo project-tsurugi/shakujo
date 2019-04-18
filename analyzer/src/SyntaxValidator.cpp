@@ -393,6 +393,21 @@ protected:
         return true;
     }
 
+    bool enter(model::expression::relation::RenameExpression const* node) override {
+        if (!is_defined(node->operand())) {
+            report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "rename expression must have a valid operand");
+        }
+        if (!is_defined(node->name())) {
+            report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "rename expression must have a valid relation name");
+        }
+        for (auto column : node->columns()) {
+            if (!is_defined(column)) {
+                report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "rename expression must have valid column name");
+            }
+        }
+        return true;
+    }
+
     bool enter(model::expression::relation::ProjectionExpression const* node) override {
         if (!is_defined(node->operand())) {
             report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "projection expression must have a valid operand");

@@ -123,6 +123,7 @@ protected:
     // DML
     void visit(model::statement::dml::EmitStatement*, ScopeContext&) override;
     void visit(model::expression::relation::ScanExpression*, ScopeContext&) override;
+    void visit(model::expression::relation::RenameExpression*, ScopeContext&) override;
     void visit(model::expression::relation::SelectionExpression*, ScopeContext&) override;
     void visit(model::expression::relation::ProjectionExpression*, ScopeContext&) override;
     void visit(model::expression::relation::JoinExpression*, ScopeContext&) override;

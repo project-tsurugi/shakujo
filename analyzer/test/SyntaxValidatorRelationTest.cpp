@@ -47,8 +47,52 @@ public:
 TEST_F(SyntaxValidatorRelationTest, ScanExpression) {
     validate(f.ScanExpression(f.Name("a")));
     validate(f.ScanExpression(f.Name("a", "b", "c")));
-    validate(f.ScanExpression(f.Name("a"), f.SimpleName("alias")));
     should_error(f.ScanExpression({}));
+}
+
+TEST_F(SyntaxValidatorRelationTest, RenameExpression) {
+    validate(f.RenameExpression(
+        literal(),
+        f.Name("A"),
+        {
+            f.Name("A1"),
+        }
+    ));
+    validate(f.RenameExpression(
+        literal(),
+        f.Name("A"),
+        {
+            f.Name("A1"),
+            f.Name("A2"),
+            f.Name("A3"),
+        }
+    ));
+    validate(f.RenameExpression(
+        literal(),
+        f.Name("A"),
+        {}
+    ));
+    should_error(f.RenameExpression(
+        {},
+        f.Name("A"),
+        {
+            f.Name("A1"),
+        }
+    ));
+    should_error(f.RenameExpression(
+        literal(),
+        {},
+        {
+            f.Name("A1"),
+        }
+    ));
+    should_error(f.RenameExpression(
+        literal(),
+        f.Name("A"),
+        {
+            nullptr,
+        }
+    ));
 }
 
 TEST_F(SyntaxValidatorRelationTest, ProjectionExpression) {
@@ -181,13 +225,6 @@ TEST_F(SyntaxValidatorRelationTest, AggregationExpression) {
         {
             f.AggregationExpressionColumn(f.Name("f"), Quantifier::ABSENT, literal(), f.Name("a")),
         }));
-    validate(f.AggregationExpression(
-        literal(),
-        {},
-        {
-            f.AggregationExpressionColumn(f.Name("f"), Quantifier::ABSENT, literal()),
-        },
-        f.Name("a")));
     should_error(f.AggregationExpression(
         {},
         {},

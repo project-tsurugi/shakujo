@@ -162,6 +162,76 @@ public:
         // type information is unchanged
     }
 
+    void exit(model::expression::relation::RenameExpression* node) override {
+        auto parent = relation_of(node->operand());
+        auto relation = relation_of(node);
+
+        if (!node->columns().empty()) {
+            std::vector<std::size_t> indices {};
+            indices.reserve(parent->output().columns().size());
+            for (auto&& column : parent->output().columns()) {
+                auto index = relation->process().index_of(*column);
+                assert(index.has_value());  // NOLINT
+                indices.emplace_back(index.value());
+            }
+            // high watermark of columns to keep their positions from the first
+            std::size_t kept = 0;
+            std::size_t moved = 0;
+            for (std::size_t i = 0, n = indices.size(); i < n; ++i) {
+                // adjust index on origin considering moved columns
+                auto index_on_origin = indices[i];
+                for (std::size_t j = kept; j < i; ++j) {
+                    if (indices[j] < indices[i]) {
+                        --index_on_origin;
+                    }
+                }
+
+                // don't move back if the target column is just on the watermark
+                if (index_on_origin == kept) {
+                    ++kept;
+                    continue;
+                }
+
+                // move back the column
+                auto name = node->columns().release(index_on_origin);
+                node->columns().push_back(std::move(name));
+                ++moved;
+            }
+
+            // remove between the [high watermark of columns to keep, column size - moved back columns)
+            for (std::size_t i = kept, n = node->columns().size() - moved; i < n; ++i) {
+                node->columns().remove(kept);
+            }
+        }
+
+        auto origin = type_of<common::core::type::Relation>(node->operand());
+
+        std::vector<common::core::Name> qualifiers {};
+        qualifiers.reserve(1);
+        qualifiers.emplace_back(*node->name());
+
+        std::vector<common::core::type::Relation::Column> columns {};
+        columns.reserve(origin->columns().size());
+
+        std::size_t column_index = 0;
+        for (auto&& column : origin->columns()) {
+            std::string const* name;
+            if (node->columns().empty()) {
+                name = &column.name();
+            } else {
+                name = &node->columns()[column_index]->token();
+            }
+            columns.emplace_back(qualifiers, *name, make_clone(column.type()));
+            ++column_index;
+        }
+
+        relation->process() = parent->output();
+        relation->output() = parent->output();
+
+        node->expression_key(context_.bindings().create_key<binding::ExpressionBinding>(
+            std::make_unique<common::core::type::Relation>(std::move(columns))));
+    }
+
     void exit(model::expression::relation::SelectionExpression* node) override {
         auto parent = relation_of(node->operand());
         auto relation = relation_of(node);

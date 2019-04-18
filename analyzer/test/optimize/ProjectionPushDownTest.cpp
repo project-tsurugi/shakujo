@@ -533,8 +533,99 @@ TEST_F(ProjectionPushDownTest, join_cross) {
             EXPECT_EQ(*c->type(), t::Int(64U, NON_NULL));
         }
     }
-
 }
 
+TEST_F(ProjectionPushDownTest, rename) {  // test for FixRelationInfo
+    add(common::schema::TableInfo { "testing", {
+        { "C1", t::Int(64U, NON_NULL), },
+        { "C2", t::Int(64U, NON_NULL), },
+        { "C3", t::Int(64U, NON_NULL), },
+        { "C4", t::Int(64U, NON_NULL), },
+    }});
+    auto expr = apply(f.ProjectionExpression(
+        f.RenameExpression(
+            f.OrderExpression(
+                f.ScanExpression(f.Name("testing")),
+                {
+                    f.OrderExpressionElement(var("C3")),
+                }),
+            f.Name("A"),
+            {}
+        ),
+        {
+            f.ProjectionExpressionColumn(var("C1")),
+            f.ProjectionExpressionColumn(var("C3")),
+        }));
+    auto projection = cast<model::expression::relation::ProjectionExpression>(expr.get());
+    auto rename = cast<model::expression::relation::RenameExpression>(projection->operand());
+    auto order = cast<model::expression::relation::OrderExpression>(rename->operand());
+    auto optimize = cast<model::expression::relation::ProjectionExpression>(order->operand());
+    cast<model::expression::relation::ScanExpression>(optimize->operand());
+
+    ASSERT_EQ(rename->columns().size(), 0);
+
+    auto type = extract_relation_type(rename);
+    ASSERT_EQ(type->columns().size(), 2);
+    {
+        auto&& c = type->columns()[0];
+        EXPECT_EQ(c.qualifiers(), names({ "A" }));
+        EXPECT_EQ(c.name(), "C1");
+    }
+    {
+        auto&& c = type->columns()[1];
+        EXPECT_EQ(c.qualifiers(), names({ "A" }));
+        EXPECT_EQ(c.name(), "C3");
+    }
+}
+
+TEST_F(ProjectionPushDownTest, rename_columns) {  // test for FixRelationInfo
+    add(common::schema::TableInfo { "testing", {
+        { "C1", t::Int(64U, NON_NULL), },
+        { "C2", t::Int(64U, NON_NULL), },
+        { "C3", t::Int(64U, NON_NULL), },
+        { "C4", t::Int(64U, NON_NULL), },
+    }});
+    auto expr = apply(f.ProjectionExpression(
+        f.RenameExpression(
+            f.OrderExpression(
+                f.ScanExpression(f.Name("testing")),
+                {
+                    f.OrderExpressionElement(var("C3")),
+                }),
+            f.Name("A"),
+            {
+                f.Name("A1"),
+                f.Name("A2"),
+                f.Name("A3"),
+                f.Name("A4"),
+            }
+        ),
+        {
+            f.ProjectionExpressionColumn(var("A1")),
+            f.ProjectionExpressionColumn(var("A3")),
+        }));
+    auto projection = cast<model::expression::relation::ProjectionExpression>(expr.get());
+    auto rename = cast<model::expression::relation::RenameExpression>(projection->operand());
+    auto order = cast<model::expression::relation::OrderExpression>(rename->operand());
+    auto optimize = cast<model::expression::relation::ProjectionExpression>(order->operand());
+    cast<model::expression::relation::ScanExpression>(optimize->operand());
+
+    ASSERT_EQ(rename->columns().size(), 2);
+    EXPECT_EQ(*f.Name("A1"), *rename->columns()[0]);
+    EXPECT_EQ(*f.Name("A3"), *rename->columns()[1]);
+
+    auto type = extract_relation_type(rename);
+    ASSERT_EQ(type->columns().size(), 2);
+    {
+        auto&& c = type->columns()[0];
+        EXPECT_EQ(c.qualifiers(), names({ "A" }));
+        EXPECT_EQ(c.name(), "A1");
+    }
+    {
+        auto&& c = type->columns()[1];
+        EXPECT_EQ(c.qualifiers(), names({ "A" }));
+        EXPECT_EQ(c.name(), "A3");
+    }
+}
 
 }  // namespace shakujo::analyzer::optimize

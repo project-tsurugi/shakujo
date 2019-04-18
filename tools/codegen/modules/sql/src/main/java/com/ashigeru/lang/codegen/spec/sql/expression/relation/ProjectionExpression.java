@@ -38,10 +38,6 @@ public class ProjectionExpression extends MetaClass {
     @Description("projection columns")
     Property<List<Column>> columns = property();
 
-    @Description("alias name")
-    @Opt
-    Property<SimpleName> alias = property();
-
     @Description("projection specification")
     @Extends(VariableKey.Provider.class)
     public static class Column extends MetaClass {

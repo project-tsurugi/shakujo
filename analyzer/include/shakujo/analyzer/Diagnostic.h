@@ -214,6 +214,11 @@ public:
         COLUMN_NOT_FOUND,
 
         /**
+         * @brief mismatch number of columns.
+         */
+        INCOMPATIBLE_COLUMN_COUNT,
+
+        /**
          * @brief each table does not have any common columns.
          */
         MISSING_NATURAL_JOIN_PAIR,
@@ -415,6 +420,8 @@ inline constexpr std::string_view to_string_view(Diagnostic::Code value) {
             return "target must be a table expression";
         case Code::COLUMN_NOT_FOUND:
             return "target column is not found";
+        case Code::INCOMPATIBLE_COLUMN_COUNT:
+            return "inconsistent number of columns";
         case Code::MISSING_NATURAL_JOIN_PAIR:
             return "no natural join pairs";
         case Code::INVALID_COLUMN_REFERENCE:
