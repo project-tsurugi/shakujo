@@ -15,27 +15,16 @@
  */
 package com.ashigeru.lang.codegen.spec.sql.program;
 
-import java.util.List;
-
 import com.ashigeru.lang.codegen.ir.reflect.Description;
 import com.ashigeru.lang.codegen.ir.reflect.Extends;
 import com.ashigeru.lang.codegen.ir.reflect.MetaClass;
-import com.ashigeru.lang.codegen.ir.reflect.Opt;
 import com.ashigeru.lang.codegen.spec.sql.Node;
-import com.ashigeru.lang.codegen.spec.sql.statement.Statement;
 
-@Description("compilation unit")
+@Description("comment in program")
 @Extends(Node.class)
 @SuppressWarnings("javadoc")
-public class Program extends MetaClass {
+public class Comment extends MetaClass {
 
-    @Description("global declarations")
-    Property<List<GlobalDeclaration>> declarations = property();
-
-    @Description("program entry")
-    Property<Statement> main = property();
-
-    @Description("comments")
-    @Opt
-    Property<List<Comment>> comments = property();
+    @Description("comment text")
+    Property<String> contents = property();
 }

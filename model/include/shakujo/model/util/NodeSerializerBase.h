@@ -66,6 +66,7 @@
 #include "shakujo/model/name/Name.h"
 #include "shakujo/model/name/QualifiedName.h"
 #include "shakujo/model/name/SimpleName.h"
+#include "shakujo/model/program/Comment.h"
 #include "shakujo/model/program/GlobalDeclaration.h"
 #include "shakujo/model/program/GlobalFunctionDeclaration.h"
 #include "shakujo/model/program/GlobalVariableDeclaration.h"
@@ -589,6 +590,13 @@ public:
      * @param value the target value
      */
     virtual void serialize(common::util::DataSerializer& printer, name::SimpleName const* value);  // NOLINT
+
+    /**
+     * @brief serializes the value into given printer.
+     * @param printer the destination printer
+     * @param value the target value
+     */
+    virtual void serialize(common::util::DataSerializer& printer, program::Comment const* value);  // NOLINT
 
     /**
      * @brief serializes the value into given printer.

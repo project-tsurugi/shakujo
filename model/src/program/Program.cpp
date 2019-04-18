@@ -20,6 +20,7 @@
 #include <memory>
 
 #include "shakujo/common/util/utility.h"
+#include "shakujo/model/program/Comment.h"
 #include "shakujo/model/program/GlobalDeclaration.h"
 #include "shakujo/model/statement/Statement.h"
 #include "shakujo/model/util/NodeList.h"
@@ -30,6 +31,7 @@ class Program::Impl {
 public:
     util::NodeList<GlobalDeclaration> declarations_;
     std::unique_ptr<statement::Statement> main_;
+    util::NodeList<Comment> comments_;
 
     Impl() = default;
     ~Impl() noexcept = default;
@@ -47,6 +49,12 @@ public:
             }
         }
         other->main_ = common::util::make_clone(main_);
+        if (!comments_.empty()) {
+            other->comments_.reserve(comments_.size());
+            for (auto e : comments_) {
+                other->comments_.push_back(common::util::make_clone(e));
+            }
+        }
         return other;
     }
 };
@@ -78,6 +86,10 @@ std::unique_ptr<statement::Statement> Program::release_main() {
     std::unique_ptr<statement::Statement> ret { std::move(impl_->main_) };
     impl_->main_ = {};
     return ret;
+}
+
+util::NodeList<Comment>& Program::comments() {
+    return impl_->comments_;
 }
 
 Program* Program::clone() const & {

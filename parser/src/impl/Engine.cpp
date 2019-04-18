@@ -64,16 +64,65 @@ common::core::DocumentRegion Engine::region(antlr4::ParserRuleContext *first, an
     throw Parser::Exception("unknown rule", region(c));
 }
 
+ptr_vector<model::program::Comment> Engine::collect_comments(
+        antlr4::ParserRuleContext *c, bool leading, bool trailing) {
+    static std::vector<std::size_t> const comment_types ({
+        ShakujoLexer::SINGLE_LINE_COMMENT,
+        ShakujoLexer::MULTI_LINE_COMMENT,
+    });
+    if (auto* stream = dynamic_cast<antlr4::CommonTokenStream*>(parser_->getTokenStream())) {
+        auto start = c->getStart()->getTokenIndex();
+        auto stop = c->getStop()->getTokenIndex();
+        if (start != INVALID_INDEX && stop != INVALID_INDEX) {
+            if (leading && start != 0) {
+                while (start != 0) {
+                    auto token = stream->get(start - 1);
+                    if (token->getChannel() == ShakujoLexer::DEFAULT_TOKEN_CHANNEL) {
+                        break;
+                    }
+                    --start;
+                }
+            }
+            if (trailing) {
+                while (stop + 1 < stream->size()) {
+                    auto token = stream->get(stop + 1);
+                    if (token->getChannel() == ShakujoLexer::DEFAULT_TOKEN_CHANNEL) {
+                        break;
+                    }
+                    ++stop;
+                }
+            }
+            ptr_vector<model::program::Comment> ret;
+            for (std::size_t i = start; i <= stop; ++i) {
+                auto token = stream->get(i);
+                if (token->getChannel() != ShakujoLexer::COMMENT) {
+                    continue;
+                }
+                auto begin = position(token, true);
+                auto end = position(token, false);
+                ret.emplace_back(f.Comment(token->getText()) << common::core::DocumentRegion(location_, begin, end));
+            }
+            return ret;
+        }
+    }
+    return {};
+}
+
 std::unique_ptr<model::program::Program> Engine::visit(Grammar::ProgramEntryContext *c) {
     check(c);
     if (auto s = c->dmlStatement(); is_defined(s)) {
         auto main = visit(s);
-        return f.Program({}, std::move(main)) << region(c);
+        auto comments = collect_comments(c);
+        auto program = f.Program({}, std::move(main), std::move(comments)) << region(c);
+        return program;
     }
     if (auto s = c->ddlStatement(); is_defined(s)) {
         auto main = visit(s);
-        return f.Program({}, std::move(main)) << region(c);
+        auto comments = collect_comments(c);
+        auto program = f.Program({}, std::move(main), std::move(comments)) << region(c);
+        return program;
     }
+
     rule_error(c);
 }
 

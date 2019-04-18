@@ -25,12 +25,15 @@
 
 #include "antlr4-runtime.h"
 #include "ShakujoParser.h"
+#include "ShakujoLexer.h"
 
 #include "shakujo/model/IRFactory.h"
 
 namespace shakujo::parser::impl {
 
-using Grammar = shakujo_lang::ShakujoParser;
+using namespace shakujo_lang;  // NOLINT
+
+using Grammar = ShakujoParser;
 
 template<class E>
 using ptr_vector = std::vector<std::unique_ptr<E>>;
@@ -590,6 +593,8 @@ private:
 
     common::core::DocumentRegion region(antlr4::ParserRuleContext *, antlr4::ParserRuleContext * = nullptr);
     [[noreturn]] void rule_error(antlr4::ParserRuleContext *);
+    ptr_vector<model::program::Comment> collect_comments(
+        antlr4::ParserRuleContext *, bool leading = true, bool trailing = true);
 };
 
 }  //  namespace shakujo::parser::impl

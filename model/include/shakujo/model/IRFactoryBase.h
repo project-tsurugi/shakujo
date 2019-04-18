@@ -64,6 +64,7 @@
 #include "shakujo/model/name/Name.h"
 #include "shakujo/model/name/QualifiedName.h"
 #include "shakujo/model/name/SimpleName.h"
+#include "shakujo/model/program/Comment.h"
 #include "shakujo/model/program/GlobalDeclaration.h"
 #include "shakujo/model/program/GlobalFunctionDeclaration.h"
 #include "shakujo/model/program/GlobalVariableDeclaration.h"
@@ -859,6 +860,22 @@ public:
             std::string token);
 
     /**
+     * @brief returns a new empty program::Comment.
+     * @return a created empty node
+     * @see program::Comment
+     */
+    virtual std::unique_ptr<program::Comment> Comment();
+
+    /**
+     * @brief returns a new program::Comment.
+     * @param contents comment text
+     * @return a created node
+     * @see program::Comment
+     */
+    std::unique_ptr<program::Comment> Comment(
+            std::string contents);
+
+    /**
      * @brief returns a new empty program::GlobalFunctionDeclaration.
      * @return a created empty node
      * @see program::GlobalFunctionDeclaration
@@ -935,12 +952,14 @@ public:
      * @brief returns a new program::Program.
      * @param declarations global declarations
      * @param main program entry
+     * @param comments comments
      * @return a created node
      * @see program::Program
      */
     std::unique_ptr<program::Program> Program(
             common::util::MoveInitializerList<std::unique_ptr<program::GlobalDeclaration>> declarations,
-            std::unique_ptr<statement::Statement> main);
+            std::unique_ptr<statement::Statement> main,
+            common::util::MoveInitializerList<std::unique_ptr<program::Comment>> comments = {});
 
     /**
      * @brief returns a new empty statement::AnchorDeclaration.
