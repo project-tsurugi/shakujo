@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 // DON'T EDIT THIS GENERATED FILE //
-#ifndef SHAKUJO_MODEL_EXPRESSION_RELATION_SCAN_EXPRESSION_H_
-#define SHAKUJO_MODEL_EXPRESSION_RELATION_SCAN_EXPRESSION_H_
+#ifndef SHAKUJO_MODEL_EXPRESSION_RELATION_RENAME_EXPRESSION_H_
+#define SHAKUJO_MODEL_EXPRESSION_RELATION_RENAME_EXPRESSION_H_
 
 #include <utility>
 #include <memory>
@@ -24,85 +24,126 @@
 #include "shakujo/model/expression/ExpressionKind.h"
 #include "shakujo/model/key/ExpressionKey.h"
 #include "shakujo/model/key/RelationKey.h"
-#include "shakujo/model/name/Name.h"
+#include "shakujo/model/name/SimpleName.h"
+#include "shakujo/model/util/NodeList.h"
 
 namespace shakujo::model::expression::relation {
 /**
- * @brief Represents retrieves relation from tables.
+ * @brief Represents renaming relation and its columns.
  */
-class ScanExpression
+class RenameExpression
         : public Expression
         , public key::RelationKey::Provider {
 private:
     class Impl;
     std::unique_ptr<Impl> impl_;
-    explicit ScanExpression(std::unique_ptr<Impl>) noexcept;
+    explicit RenameExpression(std::unique_ptr<Impl>) noexcept;
 
 public:
     /**
      * @brief Constructs a new empty object.
      */
-    ScanExpression();
+    RenameExpression();
 
     /**
      * @brief Destroys this object.
      */
-    ~ScanExpression() noexcept override;
+    ~RenameExpression() noexcept override;
 
     /**
      * @brief Copy-constructs a new object.
      * @param other the source object
      */
-    ScanExpression(ScanExpression const& other) = delete;
+    RenameExpression(RenameExpression const& other) = delete;
 
     /**
      * @brief Copy-assigns to this object.
      * @param other the source object
      * @return this
      */
-    ScanExpression& operator=(ScanExpression const& other) = delete;
+    RenameExpression& operator=(RenameExpression const& other) = delete;
 
     /**
      * @brief Move-constructs a new object.
      * @param other the source object
      */
-    ScanExpression(ScanExpression&& other) noexcept;
+    RenameExpression(RenameExpression&& other) noexcept;
 
     /**
      * @brief Move-assigns to this object.
      * @param other the source object
      * @return this
      */
-    ScanExpression& operator=(ScanExpression&& other) noexcept;
+    RenameExpression& operator=(RenameExpression&& other) noexcept;
 
 public:
     /**
-     * @brief Returns table name.
-     * @return table name.
+     * @brief Returns source relation.
+     * @return source relation.
      */
-    name::Name* table();
+    Expression* operand();
 
     /**
-     * @brief Returns table name.
-     * @return table name.
+     * @brief Returns source relation.
+     * @return source relation.
      */
-    inline name::Name const* table() const {
-        return const_cast<ScanExpression*>(this)->table();
+    inline Expression const* operand() const {
+        return const_cast<RenameExpression*>(this)->operand();
     }
 
     /**
-     * @brief Sets table name.
-     * @param table table name
+     * @brief Sets source relation.
+     * @param operand source relation
      * @return this
      */
-    ScanExpression& table(std::unique_ptr<name::Name> table);
+    RenameExpression& operand(std::unique_ptr<Expression> operand);
 
     /**
-     * @brief Releases table name from this node.
+     * @brief Releases source relation from this node.
      * @return the released node
      */
-    std::unique_ptr<name::Name> release_table();
+    std::unique_ptr<Expression> release_operand();
 
+    /**
+     * @brief Returns relation name.
+     * @return relation name.
+     */
+    name::SimpleName* name();
+
+    /**
+     * @brief Returns relation name.
+     * @return relation name.
+     */
+    inline name::SimpleName const* name() const {
+        return const_cast<RenameExpression*>(this)->name();
+    }
+
+    /**
+     * @brief Sets relation name.
+     * @param name relation name
+     * @return this
+     */
+    RenameExpression& name(std::unique_ptr<name::SimpleName> name);
+
+    /**
+     * @brief Releases relation name from this node.
+     * @return the released node
+     */
+    std::unique_ptr<name::SimpleName> release_name();
+
+    /**
+     * @brief Returns column names.
+     * @return column names.
+     */
+    util::NodeList<name::SimpleName>& columns();
+
+    /**
+     * @brief Returns column names.
+     * @return column names.
+     */
+    inline util::NodeList<name::SimpleName> const& columns() const {
+        return const_cast<RenameExpression*>(this)->columns();
+    }
     /**
      * @brief Returns expression key.
      * @return expression key.
@@ -114,7 +155,7 @@ public:
      * @return expression key.
      */
     inline key::ExpressionKey const* expression_key() const override {
-        return const_cast<ScanExpression*>(this)->expression_key();
+        return const_cast<RenameExpression*>(this)->expression_key();
     }
 
     /**
@@ -122,7 +163,7 @@ public:
      * @param expression_key expression key
      * @return this
      */
-    ScanExpression& expression_key(std::unique_ptr<key::ExpressionKey> expression_key) override;
+    RenameExpression& expression_key(std::unique_ptr<key::ExpressionKey> expression_key) override;
 
     /**
      * @brief Returns relation key.
@@ -135,7 +176,7 @@ public:
      * @return relation key.
      */
     inline key::RelationKey const* relation_key() const override {
-        return const_cast<ScanExpression*>(this)->relation_key();
+        return const_cast<RenameExpression*>(this)->relation_key();
     }
 
     /**
@@ -143,25 +184,25 @@ public:
      * @param relation_key relation key
      * @return this
      */
-    ScanExpression& relation_key(std::unique_ptr<key::RelationKey> relation_key) override;
+    RenameExpression& relation_key(std::unique_ptr<key::RelationKey> relation_key) override;
 
     /**
      * @brief Returns a copy of this object.
      * @return a clone of this
      */
-    ScanExpression* clone() const & override;
+    RenameExpression* clone() const & override;
 
     /**
      * @brief Returns a copy of this object.
      * @return a clone of this
      */
-    ScanExpression* clone() && override;
+    RenameExpression* clone() && override;
 
 public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr auto tag = ExpressionKind::SCAN_EXPRESSION;
+    static inline constexpr auto tag = ExpressionKind::RENAME_EXPRESSION;
 
     /**
      * @brief Returns the node kind.
@@ -174,4 +215,4 @@ public:
 };
 }  // namespace shakujo::model::expression::relation
 
-#endif  // SHAKUJO_MODEL_EXPRESSION_RELATION_SCAN_EXPRESSION_H_
+#endif  // SHAKUJO_MODEL_EXPRESSION_RELATION_RENAME_EXPRESSION_H_

@@ -209,6 +209,9 @@ void NodeWalker::walk(expression::Expression* node) {
     case expression::relation::ProjectionExpression::tag:
         walk(static_cast<expression::relation::ProjectionExpression*>(node));  // NOLINT
         return;
+    case expression::relation::RenameExpression::tag:
+        walk(static_cast<expression::relation::RenameExpression*>(node));  // NOLINT
+        return;
     case expression::relation::ScanExpression::tag:
         walk(static_cast<expression::relation::ScanExpression*>(node));  // NOLINT
         return;
@@ -405,7 +408,6 @@ void NodeWalker::walk(expression::relation::AggregationExpression* node) {
         if (child->operand()) walk(child->operand());
         if (child->alias()) walk(child->alias());
     }
-    if (node->alias()) walk(node->alias());
     exit(node);
 }
 
@@ -454,14 +456,22 @@ void NodeWalker::walk(expression::relation::ProjectionExpression* node) {
         if (child->value()) walk(child->value());
         if (child->alias()) walk(child->alias());
     }
-    if (node->alias()) walk(node->alias());
+    exit(node);
+}
+
+void NodeWalker::walk(expression::relation::RenameExpression* node) {
+    if (!enter(node)) return;
+    if (node->operand()) walk(node->operand());
+    if (node->name()) walk(node->name());
+    for (auto child : node->columns()) {
+        if (child) walk(child);
+    }
     exit(node);
 }
 
 void NodeWalker::walk(expression::relation::ScanExpression* node) {
     if (!enter(node)) return;
     if (node->table()) walk(node->table());
-    if (node->alias()) walk(node->alias());
     exit(node);
 }
 

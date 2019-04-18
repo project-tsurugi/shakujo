@@ -235,8 +235,11 @@ public:
         flush(node, std::move(prev));
     }
 
+    void visit(model::expression::relation::RenameExpression* node, Requirements&& prev) override {
+        dispatch(node->operand(), std::move(prev));
+    }
+
     void visit(model::expression::relation::SelectionExpression* node, Requirements&& prev) override {
-        // just forward
         collect(prev, node->condition());
         dispatch(node->operand(), std::move(prev));
     }

@@ -253,6 +253,34 @@ TEST_F(FixRelationInfoTest, scan_secondary_partial) {
     ASSERT_EQ(output.unique_keys().size(), 0U);
 }
 
+TEST_F(FixRelationInfoTest, rename) {
+    add(common::schema::TableInfo { "testing", {
+        { "C1", t::Int(64U, NON_NULL), },
+    }});
+    auto expr = apply(f.RenameExpression(
+        f.ScanExpression(f.Name("testing")),
+        f.Name("A"),
+        {
+            f.Name("A1"),
+        }
+    ));
+    auto node = cast<model::expression::relation::RenameExpression>(expr.get());
+
+    auto relation = extract_relation(node);
+    auto&& output = relation->output();
+    ASSERT_EQ(output.constants().size(), 0U);
+    ASSERT_EQ(output.order().size(), 0U);
+    ASSERT_EQ(output.unique_keys().size(), 0U);
+
+    auto rtype = extract_relation_type(node);
+    ASSERT_EQ(rtype->columns().size(), 1);
+    {
+        auto&& c = rtype->columns()[0];
+        EXPECT_EQ(c.qualifiers(), names({ "A" }));
+        EXPECT_EQ(c.name(), "A1");
+    }
+}
+
 TEST_F(FixRelationInfoTest, select) {
     add({
         "testing",

@@ -695,4 +695,20 @@ TEST_F(PredicatePushDownTest, scan_joinnatural_select_propagate) {
     }
 }
 
+TEST_F(PredicatePushDownTest, rename) {
+    add(common::schema::TableInfo { "testing", {
+        { "C1", t::Int(64U, NON_NULL), },
+    }});
+    auto expr = apply(f.SelectionExpression(
+        f.RenameExpression(
+            f.ScanExpression(f.Name("testing")),
+            f.Name("A")
+        ),
+        f.BinaryOperator(BOp::EQUAL, var("C1"), literal(0))
+        ));
+    auto rename = cast<model::expression::relation::RenameExpression>(expr.get());
+    auto select = cast<model::expression::relation::SelectionExpression>(rename->operand());
+    cast<model::expression::relation::ScanExpression>(select->operand());
+}
+
 }  // namespace shakujo::analyzer::optimize

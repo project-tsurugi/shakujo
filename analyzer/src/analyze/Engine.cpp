@@ -975,12 +975,7 @@ void Engine::visit(model::expression::relation::ScanExpression* node, ScopeConte
     }
 
     std::vector<common::core::Name> qualifiers;
-    // FIXME use table name as qualifier even if explicit alias is present
-    if (is_defined(node->alias())) {
-        qualifiers.emplace_back(*node->alias());
-    } else {
-        qualifiers.emplace_back(*node->table());
-    }
+    qualifiers.emplace_back(*node->table());
     std::vector<common::core::type::Relation::Column> columns;
     columns.reserve(table_info.columns().size());
     for (auto& c : table_info.columns()) {
@@ -995,6 +990,60 @@ void Engine::visit(model::expression::relation::ScanExpression* node, ScopeConte
     relation->scan_strategy({ table_info, binding::ScanStrategy::Kind::FULL, });
     bless(node, std::move(relation));
     bless(node, std::move(relation_type));
+}
+
+void Engine::visit(model::expression::relation::RenameExpression* node, ScopeContext& prev) {
+    dispatch(node->operand(), prev);
+    auto source_expr = extract_binding(node->operand());
+    if (!is_valid(source_expr)) {
+        bless_undefined<binding::ExpressionBinding>(node);
+        bless_undefined<binding::RelationBinding>(node);
+        return;
+    }
+    if (!require_relation(node->operand())) {
+        bless_erroneous_expression(node);
+        bless_undefined<binding::RelationBinding>(node);
+        return;
+    }
+    auto source_relation = extract_relation(node->operand());
+    if (!source_relation->output().is_valid()) {
+        bless_undefined<binding::ExpressionBinding>(node);
+        bless_undefined<binding::RelationBinding>(node);
+        return;
+    }
+
+    auto origin = dynamic_pointer_cast<common::core::type::Relation>(source_expr->type());
+    if (!node->columns().empty() && node->columns().size() != origin->columns().size()) {
+        report(node, Diagnostic::Code::INCOMPATIBLE_COLUMN_COUNT, to_string(
+            "column list has inconsistent number of columns: "
+            "listed ", node->columns().size(), " column(s)",
+            ", but actual relation has ", origin->columns().size(), " column(s)"));
+        bless_undefined<binding::ExpressionBinding>(node);
+        bless_undefined<binding::RelationBinding>(node);
+        return;
+    }
+
+    std::vector<common::core::Name> qualifiers {};
+    qualifiers.reserve(1);
+    qualifiers.emplace_back(*node->name());
+
+    std::vector<common::core::type::Relation::Column> columns {};
+    columns.reserve(origin->columns().size());
+
+    std::size_t column_index = 0;
+    for (auto&& column : origin->columns()) {
+        std::string const* name;
+        if (node->columns().empty()) {
+            name = &column.name();
+        } else {
+            name = &node->columns()[column_index]->token();
+        }
+        columns.emplace_back(qualifiers, *name, make_clone(column.type()));
+        ++column_index;
+    }
+
+    bless(node, std::make_unique<common::core::type::Relation>(std::move(columns)));
+    bless(node, std::make_shared<binding::RelationBinding>(source_relation->output(), source_relation->output()));
 }
 
 void Engine::visit(model::expression::relation::SelectionExpression* node, ScopeContext& prev) {
@@ -1063,10 +1112,6 @@ void Engine::visit(model::expression::relation::ProjectionExpression* node, Scop
     RelationScope relation_scope { bindings(), &prev.variables(), relation, source_relation->output().columns() };
     ScopeContext scope { relation_scope, prev.functions() };
 
-    std::vector<common::core::Name> qualifiers;
-    if (is_defined(node->alias())) {
-        qualifiers.emplace_back(*node->alias());
-    }
     std::vector<common::core::type::Relation::Column> columns;
     columns.reserve(node->columns().size());
     binding::RelationBinding::Profile output;
@@ -1089,7 +1134,7 @@ void Engine::visit(model::expression::relation::ProjectionExpression* node, Scop
             bindings().next_variable_id(),
             std::move(name),
             make_clone(column_expr->type()));
-        columns.emplace_back(qualifiers, std::move(simple_name), make_clone(column_expr->type()));
+        columns.emplace_back(std::move(simple_name), make_clone(column_expr->type()));
         output.columns().emplace_back(var);
         bless(c, var);
 
@@ -1502,10 +1547,6 @@ void Engine::visit(model::expression::relation::AggregationExpression* node, Sco
     RelationScope relation_scope { bindings(), &prev.variables(), relation, source_relation->output().columns() };
     ScopeContext scope { relation_scope, prev.functions() };
 
-    std::vector<common::core::Name> qualifiers;
-    if (is_defined(node->alias())) {
-        qualifiers.emplace_back(*node->alias());
-    }
     std::set<std::shared_ptr<binding::VariableBinding>> group_keys {};
     for (auto* k : node->keys()) {
         dispatch(k, scope);
@@ -1581,7 +1622,7 @@ void Engine::visit(model::expression::relation::AggregationExpression* node, Sco
             bindings().next_variable_id(),
             std::move(name),
             make_clone(column_type));
-        columns.emplace_back(qualifiers, std::move(simple_name), std::move(column_type));
+        columns.emplace_back(std::move(simple_name), std::move(column_type));
         output.columns().emplace_back(var);
         bless(c, var);
     }

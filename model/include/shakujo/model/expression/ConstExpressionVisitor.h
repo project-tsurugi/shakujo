@@ -53,6 +53,7 @@
 #include "shakujo/model/expression/relation/LimitExpression.h"
 #include "shakujo/model/expression/relation/OrderExpression.h"
 #include "shakujo/model/expression/relation/ProjectionExpression.h"
+#include "shakujo/model/expression/relation/RenameExpression.h"
 #include "shakujo/model/expression/relation/ScanExpression.h"
 #include "shakujo/model/expression/relation/SelectionExpression.h"
 
@@ -422,6 +423,17 @@ public:
     }
 
     /**
+     * @brief Processes RenameExpression.
+     * @param node the processing target
+     * @param args the processing arguments
+     * @return the result
+     * @see relation::RenameExpression
+     */
+    virtual Return visit(relation::RenameExpression const* node, Args... args) {
+        return visitDefault(node, std::forward<Args>(args)...);
+    }
+
+    /**
      * @brief Processes ScanExpression.
      * @param node the processing target
      * @param args the processing arguments
@@ -513,6 +525,8 @@ public:
             return visit(static_cast<relation::OrderExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case relation::ProjectionExpression::tag:
             return visit(static_cast<relation::ProjectionExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
+        case relation::RenameExpression::tag:
+            return visit(static_cast<relation::RenameExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case relation::ScanExpression::tag:
             return visit(static_cast<relation::ScanExpression const*>(node), std::forward<Args>(args)...);  // NOLINT
         case relation::SelectionExpression::tag:

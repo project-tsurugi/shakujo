@@ -187,6 +187,15 @@ public:
         flush_predicates(node, std::move(preds), true);
     }
 
+    void visit(model::expression::relation::RenameExpression* node, Predicates&& preds) override {
+        // through
+        auto relation = relation_of(node);
+        VariableRewriter rewriter {};
+        rewriter.add_rule(relation->output().columns(), relation->process().columns());
+        preds.rewriter.merge(rewriter);
+        dispatch(node->operand(), std::move(preds));
+    }
+
     void visit(model::expression::relation::ProjectionExpression* node, Predicates&& prev) override {
         auto relation = relation_of(node);
         VariableRewriter rewriter {};

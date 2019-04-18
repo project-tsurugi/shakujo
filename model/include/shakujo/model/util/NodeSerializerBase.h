@@ -55,6 +55,7 @@
 #include "shakujo/model/expression/relation/LimitExpression.h"
 #include "shakujo/model/expression/relation/OrderExpression.h"
 #include "shakujo/model/expression/relation/ProjectionExpression.h"
+#include "shakujo/model/expression/relation/RenameExpression.h"
 #include "shakujo/model/expression/relation/ScanExpression.h"
 #include "shakujo/model/expression/relation/SelectionExpression.h"
 #include "shakujo/model/key/ExpressionKey.h"
@@ -511,6 +512,13 @@ public:
      * @param value the target value
      */
     virtual void serialize(common::util::DataSerializer& printer, expression::relation::ProjectionExpression::Column const* value);  // NOLINT
+
+    /**
+     * @brief serializes the value into given printer.
+     * @param printer the destination printer
+     * @param value the target value
+     */
+    virtual void serialize(common::util::DataSerializer& printer, expression::relation::RenameExpression const* value);  // NOLINT
 
     /**
      * @brief serializes the value into given printer.

@@ -78,6 +78,18 @@ public:
         rewriter_.add_rule(relation->output().columns(), relation->output().columns());
     }
 
+    void visit(model::expression::relation::RenameExpression* node) override {
+        dispatch(node->operand());
+        if (!strategy_.table()) {
+            return;
+        }
+        auto parent = context_.relation_of(node->operand());
+        auto relation = context_.relation_of(node);
+        VariableRewriter rewriter;
+        rewriter.add_rule(parent->output().columns(), relation->output().columns());
+        rewriter_.merge(rewriter);
+    }
+
     void visit(model::expression::relation::SelectionExpression* node) override {
         dispatch(node->operand());
         if (!strategy_.table()) {

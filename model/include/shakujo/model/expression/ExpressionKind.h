@@ -184,6 +184,11 @@ enum class ExpressionKind {
      */
     PROJECTION_EXPRESSION,
     /**
+     * @brief tag for RenameExpression.
+     * @see relation::RenameExpression
+     */
+    RENAME_EXPRESSION,
+    /**
      * @brief tag for ScanExpression.
      * @see relation::ScanExpression
      */
@@ -234,6 +239,7 @@ inline constexpr std::string_view to_string_view(ExpressionKind value) {
         case ExpressionKind::LIMIT_EXPRESSION: return "LIMIT_EXPRESSION";
         case ExpressionKind::ORDER_EXPRESSION: return "ORDER_EXPRESSION";
         case ExpressionKind::PROJECTION_EXPRESSION: return "PROJECTION_EXPRESSION";
+        case ExpressionKind::RENAME_EXPRESSION: return "RENAME_EXPRESSION";
         case ExpressionKind::SCAN_EXPRESSION: return "SCAN_EXPRESSION";
         case ExpressionKind::SELECTION_EXPRESSION: return "SELECTION_EXPRESSION";
     }

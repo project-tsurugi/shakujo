@@ -113,12 +113,13 @@ tableReference
     ;
 
 tablePrimary
-    : tableName
+    : name correlationSpec?
+    | '(' querySpecification ')' correlationSpec
     | '(' joinedTable ')'
     ;
 
-tableName
-    : name (K_AS? simpleName)? // FIXME: correlation name with derived columns
+correlationSpec
+    : K_AS? simpleName ( '(' columnName ( ',' columnName )* ')' )?
     ;
 
 joinedTable

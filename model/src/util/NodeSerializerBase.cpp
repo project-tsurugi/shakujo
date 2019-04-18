@@ -57,6 +57,7 @@
 #include "shakujo/model/expression/relation/LimitExpression.h"
 #include "shakujo/model/expression/relation/OrderExpression.h"
 #include "shakujo/model/expression/relation/ProjectionExpression.h"
+#include "shakujo/model/expression/relation/RenameExpression.h"
 #include "shakujo/model/expression/relation/ScanExpression.h"
 #include "shakujo/model/expression/relation/SelectionExpression.h"
 #include "shakujo/model/key/ExpressionKey.h"
@@ -599,6 +600,9 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
     case expression::relation::ProjectionExpression::tag:
         serialize(printer, static_cast<expression::relation::ProjectionExpression const*>(value));  // NOLINT
         return;
+    case expression::relation::RenameExpression::tag:
+        serialize(printer, static_cast<expression::relation::RenameExpression const*>(value));  // NOLINT
+        return;
     case expression::relation::ScanExpression::tag:
         serialize(printer, static_cast<expression::relation::ScanExpression const*>(value));  // NOLINT
         return;
@@ -1074,11 +1078,6 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         printer.exit_property("columns");
     }
     {
-        printer.enter_property("alias");
-        serialize(printer, value->alias());
-        printer.exit_property("alias");
-    }
-    {
         printer.enter_property("expression_key");
         serialize(printer, value->expression_key());
         printer.exit_property("expression_key");
@@ -1395,11 +1394,6 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         printer.exit_property("columns");
     }
     {
-        printer.enter_property("alias");
-        serialize(printer, value->alias());
-        printer.exit_property("alias");
-    }
-    {
         printer.enter_property("expression_key");
         serialize(printer, value->expression_key());
         printer.exit_property("expression_key");
@@ -1444,6 +1438,46 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
     }
 }
 
+void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expression::relation::RenameExpression const* value) {
+    if (value == nullptr) {
+        printer.value(nullptr);
+        return;
+    }
+    printer.enter_object("RenameExpression");
+    {
+        printer.enter_property("operand");
+        serialize(printer, value->operand());
+        printer.exit_property("operand");
+    }
+    {
+        printer.enter_property("name");
+        serialize(printer, value->name());
+        printer.exit_property("name");
+    }
+    {
+        printer.enter_property("columns");
+        auto& list = value->columns();
+        auto size = list.size();
+        printer.enter_array(size);
+        for (auto element : list) {
+            serialize(printer, element);
+        }
+        printer.exit_array(size);
+        printer.exit_property("columns");
+    }
+    {
+        printer.enter_property("expression_key");
+        serialize(printer, value->expression_key());
+        printer.exit_property("expression_key");
+    }
+    {
+        printer.enter_property("relation_key");
+        serialize(printer, value->relation_key());
+        printer.exit_property("relation_key");
+    }
+    printer.exit_object("RenameExpression");
+}
+
 void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expression::relation::ScanExpression const* value) {
     if (value == nullptr) {
         printer.value(nullptr);
@@ -1454,11 +1488,6 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, expres
         printer.enter_property("table");
         serialize(printer, value->table());
         printer.exit_property("table");
-    }
-    {
-        printer.enter_property("alias");
-        serialize(printer, value->alias());
-        printer.exit_property("alias");
     }
     {
         printer.enter_property("expression_key");

@@ -23,14 +23,12 @@
 #include "shakujo/model/key/ExpressionKey.h"
 #include "shakujo/model/key/RelationKey.h"
 #include "shakujo/model/name/Name.h"
-#include "shakujo/model/name/SimpleName.h"
 
 namespace shakujo::model::expression::relation {
 
 class ScanExpression::Impl {
 public:
     std::unique_ptr<name::Name> table_;
-    std::unique_ptr<name::SimpleName> alias_;
     std::unique_ptr<key::ExpressionKey> expression_key_;
     std::unique_ptr<key::RelationKey> relation_key_;
 
@@ -44,7 +42,6 @@ public:
     std::unique_ptr<Impl> clone() const {
         auto other = std::make_unique<Impl>();
         other->table_ = common::util::make_clone(table_);
-        other->alias_ = common::util::make_clone(alias_);
         return other;
     }
 };
@@ -71,21 +68,6 @@ ScanExpression& ScanExpression::table(std::unique_ptr<name::Name> table) {
 std::unique_ptr<name::Name> ScanExpression::release_table() {
     std::unique_ptr<name::Name> ret { std::move(impl_->table_) };
     impl_->table_ = {};
-    return ret;
-}
-
-name::SimpleName* ScanExpression::alias() {
-    return impl_->alias_.get();
-}
-
-ScanExpression& ScanExpression::alias(std::unique_ptr<name::SimpleName> alias) {
-    impl_->alias_ = std::move(alias);
-    return *this;
-}
-
-std::unique_ptr<name::SimpleName> ScanExpression::release_alias() {
-    std::unique_ptr<name::SimpleName> ret { std::move(impl_->alias_) };
-    impl_->alias_ = {};
     return ret;
 }
 
