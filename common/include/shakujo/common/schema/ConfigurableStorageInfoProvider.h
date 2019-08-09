@@ -70,6 +70,21 @@ public:
         return *this;
     }
 
+    /**
+     * @brief remove a table.
+     * @param name the target table name
+     * @return true if the table entry is successfully removed
+     * @return false if the table entry with the given name doesn't exist
+     */
+    bool remove(core::Name const& name) {
+        std::unique_lock lock { mutex_ };
+        if (auto it = entries_.find(name); it != entries_.end()) {
+            entries_.erase(it);
+            return true;
+        }
+        return false;
+    }
+
     TableInfo const& find_table(core::Name const& name) const override {
         std::unique_lock lock { mutex_ };
         if (auto it = entries_.find(name); it != entries_.end()) {

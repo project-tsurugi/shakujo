@@ -129,4 +129,29 @@ TEST_F(ConfigurableStorageInfoProviderTest, concurrent) {
     }
 }
 
+TEST_F(ConfigurableStorageInfoProviderTest, remove) {
+    ConfigurableStorageInfoProvider provider {};
+    provider.add({
+                         "T",
+                         {
+                                 { "C1", t::Int(32U) },
+                         }
+                 });
+    {
+        auto&& table = provider.find_table(common::core::Name("T"));
+        EXPECT_EQ(table.name(), "T");
+    }
+    {
+        EXPECT_TRUE(provider.remove(common::core::Name("T")));
+    }
+    {
+        auto&& table = provider.find_table(common::core::Name("T"));
+        EXPECT_FALSE(table.is_valid());
+    }
+    {
+        EXPECT_FALSE(provider.remove(common::core::Name("T")));
+    }
+}
+
+
 }  // namespace shakujo::common::schema
