@@ -10,6 +10,7 @@ dmlStatement
 
 ddlStatement
     : createTableStatement
+    | dropTableStatement
     ;
 
 // -- INSERT
@@ -272,6 +273,11 @@ columnOrder
     : columnName K_ASC
     | columnName K_DESC
     | columnName
+    ;
+
+// drop table
+dropTableStatement
+    : K_DROP K_TABLE name
     ;
 
 // general statement

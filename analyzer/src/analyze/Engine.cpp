@@ -2092,6 +2092,11 @@ void Engine::visit(model::statement::ddl::CreateTableStatement* node, ScopeConte
     bless(node, std::move(binding));
 }
 
+void Engine::visit(model::statement::ddl::DropTableStatement*, ScopeContext&) {
+    // Drop table statement has nothing to analyze
+}
+
+
 std::unique_ptr<common::core::Type>
 Engine::apply_binary_promotion(model::expression::Expression* a, model::expression::Expression* b) {
     auto a_expr = extract_binding(a);

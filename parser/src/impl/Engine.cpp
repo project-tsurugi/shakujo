@@ -164,6 +164,9 @@ std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::DdlStatement
     if (auto s = c->createTableStatement(); is_defined(s)) {
         return visit(s);
     }
+    if (auto s = c->dropTableStatement(); is_defined(s)) {
+        return visit(s);
+    }
     rule_error(c);
 }
 
@@ -1010,6 +1013,18 @@ void Engine::visit(Grammar::PrimaryKeyDefinitionContext *c, model::statement::dd
             }
         }
         return;
+    }
+    rule_error(c);
+}
+
+std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::DropTableStatementContext *c) {
+    check(c);
+    auto n = c->name();
+    if (is_defined(c->K_DROP()) && is_defined(c->K_TABLE()) && is_defined(n)) {
+        auto result = f.DropTableStatement() << region(c);
+        auto name = visit(n);
+        result->table(std::move(name));
+        return result;
     }
     rule_error(c);
 }

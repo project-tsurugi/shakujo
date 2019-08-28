@@ -138,6 +138,7 @@ protected:
 
     // DDL
     void visit(model::statement::ddl::CreateTableStatement*, ScopeContext&) override;
+    void visit(model::statement::ddl::DropTableStatement*, ScopeContext&) override;
 
 private:
     template<class K>

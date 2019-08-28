@@ -20,6 +20,7 @@ K_UPDATE: U P D A T E;
 K_SET: S E T;
 
 K_CREATE: C R E A T E;
+K_DROP: D R O P;
 K_TABLE: T A B L E;
 
 K_DEFAULT: D E F A U L T;

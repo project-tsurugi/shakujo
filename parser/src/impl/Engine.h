@@ -76,6 +76,7 @@ public:
 
     // ddlStatement
     //     : createTableStatement
+    //     | dropTableStatement
     //     ;
     std::unique_ptr<model::statement::Statement> visit(Grammar::DdlStatementContext *);
 
@@ -419,6 +420,12 @@ public:
     //     | columnName
     //     ;
     std::unique_ptr<model::statement::ddl::CreateTableStatement::PrimaryKey> visit(Grammar::ColumnOrderContext *);
+
+    // -- DROP TABLE
+    // dropTableStatement
+    //     : K_DROP K_TABLE name
+    //     ;
+    std::unique_ptr<model::statement::Statement> visit(Grammar::DropTableStatementContext *);
 
 
     // -- generic statements
