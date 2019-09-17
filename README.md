@@ -2,7 +2,7 @@
 
 ## Requirements
 
-* CMake `>= 3.5`
+* CMake `>= 3.10`
 * C++ Compiler `>= C++17`
 * Java Runtime `>= 8.0`
 * and see *Dockerfile* section
