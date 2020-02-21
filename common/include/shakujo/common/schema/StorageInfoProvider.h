@@ -17,6 +17,7 @@
 #ifndef SHAKUJO_COMMON_SCHEMA_STORAGE_INFO_PROVIDER_H_
 #define SHAKUJO_COMMON_SCHEMA_STORAGE_INFO_PROVIDER_H_
 
+#include <functional>
 #include "TableInfo.h"
 
 namespace shakujo::common::schema {
@@ -48,6 +49,12 @@ public:
      * @return the corresponded table information, or invalid table information if it does not exist
      */
     virtual TableInfo const& find_table(core::Name const& name) const;
+
+    /**
+     * @brief provides all tables in this provider.
+     * @param consumer the destination consumer, which accepts each table info
+     */
+    virtual void each_table(std::function<void(TableInfo const&)>const& consumer) const;
 };
 }  // namespace shakujo::common::schema
 

@@ -153,5 +153,31 @@ TEST_F(ConfigurableStorageInfoProviderTest, remove) {
     }
 }
 
+TEST_F(ConfigurableStorageInfoProviderTest, each) {
+    ConfigurableStorageInfoProvider provider {};
+    provider.add({
+            "T1",
+            {
+                    { "C1", t::Int(32U) },
+            }
+    });
+    provider.add({
+            "T2",
+            {
+                    { "C1", t::Int(32U) },
+            }
+    });
+    std::vector<TableInfo const*> vec{};
+    provider.each_table([&](auto& info){
+        vec.emplace_back(&info);
+    });
+    ASSERT_EQ(vec.size(), 2);
+    std::sort(vec.begin(), vec.end(), [](TableInfo const* a, TableInfo const* b){
+        return a->name() < b->name();
+    });
+    EXPECT_EQ(vec[0]->name(), "T1");
+    EXPECT_EQ(vec[1]->name(), "T2");
+}
+
 
 }  // namespace shakujo::common::schema

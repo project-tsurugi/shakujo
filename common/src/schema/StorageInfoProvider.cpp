@@ -25,5 +25,7 @@ TableInfo const& StorageInfoProvider::find_table(core::Name const&) const {
     return INVALID;
 }
 
+void StorageInfoProvider::each_table(std::function<void(TableInfo const&)> const&) const {}
+
 }  // namespace shakujo::common::schema
 

@@ -93,6 +93,12 @@ public:
         return StorageInfoProvider::find_table(name);
     }
 
+    void each_table(std::function<void(TableInfo const&)>const& consumer) const override {
+        std::unique_lock lock { mutex_ };
+        for(auto& p: entries_) {
+            consumer(*p.second);
+        }
+    }
 private:
     class Comparator {
     public:
