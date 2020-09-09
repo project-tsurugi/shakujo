@@ -72,6 +72,10 @@ public:
             return region_;
         }
 
+        /**
+         * @brief  todo : pending statements to avoid doxygen error.
+         * @return todo : pending statements to avoid doxygen error.
+         */
         char const* what() const noexcept override {
             return what_.c_str();
         }
