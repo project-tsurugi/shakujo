@@ -239,7 +239,7 @@ public:
     template<typename T>
     std::unique_ptr<T> analyze_unmanaged(std::unique_ptr<T> node) {
         do_analyze(node.get());
-        return std::move(node);
+        return node;
     }
 
     template<class T>

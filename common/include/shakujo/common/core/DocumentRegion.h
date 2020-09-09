@@ -231,7 +231,7 @@ std::unique_ptr<T> operator<<(std::unique_ptr<T> node, common::core::DocumentReg
     if (node) {
         node->region(std::move(region));
     }
-    return std::move(node);
+    return node;
 }
 
 }  // namespace shakujo::common::core

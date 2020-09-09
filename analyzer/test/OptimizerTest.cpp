@@ -40,7 +40,7 @@ public:
 
         Optimizer optimizer { env.binding_context() };
         optimizer(node.get());
-        return std::move(node);
+        return node;
     }
 
     template<class T, class U>
