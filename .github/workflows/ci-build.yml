@@ -41,7 +41,7 @@ jobs:
       - id: Clang-Tidy
         name: Clang-Tidy
         run: |
-          python tools/bin/run-clang-tidy.py -quiet -export-fixes=build/clang-tidy-fix.yaml -p build -extra-arg=-Wno-unknown-warning-option -header-filter=$(pwd)'/(include|common|model|parser|analyzer|examples)/.*\\.h$' $(pwd)'/(src|(common|model|parser|analyzer)/src|examples)/.*' 2>&1 | tee build/clang-tidy.log
+          python tools/bin/run-clang-tidy.py -quiet -export-fixes=build/clang-tidy-fix.yaml -p build -extra-arg=-Wno-unknown-warning-option -header-filter=$(pwd)'/(include|common|model|parser|analyzer|examples)/.*\.h$' $(pwd)'/(src|(common|model|parser|analyzer)/src|examples)/.*' 2>&1 | tee build/clang-tidy.log
 
       - id: Doxygen
         name: Doxygen
