@@ -17,7 +17,7 @@ git submodule update --init --recursive
 ```dockerfile
 FROM ubuntu:18.04
 
-RUN apt update -y && apt install -y git build-essential cmake ninja-build openjdk-8-jdk libgoogle-glog-dev pkg-config uuid-dev doxygen
+RUN apt update -y && apt install -y git build-essential cmake ninja-build openjdk-11-jdk libgoogle-glog-dev pkg-config uuid-dev doxygen
 ```
 
 ## How to build
