@@ -104,7 +104,7 @@ private:
 class Parser::Impl {
 public:
     void debug(antlr4::RuleContext *context, antlr4::Parser &parser) {
-        VLOG(2) << context->toStringTree(&parser) << std::endl;
+        VLOG(40) << context->toStringTree(&parser) << std::endl;
     }
 
     template<class In, class Context>
