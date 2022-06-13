@@ -1392,6 +1392,17 @@ std::unique_ptr<model::expression::Expression> Engine::visit(Grammar::FunctionCa
             return f.FunctionCall(std::move(name), std::move(arguments)) << region(c);
         }
         return f.FunctionCall(std::move(name)) << region(c);
+    } else if (is_defined(c->K_CAST())) {
+        auto e = c->expression();
+        auto t = c->dataType();
+        if (is_defined(e) && is_defined(t)) {
+            auto expr = visit(e);
+            auto type = visit(t);
+            return f.TypeOperator(
+                    model::expression::TypeOperator::Kind::CAST,
+                    std::move(type),
+                    std::move(expr));
+        }
     }
     rule_error(c);
 }

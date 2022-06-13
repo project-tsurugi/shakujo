@@ -550,6 +550,7 @@ public:
     //     | name '(' '*' ')'
     //     | name '(' K_ALL expression ')'
     //     | name '(' K_DISTINCT expression ')'
+    //     | K_CAST '(' expression K_AS dataType ')'
     //     ;
     std::unique_ptr<model::expression::Expression> visit(Grammar::FunctionCallContext *);
 

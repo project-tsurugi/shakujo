@@ -69,6 +69,8 @@ K_PRECISION: P R E C I S I O N;
 K_IF: I F;
 K_EXISTS: E X I S T S;
 
+K_CAST: C A S T;
+
 PLUS: '+';
 MINUS: '-';
 ASTERISK: '*';

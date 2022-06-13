@@ -295,10 +295,18 @@ protected:
     //    return true;
     //}
 
-    //bool enter(model::expression::TypeOperator const* node) override {
-    //    // FIXME: impl
-    //    return true;
-    //}
+    bool enter(model::expression::TypeOperator const* node) override {
+        if (node->operator_kind() == model::expression::TypeOperator::Kind::INVALID) {
+            report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "type operator must have a valid operator");
+        }
+        if (!is_defined(node->operand())) {
+            report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "type operator must have a valid term");
+        }
+        if (!is_defined(node->type())) {
+            report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "type operator must have a valid type");
+        }
+        return true;
+    }
 
     bool enter(model::expression::UnaryOperator const* node) override {
         if (node->operator_kind() == model::expression::UnaryOperator::Kind::INVALID) {
