@@ -387,6 +387,7 @@ functionCall
     | name '(' '*' ')'
     | name '(' K_ALL expression ')'
     | name '(' K_DISTINCT expression ')'
+    | K_CAST '(' expression K_AS dataType ')'
     ;
 
 name

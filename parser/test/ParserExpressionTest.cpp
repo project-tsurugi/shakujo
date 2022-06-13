@@ -159,6 +159,13 @@ TEST_F(ParserExpressionTest, function_call_count_asterisk) {
     ASSERT_EQ(0U, args.size());
 }
 
+TEST_F(ParserExpressionTest, function_call_cast) {
+    auto v = parse_expression<TypeOperator>("cast(100 as double)");
+    EXPECT_EQ(TypeOperator::Kind::CAST, v->operator_kind());
+    EXPECT_EQ(as_int(v->operand()), 100);
+    EXPECT_TRUE(equals(v->type(), f.Float64Type()));
+}
+
 TEST_F(ParserExpressionTest, placeholder_named) {
     auto v = parse_expression<Placeholder>(":ph");
     EXPECT_EQ(v->name(), "ph");
