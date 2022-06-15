@@ -135,7 +135,7 @@ public:
                     return std::make_optional(i);
                 }
             }
-            return {};
+            return std::nullopt;
         }
 
         /**
