@@ -1588,20 +1588,62 @@ std::unique_ptr<model::type::Type> Engine::visit(Grammar::DataTypeContext *c) {
     if (is_defined(c->K_DOUBLE())) {
         return f.Float64Type() << region(c);
     }
+    if (is_defined(c->K_DECIMAL())) {
+        std::optional<std::size_t> precision {};
+        std::optional<std::size_t> scale {};
+        if (is_defined(c->precision)) {
+            precision.emplace(visit(c->precision));
+        }
+        if (is_defined(c->scale)) {
+            scale.emplace(visit(c->scale));
+        }
+        return f.DecimalType(precision, scale);
+    }
     if (is_defined(c->K_CHAR())) {
         if (auto p = c->dataSize(); is_defined(p)) {
             auto sz = visit(p);
             return f.CharType(sz) << region(c);
         }
+        return f.CharType(1) << region(c);
     }
     if (is_defined(c->K_VARCHAR())) {
-        if (auto p = c->dataSize(); is_defined(p)) {
+        if (auto p = c->size; is_defined(p)) {
             auto sz = visit(p);
             return f.VarCharType(sz) << region(c);
         }
     }
     if (is_defined(c->K_STRING())) {
         return f.StringType() << region(c);
+    }
+    if (is_defined(c->K_BINARY())) {
+        if (auto p = c->dataSize(); is_defined(p)) {
+            auto sz = visit(p);
+            return f.BinaryType(sz) << region(c);
+        }
+        return f.BinaryType(1) << region(c);
+    }
+    if (is_defined(c->K_VARBINARY())) {
+        if (auto p = c->size; is_defined(p)) {
+            auto sz = visit(p);
+            return f.VarBinaryType(sz) << region(c);
+        }
+    }
+    if (is_defined(c->K_DATE())) {
+        return f.DateType();
+    }
+    if (is_defined(c->K_TIME())) {
+        if (auto z = c->withTimeZone(); is_defined(z)) {
+            visit(z);
+            return f.TimeType(true);
+        }
+        return f.TimeType();
+    }
+    if (is_defined(c->K_TIMESTAMP())) {
+        if (auto z = c->withTimeZone(); is_defined(z)) {
+            visit(z);
+            return f.TimestampType(true);
+        }
+        return f.TimestampType();
     }
     rule_error(c);
 }
@@ -1613,5 +1655,25 @@ std::size_t Engine::visit(Grammar::DataSizeContext *c) {
     }
     return 0;
 }
+
+std::size_t Engine::visit(Grammar::FlexibleDataSizeContext *c) {
+    check(c);
+    if (auto t = c->INTEGRAL_NUMBER(); is_defined(t)) {
+        return std::stoull(t->getSymbol()->getText());
+    }
+    if (is_defined(c->ASTERISK())) {
+        return static_cast<std::size_t>(-1);
+    }
+    return 0;
+}
+
+void Engine::visit(Grammar::WithTimeZoneContext *c) {
+    check(c);
+    if (is_defined(c->K_WITH()) && is_defined(c->K_TIME()) && is_defined(c->K_ZONE())) {
+        return;
+    }
+    rule_error(c);
+}
+
 
 }  // namespace shakujo::parser::impl

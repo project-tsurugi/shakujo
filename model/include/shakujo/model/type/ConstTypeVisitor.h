@@ -22,8 +22,11 @@
 #include <sstream>
 
 #include "shakujo/model/type/ArrayType.h"
+#include "shakujo/model/type/BinaryType.h"
 #include "shakujo/model/type/BooleanType.h"
 #include "shakujo/model/type/CharType.h"
+#include "shakujo/model/type/DateType.h"
+#include "shakujo/model/type/DecimalType.h"
 #include "shakujo/model/type/Float32Type.h"
 #include "shakujo/model/type/Float64Type.h"
 #include "shakujo/model/type/Int32Type.h"
@@ -31,8 +34,11 @@
 #include "shakujo/model/type/NullType.h"
 #include "shakujo/model/type/RelationType.h"
 #include "shakujo/model/type/StringType.h"
+#include "shakujo/model/type/TimeType.h"
+#include "shakujo/model/type/TimestampType.h"
 #include "shakujo/model/type/TupleType.h"
 #include "shakujo/model/type/TypeKind.h"
+#include "shakujo/model/type/VarBinaryType.h"
 #include "shakujo/model/type/VarCharType.h"
 #include "shakujo/model/type/VectorType.h"
 
@@ -72,6 +78,17 @@ public:
     }
 
     /**
+     * @brief Processes BinaryType.
+     * @param node the processing target
+     * @param args the processing arguments
+     * @return the result
+     * @see BooleanType
+     */
+    virtual Return visit(BinaryType const* node, Args... args) {
+        return visitDefault(node, std::forward<Args>(args)...);
+    }
+
+    /**
      * @brief Processes BooleanType.
      * @param node the processing target
      * @param args the processing arguments
@@ -90,6 +107,28 @@ public:
      * @see CharType
      */
     virtual Return visit(CharType const* node, Args... args) {
+        return visitDefault(node, std::forward<Args>(args)...);
+    }
+
+    /**
+     * @brief Processes DateType.
+     * @param node the processing target
+     * @param args the processing arguments
+     * @return the result
+     * @see BooleanType
+     */
+    virtual Return visit(DateType const* node, Args... args) {
+        return visitDefault(node, std::forward<Args>(args)...);
+    }
+
+    /**
+     * @brief Processes DecimalType.
+     * @param node the processing target
+     * @param args the processing arguments
+     * @return the result
+     * @see BooleanType
+     */
+    virtual Return visit(DecimalType const* node, Args... args) {
         return visitDefault(node, std::forward<Args>(args)...);
     }
 
@@ -171,6 +210,28 @@ public:
     }
 
     /**
+     * @brief Processes TimeType.
+     * @param node the processing target
+     * @param args the processing arguments
+     * @return the result
+     * @see BooleanType
+     */
+    virtual Return visit(TimeType const* node, Args... args) {
+        return visitDefault(node, std::forward<Args>(args)...);
+    }
+
+    /**
+     * @brief Processes TimestampType.
+     * @param node the processing target
+     * @param args the processing arguments
+     * @return the result
+     * @see BooleanType
+     */
+    virtual Return visit(TimestampType const* node, Args... args) {
+        return visitDefault(node, std::forward<Args>(args)...);
+    }
+
+    /**
      * @brief Processes TupleType.
      * @param node the processing target
      * @param args the processing arguments
@@ -178,6 +239,17 @@ public:
      * @see TupleType
      */
     virtual Return visit(TupleType const* node, Args... args) {
+        return visitDefault(node, std::forward<Args>(args)...);
+    }
+
+    /**
+     * @brief Processes VarBinaryType.
+     * @param node the processing target
+     * @param args the processing arguments
+     * @return the result
+     * @see BooleanType
+     */
+    virtual Return visit(VarBinaryType const* node, Args... args) {
         return visitDefault(node, std::forward<Args>(args)...);
     }
 
@@ -215,8 +287,14 @@ public:
             return visit(static_cast<ArrayType const*>(node), std::forward<Args>(args)...);  // NOLINT
         case BooleanType::tag:
             return visit(static_cast<BooleanType const*>(node), std::forward<Args>(args)...);  // NOLINT
+        case BinaryType::tag:
+            return visit(static_cast<BinaryType const*>(node), std::forward<Args>(args)...);  // NOLINT
         case CharType::tag:
             return visit(static_cast<CharType const*>(node), std::forward<Args>(args)...);  // NOLINT
+        case DateType::tag:
+            return visit(static_cast<DateType const*>(node), std::forward<Args>(args)...);  // NOLINT
+        case DecimalType::tag:
+            return visit(static_cast<DecimalType const*>(node), std::forward<Args>(args)...);  // NOLINT
         case Float32Type::tag:
             return visit(static_cast<Float32Type const*>(node), std::forward<Args>(args)...);  // NOLINT
         case Float64Type::tag:
@@ -231,8 +309,14 @@ public:
             return visit(static_cast<RelationType const*>(node), std::forward<Args>(args)...);  // NOLINT
         case StringType::tag:
             return visit(static_cast<StringType const*>(node), std::forward<Args>(args)...);  // NOLINT
+        case TimeType::tag:
+            return visit(static_cast<TimeType const*>(node), std::forward<Args>(args)...);  // NOLINT
+        case TimestampType::tag:
+            return visit(static_cast<TimestampType const*>(node), std::forward<Args>(args)...);  // NOLINT
         case TupleType::tag:
             return visit(static_cast<TupleType const*>(node), std::forward<Args>(args)...);  // NOLINT
+        case VarBinaryType::tag:
+            return visit(static_cast<VarBinaryType const*>(node), std::forward<Args>(args)...);  // NOLINT
         case VarCharType::tag:
             return visit(static_cast<VarCharType const*>(node), std::forward<Args>(args)...);  // NOLINT
         case VectorType::tag:

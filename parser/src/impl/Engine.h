@@ -592,19 +592,37 @@ public:
     std::unique_ptr<model::expression::Placeholder> visit(Grammar::PlaceholderContext *);
 
     // dataType
-    //     : K_INT ( dataSize )?
+    //     : K_INT ( '(' dataSize ')' )?
     //     | K_BIGINT
-    //     | K_FLOAT ( dataSize )?
+    //     | K_FLOAT ( '(' dataSize ')' )?
     //     | K_DOUBLE ( K_PRECISION )?
-    //     | K_CHAR dataSize
+    //     | K_DECIMAL ( '(' precision=flexibleDataSize ( ',' scale=flexibleDataSize )? ')' )?
+    //     | K_CHAR ( '(' dataSize ')' )?
+    //     | K_VARCHAR ( '(' flexibleDataSize ')' )?
     //     | K_STRING
+    //     | K_BINARY ( '(' dataSize ')' )?
+    //     | K_VARBINARY ( '(' flexibleDataSize ')' )?
+    //     | K_DATE
+    //     | K_TIME ( withTimeZone )?
+    //     | K_TIMESTAMP ( withTimeZone )?
     //     ;
     std::unique_ptr<model::type::Type> visit(Grammar::DataTypeContext *);
 
+    // flexibleDataSize
+    //     : INTEGRAL_NUMBER
+    //     | ASTERISK
+    //     ;
+    std::size_t visit(Grammar::FlexibleDataSizeContext *);
+
     // dataSize
-    //     : '(' INTEGRAL_NUMBER ')'
+    //     : INTEGRAL_NUMBER
     //     ;
     std::size_t visit(Grammar::DataSizeContext *);
+
+    // withTimeZone
+    //     : K_WITH K_TIME K_ZONE
+    //     ;
+    void visit(Grammar::WithTimeZoneContext *);
 
 private:
     void check(antlr4::ParserRuleContext *);

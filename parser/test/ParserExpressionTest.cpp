@@ -166,6 +166,13 @@ TEST_F(ParserExpressionTest, function_call_cast) {
     EXPECT_TRUE(equals(v->type(), f.Float64Type()));
 }
 
+TEST_F(ParserExpressionTest, function_call_cast_decimal) {
+    auto v = parse_expression<TypeOperator>("cast(100 as DECIMAL(*, 2))");
+    EXPECT_EQ(TypeOperator::Kind::CAST, v->operator_kind());
+    EXPECT_EQ(as_int(v->operand()), 100);
+    EXPECT_TRUE(equals(v->type(), f.DecimalType(static_cast<std::size_t>(-1), 2)));
+}
+
 TEST_F(ParserExpressionTest, placeholder_named) {
     auto v = parse_expression<Placeholder>(":ph");
     EXPECT_EQ(v->name(), "ph");

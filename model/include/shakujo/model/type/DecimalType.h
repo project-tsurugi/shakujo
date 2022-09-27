@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 // DON'T EDIT THIS GENERATED FILE //
-#ifndef SHAKUJO_MODEL_TYPE_VAR_CHAR_TYPE_H_
-#define SHAKUJO_MODEL_TYPE_VAR_CHAR_TYPE_H_
+#ifndef SHAKUJO_MODEL_TYPE_DECIMAL_TYPE_H_
+#define SHAKUJO_MODEL_TYPE_DECIMAL_TYPE_H_
 
 #include <cstddef>
+#include <optional>
 #include <utility>
 #include <memory>
 
@@ -26,14 +27,14 @@
 
 namespace shakujo::model::type {
 /**
- * @brief Represents variant length character sequence type.
+ * @brief Represents decimal number type.
  */
-class VarCharType
+class DecimalType
         : public Type {
 private:
     class Impl;
     std::unique_ptr<Impl> impl_;
-    explicit VarCharType(std::unique_ptr<Impl>) noexcept;
+    explicit DecimalType(std::unique_ptr<Impl>) noexcept;
 
 public:
     /// @brief represents don't care values.
@@ -42,71 +43,88 @@ public:
     /**
      * @brief Constructs a new empty object.
      */
-    VarCharType();
+    DecimalType();
 
     /**
      * @brief Destroys this object.
      */
-    ~VarCharType() noexcept override;
+    ~DecimalType() noexcept override;
 
     /**
      * @brief Copy-constructs a new object.
      * @param other the source object
      */
-    VarCharType(VarCharType const& other) = delete;
+    DecimalType(DecimalType const& other) = delete;
 
     /**
      * @brief Copy-assigns to this object.
      * @param other the source object
      * @return this
      */
-    VarCharType& operator=(VarCharType const& other) = delete;
+    DecimalType& operator=(DecimalType const& other) = delete;
 
     /**
      * @brief Move-constructs a new object.
      * @param other the source object
      */
-    VarCharType(VarCharType&& other) noexcept;
+    DecimalType(DecimalType&& other) noexcept;
 
     /**
      * @brief Move-assigns to this object.
      * @param other the source object
      * @return this
      */
-    VarCharType& operator=(VarCharType&& other) noexcept;
+    DecimalType& operator=(DecimalType&& other) noexcept;
 
 public:
-    /**
-     * @brief Returns bytes length.
-     * @return bytes length.
-     * @return dont_care if bytes are flexible
-     */
-    std::size_t size() const;
 
     /**
-     * @brief Sets bytes length.
-     * @param size bytes length
+     * @brief returns the max number of decimal digits in integral and fractional part.
+     * @return the max number of digits
+     * @return dont_care if the number of digits are defaults
+     * @return empty if it is not defined
+     */
+    [[nodiscard]] std::optional<std::size_t> precision() const;
+
+    /**
+     * @brief Sets the precision.
+     * @param value the precision value
      * @return this
      */
-    VarCharType& size(std::size_t size);
+    DecimalType& precision(std::optional<std::size_t> value);
+
+    /**
+     * @brief returns the number of digits in the fractional part.
+     * @return the number of digits in the fractional part
+     * @return dont_care if the fractional part is flexible
+     * @return empty if it is not defined
+     */
+    [[nodiscard]] std::optional<std::size_t> scale() const;
+
+    /**
+     * @brief Sets the scale.
+     * @param value the scale value
+     * @return this
+     */
+    DecimalType& scale(std::optional<std::size_t> value);
 
     /**
      * @brief Returns a copy of this object.
      * @return a clone of this
      */
-    VarCharType* clone() const & override;
+    DecimalType* clone() const & override;
 
     /**
      * @brief Returns a copy of this object.
      * @return a clone of this
      */
-    VarCharType* clone() && override;
+    DecimalType* clone() && override;
 
 public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr auto tag = TypeKind::VAR_CHAR_TYPE;
+    static inline constexpr auto tag = TypeKind::DECIMAL_TYPE;
 
     /**
      * @brief Returns the node kind.
@@ -119,4 +137,4 @@ public:
 };
 }  // namespace shakujo::model::type
 
-#endif  // SHAKUJO_MODEL_TYPE_VAR_CHAR_TYPE_H_
+#endif  // SHAKUJO_MODEL_TYPE_DECIMAL_TYPE_H_

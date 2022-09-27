@@ -802,6 +802,24 @@ void ConstNodeWalker::walk(type::Type const* node) {
     case type::VectorType::tag:
         walk(static_cast<type::VectorType const*>(node));  // NOLINT
         return;
+    case type::DecimalType::tag:
+        walk(static_cast<type::DecimalType const*>(node)); // NOLINT
+        return;
+    case type::BinaryType::tag:
+        walk(static_cast<type::BinaryType const*>(node)); // NOLINT
+        return;
+    case type::VarBinaryType::tag:
+        walk(static_cast<type::VarBinaryType const*>(node)); // NOLINT
+        return;
+    case type::DateType::tag:
+        walk(static_cast<type::DateType const*>(node)); // NOLINT
+        return;
+    case type::TimeType::tag:
+        walk(static_cast<type::TimeType const*>(node)); // NOLINT
+        return;
+    case type::TimestampType::tag:
+        walk(static_cast<type::TimestampType const*>(node)); // NOLINT
+        return;
     }
     std::ostringstream ss;
     ss << "unknown node kind: " << node->kind();
@@ -877,6 +895,36 @@ void ConstNodeWalker::walk(type::VarCharType const* node) {
 void ConstNodeWalker::walk(type::VectorType const* node) {
     if (!enter(node)) return;
     if (node->element_type()) walk(node->element_type());
+    exit(node);
+}
+
+void ConstNodeWalker::walk(type::DecimalType const* node) {
+    if (!enter(node)) return;
+    exit(node);
+}
+
+void ConstNodeWalker::walk(type::BinaryType const* node) {
+    if (!enter(node)) return;
+    exit(node);
+}
+
+void ConstNodeWalker::walk(type::VarBinaryType const* node) {
+    if (!enter(node)) return;
+    exit(node);
+}
+
+void ConstNodeWalker::walk(type::DateType const* node) {
+    if (!enter(node)) return;
+    exit(node);
+}
+
+void ConstNodeWalker::walk(type::TimeType const* node) {
+    if (!enter(node)) return;
+    exit(node);
+}
+
+void ConstNodeWalker::walk(type::TimestampType const* node) {
+    if (!enter(node)) return;
     exit(node);
 }
 

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 // DON'T EDIT THIS GENERATED FILE //
-#ifndef SHAKUJO_MODEL_TYPE_VAR_CHAR_TYPE_H_
-#define SHAKUJO_MODEL_TYPE_VAR_CHAR_TYPE_H_
+#ifndef SHAKUJO_MODEL_TYPE_BINARY_TYPE_H_
+#define SHAKUJO_MODEL_TYPE_BINARY_TYPE_H_
 
 #include <cstddef>
 #include <utility>
@@ -26,60 +26,56 @@
 
 namespace shakujo::model::type {
 /**
- * @brief Represents variant length character sequence type.
+ * @brief Represents fixed length octet sequence type.
  */
-class VarCharType
+class BinaryType
         : public Type {
 private:
     class Impl;
     std::unique_ptr<Impl> impl_;
-    explicit VarCharType(std::unique_ptr<Impl>) noexcept;
+    explicit BinaryType(std::unique_ptr<Impl>) noexcept;
 
 public:
-    /// @brief represents don't care values.
-    static constexpr std::size_t dont_care = static_cast<std::size_t>(-1);
-
     /**
      * @brief Constructs a new empty object.
      */
-    VarCharType();
+    BinaryType();
 
     /**
      * @brief Destroys this object.
      */
-    ~VarCharType() noexcept override;
+    ~BinaryType() noexcept override;
 
     /**
      * @brief Copy-constructs a new object.
      * @param other the source object
      */
-    VarCharType(VarCharType const& other) = delete;
+    BinaryType(BinaryType const& other) = delete;
 
     /**
      * @brief Copy-assigns to this object.
      * @param other the source object
      * @return this
      */
-    VarCharType& operator=(VarCharType const& other) = delete;
+    BinaryType& operator=(BinaryType const& other) = delete;
 
     /**
      * @brief Move-constructs a new object.
      * @param other the source object
      */
-    VarCharType(VarCharType&& other) noexcept;
+    BinaryType(BinaryType&& other) noexcept;
 
     /**
      * @brief Move-assigns to this object.
      * @param other the source object
      * @return this
      */
-    VarCharType& operator=(VarCharType&& other) noexcept;
+    BinaryType& operator=(BinaryType&& other) noexcept;
 
 public:
     /**
      * @brief Returns bytes length.
      * @return bytes length.
-     * @return dont_care if bytes are flexible
      */
     std::size_t size() const;
 
@@ -88,25 +84,25 @@ public:
      * @param size bytes length
      * @return this
      */
-    VarCharType& size(std::size_t size);
+    BinaryType& size(std::size_t size);
 
     /**
      * @brief Returns a copy of this object.
      * @return a clone of this
      */
-    VarCharType* clone() const & override;
+    BinaryType* clone() const & override;
 
     /**
      * @brief Returns a copy of this object.
      * @return a clone of this
      */
-    VarCharType* clone() && override;
+    BinaryType* clone() && override;
 
 public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr auto tag = TypeKind::VAR_CHAR_TYPE;
+    static inline constexpr auto tag = TypeKind::BINARY_TYPE;
 
     /**
      * @brief Returns the node kind.
@@ -119,4 +115,4 @@ public:
 };
 }  // namespace shakujo::model::type
 
-#endif  // SHAKUJO_MODEL_TYPE_VAR_CHAR_TYPE_H_
+#endif  // SHAKUJO_MODEL_TYPE_BINARY_TYPE_H_

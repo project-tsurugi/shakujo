@@ -1153,5 +1153,66 @@ std::unique_ptr<type::VectorType> IRFactoryBase::VectorType(
     return ret;
 }
 
+std::unique_ptr<type::DecimalType> IRFactoryBase::DecimalType() {
+    return std::make_unique<type::DecimalType>();
+}
+
+std::unique_ptr<type::DecimalType> IRFactoryBase::DecimalType(
+        std::optional<std::size_t> precision,
+        std::optional<std::size_t> scale) {
+    auto ret = DecimalType();
+    ret->precision(precision);
+    ret->scale(scale);
+    return ret;
+}
+
+std::unique_ptr<type::BinaryType> IRFactoryBase::BinaryType() {
+    return std::make_unique<type::BinaryType>();
+}
+
+std::unique_ptr<type::BinaryType> IRFactoryBase::BinaryType(
+        std::size_t size) {
+    auto ret = BinaryType();
+    ret->size(size);
+    return ret;
+}
+
+std::unique_ptr<type::VarBinaryType> IRFactoryBase::VarBinaryType() {
+    return std::make_unique<type::VarBinaryType>();
+}
+
+std::unique_ptr<type::VarBinaryType> IRFactoryBase::VarBinaryType(
+        std::size_t size) {
+    auto ret = VarBinaryType();
+    ret->size(size);
+    return ret;
+}
+
+std::unique_ptr<type::DateType> IRFactoryBase::DateType() {
+    return std::make_unique<type::DateType>();
+}
+
+std::unique_ptr<type::TimeType> IRFactoryBase::TimeType() {
+    return std::make_unique<type::TimeType>();
+}
+
+std::unique_ptr<type::TimeType> IRFactoryBase::TimeType(
+        bool has_time_zone) {
+    auto ret = TimeType();
+    ret->has_time_zone(has_time_zone);
+    return ret;
+}
+
+std::unique_ptr<type::TimestampType> IRFactoryBase::TimestampType() {
+    return std::make_unique<type::TimestampType>();
+}
+
+std::unique_ptr<type::TimestampType> IRFactoryBase::TimestampType(
+        bool has_time_zone) {
+    auto ret = TimestampType();
+    ret->has_time_zone(has_time_zone);
+    return ret;
+}
+
 }  // namespace shakujo::model
 

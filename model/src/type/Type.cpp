@@ -118,6 +118,52 @@ bool Type::operator==(Type const& other) const {
             auto that = dynamic_pointer_cast<VectorType>(other);
             return dispatch(node->element_type(), that->element_type());
         }
+
+        bool visit(DecimalType const* node, Type const* other) override {
+            if (node->kind() != other->kind()) {
+                return false;
+            }
+            auto that = dynamic_pointer_cast<DecimalType>(other);
+            return node->precision() == that->precision()
+                && node->scale() == that->scale();
+        }
+
+        bool visit(BinaryType const* node, Type const* other) override {
+            if (node->kind() != other->kind()) {
+                return false;
+            }
+            auto that = dynamic_pointer_cast<BinaryType>(other);
+            return node->size() == that->size();
+        }
+
+        bool visit(VarBinaryType const* node, Type const* other) override {
+            if (node->kind() != other->kind()) {
+                return false;
+            }
+            auto that = dynamic_pointer_cast<VarBinaryType>(other);
+            return node->size() == that->size();
+        }
+
+        bool visit(DateType const* node, Type const* other) override {
+            return node->kind() == other->kind();
+        }
+
+        bool visit(TimeType const* node, Type const* other) override {
+            if (node->kind() != other->kind()) {
+                return false;
+            }
+            auto that = dynamic_pointer_cast<TimeType>(other);
+            return node->has_time_zone() == that->has_time_zone();
+        }
+
+        bool visit(TimestampType const* node, Type const* other) override {
+            if (node->kind() != other->kind()) {
+                return false;
+            }
+            auto that = dynamic_pointer_cast<TimestampType>(other);
+            return node->has_time_zone() == that->has_time_zone();
+        }
+
     };
     return Eq {}.dispatch(this, &other);
 }
@@ -184,13 +230,66 @@ std::ostream& operator<<(std::ostream& out, Type const& value) {
         }
 
         void visit(VarCharType const* node, std::ostream& out) override {
-            out << "VarCharType(" << node->size() << ")";
+            out << "VarCharType(";
+            print_flexible_size(node->size(), out);
+            out << ")";
         }
 
         void visit(VectorType const* node, std::ostream& out) override {
             out << "VectorType(";
             dispatch(node->element_type(), out);
             out << ")";
+        }
+
+        void visit(DecimalType const* node, std::ostream& out) override {
+            out << "DecimalType(";
+            if (node->precision()) {
+                print_flexible_size(*node->precision(), out);
+            }
+            if (node->scale()) {
+                out << ", ";
+                print_flexible_size(*node->scale(), out);
+            }
+            out << ")";
+        }
+
+        void visit(BinaryType const* node, std::ostream& out) override {
+            out << "BinaryType(" << node->size() << ")";
+        }
+
+        void visit(VarBinaryType const* node, std::ostream& out) override {
+            out << "VarBinaryType(";
+            print_flexible_size(node->size(), out);
+            out << ")";
+        }
+
+        void visit(DateType const*, std::ostream& out) override {
+            out << "DateType()";
+        }
+
+        void visit(TimeType const* node, std::ostream& out) override {
+            out << "TimeType(";
+            if (node->has_time_zone()) {
+                out << "with_time_zone";
+            }
+            out << ")";
+        }
+
+        void visit(TimestampType const* node, std::ostream& out) override {
+            out << "TimestampType(";
+            if (node->has_time_zone()) {
+                out << "with_time_zone";
+            }
+            out << ")";
+        }
+
+    private:
+        void print_flexible_size(std::size_t size, std::ostream& out) {
+            if (size == static_cast<std::size_t>(-1)) {
+                out << "*";
+            } else {
+                out << size;
+            }
         }
     };
     Printer{}.dispatch(&value, out);

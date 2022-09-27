@@ -421,15 +421,30 @@ placeholder
     ;
 
 dataType
-    : K_INT ( dataSize )?
+    : K_INT ( '(' dataSize ')' )?
     | K_BIGINT
-    | K_FLOAT ( dataSize )?
+    | K_FLOAT ( '(' dataSize ')' )?
     | K_DOUBLE ( K_PRECISION )?
-    | K_CHAR dataSize
-    | K_VARCHAR dataSize
+    | K_DECIMAL ( '(' precision=flexibleDataSize ( ',' scale=flexibleDataSize )? ')' )?
+    | K_CHAR ( '(' dataSize ')' )?
+    | K_VARCHAR '(' size=flexibleDataSize ')'
     | K_STRING
+    | K_BINARY ( '(' dataSize ')' )?
+    | K_VARBINARY '(' size=flexibleDataSize ')'
+    | K_DATE
+    | K_TIME ( withTimeZone )?
+    | K_TIMESTAMP ( withTimeZone )?
+    ;
+
+flexibleDataSize
+    : INTEGRAL_NUMBER
+    | ASTERISK
     ;
 
 dataSize
-    : '(' INTEGRAL_NUMBER ')'
+    : INTEGRAL_NUMBER
+    ;
+
+withTimeZone
+    : K_WITH K_TIME K_ZONE
     ;

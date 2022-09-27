@@ -88,8 +88,11 @@
 #include "shakujo/model/statement/dml/UpdateStatement.h"
 #include "shakujo/model/statement/transaction/TransactionBlockStatement.h"
 #include "shakujo/model/type/ArrayType.h"
+#include "shakujo/model/type/BinaryType.h"
 #include "shakujo/model/type/BooleanType.h"
 #include "shakujo/model/type/CharType.h"
+#include "shakujo/model/type/DateType.h"
+#include "shakujo/model/type/DecimalType.h"
 #include "shakujo/model/type/Float32Type.h"
 #include "shakujo/model/type/Float64Type.h"
 #include "shakujo/model/type/Int32Type.h"
@@ -97,8 +100,10 @@
 #include "shakujo/model/type/NullType.h"
 #include "shakujo/model/type/RelationType.h"
 #include "shakujo/model/type/StringType.h"
+#include "shakujo/model/type/TimeType.h"
+#include "shakujo/model/type/TimestampType.h"
 #include "shakujo/model/type/TupleType.h"
-#include "shakujo/model/type/Type.h"
+#include "shakujo/model/type/VarBinaryType.h"
 #include "shakujo/model/type/VarCharType.h"
 #include "shakujo/model/type/VectorType.h"
 
@@ -1909,6 +1914,150 @@ protected:
     }
 
     /**
+     * @brief callback on enter into DecimalType.
+     * @param node the processing target
+     * @return true if continue to enter into child elements of the given node
+     * @return false don't walk into child elements, also the corresponded exit() will not be called
+     * @see type::VectorType
+     * @see walk()
+     * @see exit()
+     */
+    virtual bool enter([[maybe_unused]] type::DecimalType const* node) {
+        return enterDefault(node);
+    }
+
+    /**
+     * @brief callback on exit from DecimalType.
+     * @param node the processing target
+     * @see type::VectorType
+     * @see walk()
+     * @see enter()
+     */
+    virtual void exit([[maybe_unused]] type::DecimalType const* node) {
+        return exitDefault(node);
+    }
+
+    /**
+     * @brief callback on enter into BinaryType.
+     * @param node the processing target
+     * @return true if continue to enter into child elements of the given node
+     * @return false don't walk into child elements, also the corresponded exit() will not be called
+     * @see type::VectorType
+     * @see walk()
+     * @see exit()
+     */
+    virtual bool enter([[maybe_unused]] type::BinaryType const* node) {
+        return enterDefault(node);
+    }
+
+    /**
+     * @brief callback on exit from BinaryType.
+     * @param node the processing target
+     * @see type::VectorType
+     * @see walk()
+     * @see enter()
+     */
+    virtual void exit([[maybe_unused]] type::BinaryType const* node) {
+        return exitDefault(node);
+    }
+
+    /**
+     * @brief callback on enter into VarBinaryType.
+     * @param node the processing target
+     * @return true if continue to enter into child elements of the given node
+     * @return false don't walk into child elements, also the corresponded exit() will not be called
+     * @see type::VectorType
+     * @see walk()
+     * @see exit()
+     */
+    virtual bool enter([[maybe_unused]] type::VarBinaryType const* node) {
+        return enterDefault(node);
+    }
+
+    /**
+     * @brief callback on exit from VarBinaryType.
+     * @param node the processing target
+     * @see type::VectorType
+     * @see walk()
+     * @see enter()
+     */
+    virtual void exit([[maybe_unused]] type::VarBinaryType const* node) {
+        return exitDefault(node);
+    }
+
+    /**
+     * @brief callback on enter into DateType.
+     * @param node the processing target
+     * @return true if continue to enter into child elements of the given node
+     * @return false don't walk into child elements, also the corresponded exit() will not be called
+     * @see type::VectorType
+     * @see walk()
+     * @see exit()
+     */
+    virtual bool enter([[maybe_unused]] type::DateType const* node) {
+        return enterDefault(node);
+    }
+
+    /**
+     * @brief callback on exit from DateType.
+     * @param node the processing target
+     * @see type::VectorType
+     * @see walk()
+     * @see enter()
+     */
+    virtual void exit([[maybe_unused]] type::DateType const* node) {
+        return exitDefault(node);
+    }
+
+    /**
+     * @brief callback on enter into TimeType.
+     * @param node the processing target
+     * @return true if continue to enter into child elements of the given node
+     * @return false don't walk into child elements, also the corresponded exit() will not be called
+     * @see type::VectorType
+     * @see walk()
+     * @see exit()
+     */
+    virtual bool enter([[maybe_unused]] type::TimeType const* node) {
+        return enterDefault(node);
+    }
+
+    /**
+     * @brief callback on exit from TimeType.
+     * @param node the processing target
+     * @see type::VectorType
+     * @see walk()
+     * @see enter()
+     */
+    virtual void exit([[maybe_unused]] type::TimeType const* node) {
+        return exitDefault(node);
+    }
+
+    /**
+     * @brief callback on enter into TimestampType.
+     * @param node the processing target
+     * @return true if continue to enter into child elements of the given node
+     * @return false don't walk into child elements, also the corresponded exit() will not be called
+     * @see type::VectorType
+     * @see walk()
+     * @see exit()
+     */
+    virtual bool enter([[maybe_unused]] type::TimestampType const* node) {
+        return enterDefault(node);
+    }
+
+    /**
+     * @brief callback on exit from TimestampType.
+     * @param node the processing target
+     * @see type::VectorType
+     * @see walk()
+     * @see enter()
+     */
+    virtual void exit([[maybe_unused]] type::TimestampType const* node) {
+        return exitDefault(node);
+    }
+
+    /**
      * @brief callback on enter into Index.
      * @param node the processing target
      * @return true if continue to enter into child elements of the given node
@@ -2651,6 +2800,48 @@ public:
      * @see type::VectorType
      */
     void walk(type::VectorType const* node);
+
+    /**
+     * @brief Begins to walk DecimalType.
+     * @param node the processing target
+     * @see type::DecimalType
+     */
+    void walk(type::DecimalType const* node);
+
+    /**
+     * @brief Begins to walk BinaryType.
+     * @param node the processing target
+     * @see type::BinaryType
+     */
+    void walk(type::BinaryType const* node);
+
+    /**
+     * @brief Begins to walk VarBinaryType.
+     * @param node the processing target
+     * @see type::VarBinaryType
+     */
+    void walk(type::VarBinaryType const* node);
+
+    /**
+     * @brief Begins to walk DateType.
+     * @param node the processing target
+     * @see type::DateType
+     */
+    void walk(type::DateType const* node);
+
+    /**
+     * @brief Begins to walk TimeType.
+     * @param node the processing target
+     * @see type::TimeType
+     */
+    void walk(type::TimeType const* node);
+
+    /**
+     * @brief Begins to walk TimestampType.
+     * @param node the processing target
+     * @see type::TimestampType
+     */
+    void walk(type::TimestampType const* node);
 
     /**
      * @brief Begins to walk Index.

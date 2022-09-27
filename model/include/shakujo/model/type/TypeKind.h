@@ -34,6 +34,11 @@ enum class TypeKind {
      */
     ARRAY_TYPE,
     /**
+     * @brief tag for BinaryType.
+     * @see BinaryType
+     */
+    BINARY_TYPE,
+    /**
      * @brief tag for BooleanType.
      * @see BooleanType
      */
@@ -43,6 +48,16 @@ enum class TypeKind {
      * @see CharType
      */
     CHAR_TYPE,
+    /**
+     * @brief tag for DateType.
+     * @see DateType
+     */
+    DATE_TYPE,
+    /**
+     * @brief tag for DecimalType.
+     * @see DecimalType
+     */
+    DECIMAL_TYPE,
     /**
      * @brief tag for Float32Type.
      * @see Float32Type
@@ -79,6 +94,16 @@ enum class TypeKind {
      */
     STRING_TYPE,
     /**
+     * @brief tag for TimeType.
+     * @see TimeType
+     */
+    TIME_TYPE,
+    /**
+     * @brief tag for TimestampType.
+     * @see TimestampType
+     */
+    TIMESTAMP_TYPE,
+    /**
      * @brief tag for TupleType.
      * @see TupleType
      */
@@ -88,6 +113,11 @@ enum class TypeKind {
      * @see VarCharType
      */
     VAR_CHAR_TYPE,
+    /**
+     * @brief tag for VarBinaryType.
+     * @see VarBinaryType
+     */
+    VAR_BINARY_TYPE,
     /**
      * @brief tag for VectorType.
      * @see VectorType
@@ -104,8 +134,11 @@ enum class TypeKind {
 inline constexpr std::string_view to_string_view(TypeKind value) {
     switch (value) {
         case TypeKind::ARRAY_TYPE: return "ARRAY_TYPE";
+        case TypeKind::BINARY_TYPE: return "BINARY_TYPE";
         case TypeKind::BOOLEAN_TYPE: return "BOOLEAN_TYPE";
         case TypeKind::CHAR_TYPE: return "CHAR_TYPE";
+        case TypeKind::DATE_TYPE: return "DATE_TYPE";
+        case TypeKind::DECIMAL_TYPE: return "DECIMAL_TYPE";
         case TypeKind::FLOAT32_TYPE: return "FLOAT32_TYPE";
         case TypeKind::FLOAT64_TYPE: return "FLOAT64_TYPE";
         case TypeKind::INT32_TYPE: return "INT32_TYPE";
@@ -113,7 +146,10 @@ inline constexpr std::string_view to_string_view(TypeKind value) {
         case TypeKind::NULL_TYPE: return "NULL_TYPE";
         case TypeKind::RELATION_TYPE: return "RELATION_TYPE";
         case TypeKind::STRING_TYPE: return "STRING_TYPE";
+        case TypeKind::TIME_TYPE: return "TIME_TYPE";
+        case TypeKind::TIMESTAMP_TYPE: return "TIMESTAMP_TYPE";
         case TypeKind::TUPLE_TYPE: return "TUPLE_TYPE";
+        case TypeKind::VAR_BINARY_TYPE: return "VAR_BINARY_TYPE";
         case TypeKind::VAR_CHAR_TYPE: return "VAR_CHAR_TYPE";
         case TypeKind::VECTOR_TYPE: return "VECTOR_TYPE";
     }

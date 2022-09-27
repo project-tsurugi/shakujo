@@ -14,99 +14,73 @@
  * limitations under the License.
  */
 // DON'T EDIT THIS GENERATED FILE //
-#ifndef SHAKUJO_MODEL_TYPE_VAR_CHAR_TYPE_H_
-#define SHAKUJO_MODEL_TYPE_VAR_CHAR_TYPE_H_
-
-#include <cstddef>
-#include <utility>
-#include <memory>
+#ifndef SHAKUJO_MODEL_TYPE_DATE_TYPE_H_
+#define SHAKUJO_MODEL_TYPE_DATE_TYPE_H_
 
 #include "shakujo/model/type/Type.h"
 #include "shakujo/model/type/TypeKind.h"
 
 namespace shakujo::model::type {
 /**
- * @brief Represents variant length character sequence type.
+ * @brief Represents date type.
  */
-class VarCharType
+class DateType
         : public Type {
-private:
-    class Impl;
-    std::unique_ptr<Impl> impl_;
-    explicit VarCharType(std::unique_ptr<Impl>) noexcept;
-
 public:
-    /// @brief represents don't care values.
-    static constexpr std::size_t dont_care = static_cast<std::size_t>(-1);
-
     /**
      * @brief Constructs a new empty object.
      */
-    VarCharType();
+    DateType() noexcept;
 
     /**
      * @brief Destroys this object.
      */
-    ~VarCharType() noexcept override;
+    ~DateType() noexcept override;
 
     /**
      * @brief Copy-constructs a new object.
      * @param other the source object
      */
-    VarCharType(VarCharType const& other) = delete;
+    DateType(DateType const& other) = delete;
 
     /**
      * @brief Copy-assigns to this object.
      * @param other the source object
      * @return this
      */
-    VarCharType& operator=(VarCharType const& other) = delete;
+    DateType& operator=(DateType const& other) = delete;
 
     /**
      * @brief Move-constructs a new object.
      * @param other the source object
      */
-    VarCharType(VarCharType&& other) noexcept;
+    DateType(DateType&& other) noexcept;
 
     /**
      * @brief Move-assigns to this object.
      * @param other the source object
      * @return this
      */
-    VarCharType& operator=(VarCharType&& other) noexcept;
+    DateType& operator=(DateType&& other) noexcept;
 
 public:
     /**
-     * @brief Returns bytes length.
-     * @return bytes length.
-     * @return dont_care if bytes are flexible
+     * @brief Returns a copy of this object.
+     * @return a clone of this
      */
-    std::size_t size() const;
-
-    /**
-     * @brief Sets bytes length.
-     * @param size bytes length
-     * @return this
-     */
-    VarCharType& size(std::size_t size);
+    DateType* clone() const & override;
 
     /**
      * @brief Returns a copy of this object.
      * @return a clone of this
      */
-    VarCharType* clone() const & override;
-
-    /**
-     * @brief Returns a copy of this object.
-     * @return a clone of this
-     */
-    VarCharType* clone() && override;
+    DateType* clone() && override;
 
 public:
     /**
      * @brief the node kind.
      */
-    static inline constexpr auto tag = TypeKind::VAR_CHAR_TYPE;
+    static inline constexpr auto tag = TypeKind::DATE_TYPE;
 
     /**
      * @brief Returns the node kind.
@@ -119,4 +93,4 @@ public:
 };
 }  // namespace shakujo::model::type
 
-#endif  // SHAKUJO_MODEL_TYPE_VAR_CHAR_TYPE_H_
+#endif  // SHAKUJO_MODEL_TYPE_DATE_TYPE_H_

@@ -32,6 +32,8 @@ using common::util::equals;
 
 class ParserCreateTableTest : public ParserTestBase, public ::testing::Test {
 public:
+    static constexpr std::size_t dont_care = model::type::VarCharType::dont_care;
+
     std::unique_ptr<CreateTableStatement> parse(const std::string& text) {
         return parse_program_main<CreateTableStatement>(text);
     }
@@ -331,7 +333,62 @@ TEST_F(ParserCreateTableTest, type_double_precision) {
     EXPECT_TRUE(equals(f.Float64Type(), col->type()));
 }
 
+TEST_F(ParserCreateTableTest, type_decimal) {
+    auto stmt = parse("CREATE TABLE t (C1 DECIMAL)");
+
+    EXPECT_TRUE(equals(f.Name("t"), stmt->table()));
+
+    auto& cols = stmt->columns();
+    ASSERT_EQ(1U, cols.size());
+    auto col = cols[0];
+    EXPECT_TRUE(equals(f.DecimalType(), col->type()));
+}
+
+TEST_F(ParserCreateTableTest, type_decimal_precision) {
+    auto stmt = parse("CREATE TABLE t (C1 DECIMAL(10))");
+
+    EXPECT_TRUE(equals(f.Name("t"), stmt->table()));
+
+    auto& cols = stmt->columns();
+    ASSERT_EQ(1U, cols.size());
+    auto col = cols[0];
+    EXPECT_TRUE(equals(f.DecimalType(10), col->type()));
+}
+
+TEST_F(ParserCreateTableTest, type_decimal_scale) {
+    auto stmt = parse("CREATE TABLE t (C1 DECIMAL(10, 2))");
+
+    EXPECT_TRUE(equals(f.Name("t"), stmt->table()));
+
+    auto& cols = stmt->columns();
+    ASSERT_EQ(1U, cols.size());
+    auto col = cols[0];
+    EXPECT_TRUE(equals(f.DecimalType(10, 2), col->type())) << *col->type();
+}
+
+TEST_F(ParserCreateTableTest, type_decimal_asterisk) {
+    auto stmt = parse("CREATE TABLE t (C1 DECIMAL(*, *))");
+
+    EXPECT_TRUE(equals(f.Name("t"), stmt->table()));
+
+    auto& cols = stmt->columns();
+    ASSERT_EQ(1U, cols.size());
+    auto col = cols[0];
+    EXPECT_TRUE(equals(f.DecimalType(dont_care, dont_care), col->type())) << *col->type();
+}
+
 TEST_F(ParserCreateTableTest, type_char) {
+    auto stmt = parse("CREATE TABLE t (C1 CHAR)");
+
+    EXPECT_TRUE(equals(f.Name("t"), stmt->table()));
+
+    auto& cols = stmt->columns();
+    ASSERT_EQ(1U, cols.size());
+    auto col = cols[0];
+    EXPECT_TRUE(equals(f.CharType(1), col->type()));
+}
+
+TEST_F(ParserCreateTableTest, type_char_size) {
     auto stmt = parse("CREATE TABLE t (C1 CHAR(10))");
 
     EXPECT_TRUE(equals(f.Name("t"), stmt->table()));
@@ -353,6 +410,17 @@ TEST_F(ParserCreateTableTest, type_varchar) {
     EXPECT_TRUE(equals(f.VarCharType(10), col->type()));
 }
 
+TEST_F(ParserCreateTableTest, type_varchar_asterisk) {
+    auto stmt = parse("CREATE TABLE t (C1 VARCHAR(*))");
+
+    EXPECT_TRUE(equals(f.Name("t"), stmt->table()));
+
+    auto& cols = stmt->columns();
+    ASSERT_EQ(1U, cols.size());
+    auto col = cols[0];
+    EXPECT_TRUE(equals(f.VarCharType(dont_care), col->type()));
+}
+
 TEST_F(ParserCreateTableTest, type_string) {
     auto stmt = parse("CREATE TABLE t (C1 STRING)");
 
@@ -362,5 +430,104 @@ TEST_F(ParserCreateTableTest, type_string) {
     ASSERT_EQ(1U, cols.size());
     auto col = cols[0];
     EXPECT_TRUE(equals(f.StringType(), col->type()));
+}
+
+TEST_F(ParserCreateTableTest, type_binary) {
+    auto stmt = parse("CREATE TABLE t (C1 BINARY)");
+
+    EXPECT_TRUE(equals(f.Name("t"), stmt->table()));
+
+    auto& cols = stmt->columns();
+    ASSERT_EQ(1U, cols.size());
+    auto col = cols[0];
+    EXPECT_TRUE(equals(f.BinaryType(1), col->type()));
+}
+
+TEST_F(ParserCreateTableTest, type_binary_size) {
+    auto stmt = parse("CREATE TABLE t (C1 BINARY(10))");
+
+    EXPECT_TRUE(equals(f.Name("t"), stmt->table()));
+
+    auto& cols = stmt->columns();
+    ASSERT_EQ(1U, cols.size());
+    auto col = cols[0];
+    EXPECT_TRUE(equals(f.BinaryType(10), col->type()));
+}
+
+TEST_F(ParserCreateTableTest, type_varbinary) {
+    auto stmt = parse("CREATE TABLE t (C1 VARBINARY(10))");
+
+    EXPECT_TRUE(equals(f.Name("t"), stmt->table()));
+
+    auto& cols = stmt->columns();
+    ASSERT_EQ(1U, cols.size());
+    auto col = cols[0];
+    EXPECT_TRUE(equals(f.VarBinaryType(10), col->type()));
+}
+
+TEST_F(ParserCreateTableTest, type_varbinary_asterisk) {
+    auto stmt = parse("CREATE TABLE t (C1 VARBINARY(*))");
+
+    EXPECT_TRUE(equals(f.Name("t"), stmt->table()));
+
+    auto& cols = stmt->columns();
+    ASSERT_EQ(1U, cols.size());
+    auto col = cols[0];
+    EXPECT_TRUE(equals(f.VarBinaryType(dont_care), col->type()));
+}
+
+TEST_F(ParserCreateTableTest, type_date) {
+    auto stmt = parse("CREATE TABLE t (C1 DATE)");
+
+    EXPECT_TRUE(equals(f.Name("t"), stmt->table()));
+
+    auto& cols = stmt->columns();
+    ASSERT_EQ(1U, cols.size());
+    auto col = cols[0];
+    EXPECT_TRUE(equals(f.DateType(), col->type()));
+}
+
+TEST_F(ParserCreateTableTest, type_time) {
+    auto stmt = parse("CREATE TABLE t (C1 TIME)");
+
+    EXPECT_TRUE(equals(f.Name("t"), stmt->table()));
+
+    auto& cols = stmt->columns();
+    ASSERT_EQ(1U, cols.size());
+    auto col = cols[0];
+    EXPECT_TRUE(equals(f.TimeType(), col->type()));
+}
+
+TEST_F(ParserCreateTableTest, type_time_with_time_zone) {
+    auto stmt = parse("CREATE TABLE t (C1 TIME WITH TIME ZONE)");
+
+    EXPECT_TRUE(equals(f.Name("t"), stmt->table()));
+
+    auto& cols = stmt->columns();
+    ASSERT_EQ(1U, cols.size());
+    auto col = cols[0];
+    EXPECT_TRUE(equals(f.TimeType(true), col->type()));
+}
+
+TEST_F(ParserCreateTableTest, type_timestamp) {
+    auto stmt = parse("CREATE TABLE t (C1 TIMESTAMP)");
+
+    EXPECT_TRUE(equals(f.Name("t"), stmt->table()));
+
+    auto& cols = stmt->columns();
+    ASSERT_EQ(1U, cols.size());
+    auto col = cols[0];
+    EXPECT_TRUE(equals(f.TimestampType(), col->type()));
+}
+
+TEST_F(ParserCreateTableTest, type_timestamp_with_time_zone) {
+    auto stmt = parse("CREATE TABLE t (C1 TIMESTAMP WITH TIME ZONE)");
+
+    EXPECT_TRUE(equals(f.Name("t"), stmt->table()));
+
+    auto& cols = stmt->columns();
+    ASSERT_EQ(1U, cols.size());
+    auto col = cols[0];
+    EXPECT_TRUE(equals(f.TimestampType(true), col->type()));
 }
 }  // namespace shakujo::parser

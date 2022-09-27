@@ -95,8 +95,11 @@
 #include "shakujo/model/statement/dml/UpdateStatement.h"
 #include "shakujo/model/statement/transaction/TransactionBlockStatement.h"
 #include "shakujo/model/type/ArrayType.h"
+#include "shakujo/model/type/BinaryType.h"
 #include "shakujo/model/type/BooleanType.h"
 #include "shakujo/model/type/CharType.h"
+#include "shakujo/model/type/DateType.h"
+#include "shakujo/model/type/DecimalType.h"
 #include "shakujo/model/type/Float32Type.h"
 #include "shakujo/model/type/Float64Type.h"
 #include "shakujo/model/type/Int32Type.h"
@@ -104,8 +107,10 @@
 #include "shakujo/model/type/NullType.h"
 #include "shakujo/model/type/RelationType.h"
 #include "shakujo/model/type/StringType.h"
+#include "shakujo/model/type/TimeType.h"
+#include "shakujo/model/type/TimestampType.h"
 #include "shakujo/model/type/TupleType.h"
-#include "shakujo/model/type/Type.h"
+#include "shakujo/model/type/VarBinaryType.h"
 #include "shakujo/model/type/VarCharType.h"
 #include "shakujo/model/type/VectorType.h"
 
@@ -1639,6 +1644,95 @@ public:
     std::unique_ptr<type::VectorType> VectorType(
             std::unique_ptr<type::Type> element_type);
 
+    /**
+     * @brief returns a new empty type::DecimalType.
+     * @return a created empty node
+     * @see type::DecimalType
+     */
+    virtual std::unique_ptr<type::DecimalType> DecimalType();
+
+    /**
+     * @brief returns a new type::DecimalType.
+     * @param precision decimal precision
+     * @param scale the number of digits in the fractional part
+     * @return a created node
+     * @see type::DecimalType
+     */
+    std::unique_ptr<type::DecimalType> DecimalType(
+            std::optional<std::size_t> precision,
+            std::optional<std::size_t> scale = {});
+
+    /**
+     * @brief returns a new empty type::BinaryType.
+     * @return a created empty node
+     * @see type::BinaryType
+     */
+    virtual std::unique_ptr<type::BinaryType> BinaryType();
+
+    /**
+     * @brief returns a new type::BinaryType.
+     * @param size bytes length
+     * @return a created node
+     * @see type::BinaryType
+     */
+    std::unique_ptr<type::BinaryType> BinaryType(
+            std::size_t size);
+
+    /**
+     * @brief returns a new empty type::VarBinaryType.
+     * @return a created empty node
+     * @see type::VarBinaryType
+     */
+    virtual std::unique_ptr<type::VarBinaryType> VarBinaryType();
+
+    /**
+     * @brief returns a new type::VarBinaryType.
+     * @param size bytes length
+     * @return a created node
+     * @see type::VarBinaryType
+     */
+    std::unique_ptr<type::VarBinaryType> VarBinaryType(
+            std::size_t size);
+
+    /**
+     * @brief returns a new empty type::DateType.
+     * @return a created empty node
+     * @see type::DateType
+     */
+    virtual std::unique_ptr<type::DateType> DateType();
+
+    /**
+     * @brief returns a new empty type::TimeType.
+     * @return a created empty node
+     * @see type::TimeType
+     */
+    virtual std::unique_ptr<type::TimeType> TimeType();
+
+    /**
+     * @brief returns a new type::TimeType.
+     * @param has_time_zone whether or not the type has time zone
+     * @return a created node
+     * @see type::TimeType
+     */
+    std::unique_ptr<type::TimeType> TimeType(
+            bool has_time_zone);
+
+    /**
+     * @brief returns a new empty type::TimestampType.
+     * @return a created empty node
+     * @see type::TimestampType
+     */
+    virtual std::unique_ptr<type::TimestampType> TimestampType();
+
+
+    /**
+     * @brief returns a new type::TimestampType.
+     * @param has_time_zone whether or not the type has time zone
+     * @return a created node
+     * @see type::TimestampType
+     */
+    std::unique_ptr<type::TimestampType> TimestampType(
+            bool has_time_zone);
 };
 }  // namespace shakujo::model
 
