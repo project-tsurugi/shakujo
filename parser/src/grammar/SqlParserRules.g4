@@ -15,7 +15,14 @@ ddlStatement
 
 // -- INSERT
 insertStatement
-    : K_INSERT K_INTO insertionTarget insertColumnsAndSources
+    : insertOperation K_INTO insertionTarget insertColumnsAndSources
+    ;
+
+insertOperation
+    : K_INSERT
+    | K_INSERT K_OR K_REPLACE
+    | K_INSERT K_IF K_NOT K_EXISTS
+    | K_UPDATE K_OR K_INSERT
     ;
 
 insertionTarget

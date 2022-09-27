@@ -1390,13 +1390,15 @@ public:
      * @param table table name
      * @param initialize initialization statements
      * @param columns destination column specifications
+     * @param action the conflict behavior
      * @return a created node
      * @see statement::dml::InsertValuesStatement
      */
     std::unique_ptr<statement::dml::InsertValuesStatement> InsertValuesStatement(
             std::unique_ptr<name::Name> table,
             common::util::MoveInitializerList<std::unique_ptr<statement::Statement>> initialize,
-            common::util::MoveInitializerList<std::unique_ptr<statement::dml::InsertValuesStatement::Column>> columns);
+            common::util::MoveInitializerList<std::unique_ptr<statement::dml::InsertValuesStatement::Column>> columns,
+            statement::dml::InsertValuesStatement::ConflictAction action = statement::dml::InsertValuesStatement::ConflictAction::ERROR);
 
     /**
      * @brief returns a new empty statement::dml::InsertValuesStatement::Column.

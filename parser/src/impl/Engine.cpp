@@ -172,11 +172,32 @@ std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::DdlStatement
 
 std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::InsertStatementContext *c) {
     check(c);
+    auto o = c->insertOperation();
     auto t = c->insertionTarget();
     auto s = c->insertColumnsAndSources();
-    if (is_defined(t) && is_defined(s)) {
+    if (is_defined(o) && is_defined(t) && is_defined(s)) {
+        auto action = visit(o);
         auto target = visit(t);
-        return visit(s, std::move(target));
+        return visit(s, std::move(target), action);
+    }
+    rule_error(c);
+}
+
+model::statement::dml::InsertValuesStatement::ConflictAction Engine::visit(
+        Grammar::InsertOperationContext *c) {
+    check(c);
+    using ConflictAction = model::statement::dml::InsertValuesStatement::ConflictAction;
+    if (is_defined(c->K_INSERT())) {
+        if (is_defined(c->K_IF()) && is_defined(c->K_NOT()) && is_defined(c->K_EXISTS())) {
+            return ConflictAction::SKIP;
+        }
+        if (is_defined(c->K_OR()) && is_defined(c->K_REPLACE())) {
+            return ConflictAction::REPLACE;
+        }
+        if (is_defined(c->K_UPDATE()) && is_defined(c->K_OR())) {
+            return ConflictAction::REPLACE;
+        }
+        return ConflictAction::ERROR;
     }
     rule_error(c);
 }
@@ -191,7 +212,8 @@ std::unique_ptr<model::name::Name> Engine::visit(Grammar::InsertionTargetContext
 
 std::unique_ptr<model::statement::Statement> Engine::visit(
         Grammar::InsertColumnsAndSourcesContext *c,
-        std::unique_ptr<model::name::Name> target) {
+        std::unique_ptr<model::name::Name> target,
+        model::statement::dml::InsertValuesStatement::ConflictAction conflict_action) {
     check(c);
     if (auto ctor = c->insertValuesConstructor(); is_defined(ctor)) {
         // INSERT INTO ... VALUES ...
@@ -212,7 +234,11 @@ std::unique_ptr<model::statement::Statement> Engine::visit(
         for (std::size_t i = 0, n = values.size(); i < n; i++) {
             columns[i]->value(std::move(values[i]));
         }
-        return f.InsertValuesStatement(std::move(target), std::move(columns)) << region(c);
+        return f.InsertValuesStatement(
+                std::move(target),
+                {},
+                std::move(columns),
+                conflict_action) << region(c);
     }
     rule_error(c);
 }

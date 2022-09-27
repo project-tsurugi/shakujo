@@ -42,6 +42,7 @@ public:
 TEST_F(ParserInsertTest, insert_values_simple) {
     auto stmt = parse_insert_values("INSERT INTO TBL VALUES (1)");
 
+    EXPECT_EQ(InsertValuesStatement::ConflictAction::ERROR, stmt->conflict_action());
     EXPECT_TRUE(equals(f.Name("TBL"), stmt->table()));
 
     auto& cols = stmt->columns();
@@ -51,6 +52,24 @@ TEST_F(ParserInsertTest, insert_values_simple) {
         EXPECT_FALSE(c->name());
         EXPECT_EQ(1, value_of<v::Int>(c->value()));
     }
+}
+
+TEST_F(ParserInsertTest, insert_values_or_replace) {
+    auto stmt = parse_insert_values("INSERT OR REPLACE INTO TBL VALUES (1)");
+
+    EXPECT_EQ(InsertValuesStatement::ConflictAction::REPLACE, stmt->conflict_action());
+}
+
+TEST_F(ParserInsertTest, insert_values_or_update) {
+    auto stmt = parse_insert_values("UPDATE OR INSERT INTO TBL VALUES (1)");
+
+    EXPECT_EQ(InsertValuesStatement::ConflictAction::REPLACE, stmt->conflict_action());
+}
+
+TEST_F(ParserInsertTest, insert_values_if_not_exists) {
+    auto stmt = parse_insert_values("INSERT IF NOT EXISTS INTO TBL VALUES (1)");
+
+    EXPECT_EQ(InsertValuesStatement::ConflictAction::SKIP, stmt->conflict_action());
 }
 
 TEST_F(ParserInsertTest, insert_values_multiple_values) {

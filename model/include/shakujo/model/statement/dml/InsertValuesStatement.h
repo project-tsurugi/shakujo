@@ -179,6 +179,22 @@ public:
         Column* clone() && override;
 
     };
+
+    /**
+     * @brief Represents a kind of behavior when a row with the same primary key is already exists on the destination table.
+     */
+    enum class ConflictAction {
+
+        /// @brief Raises an error if the primary key is conflicted.
+        ERROR,
+
+        /// @brief Skips the row if the primary key is conflicted.
+        SKIP,
+
+        /// @brief Replaces the row if the primary key is conflicted.
+        REPLACE,
+    };
+
 public:
     /**
      * @brief Constructs a new empty object.
@@ -217,6 +233,20 @@ public:
     InsertValuesStatement& operator=(InsertValuesStatement&& other) noexcept;
 
 public:
+
+    /**
+     * @brief Returns the behavior kind on the row was conflicted.
+     * @return the behavior kind
+     */
+    [[nodiscard]] ConflictAction conflict_action() const;
+
+    /**
+     * @brief Sets the behavior kin on the row was conflicted.
+     * @param action the behavior kind
+     * @return this
+     */
+    InsertValuesStatement& conflict_action(ConflictAction action);
+
     /**
      * @brief Returns table name.
      * @return table name.

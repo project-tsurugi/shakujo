@@ -82,9 +82,17 @@ public:
 
     // -- INSERT
     // insertStatement
-    //     : K_INSERT K_INTO insertionTarget insertColumnsAndSources
-    //     ;
+    //         : insertOperation K_INTO insertionTarget insertColumnsAndSources
+    //         ;
     std::unique_ptr<model::statement::Statement> visit(Grammar::InsertStatementContext *);
+
+    // insertOperation
+    //         : K_INSERT
+    //         | K_INSERT K_OR K_REPLACE
+    //         | K_INSERT K_IF K_NOT K_EXISTS
+    //         | K_UPDATE K_OR K_INSERT
+    //         ;
+    model::statement::dml::InsertValuesStatement::ConflictAction visit(Grammar::InsertOperationContext *);
 
     // insertionTarget
     //     : name
@@ -96,7 +104,9 @@ public:
     //     ;
     std::unique_ptr<model::statement::Statement> visit(
             Grammar::InsertColumnsAndSourcesContext *,
-            std::unique_ptr<model::name::Name> target);
+            std::unique_ptr<model::name::Name> target,
+            model::statement::dml::InsertValuesStatement::ConflictAction conflict_action =
+                    model::statement::dml::InsertValuesStatement::ConflictAction::ERROR);
 
     // insertColumnList
     //     : simpleName (',' simpleName)*

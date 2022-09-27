@@ -33,6 +33,7 @@ namespace shakujo::model::statement::dml {
 
 class InsertValuesStatement::Impl {
 public:
+    ConflictAction conflict_action_;
     std::unique_ptr<name::Name> table_;
     util::NodeList<Statement> initialize_;
     util::FragmentList<InsertValuesStatement::Column> columns_;
@@ -47,6 +48,7 @@ public:
 
     std::unique_ptr<Impl> clone() const {
         auto other = std::make_unique<Impl>();
+        other->conflict_action_ = conflict_action_;
         other->table_ = common::util::make_clone(table_);
         if (!initialize_.empty()) {
             other->initialize_.reserve(initialize_.size());
@@ -94,6 +96,15 @@ InsertValuesStatement::~InsertValuesStatement() noexcept = default;
 InsertValuesStatement::InsertValuesStatement(InsertValuesStatement&&) noexcept = default;
 
 InsertValuesStatement& InsertValuesStatement::operator=(InsertValuesStatement&&) noexcept = default;
+
+InsertValuesStatement::ConflictAction InsertValuesStatement::conflict_action() const {
+    return impl_->conflict_action_;
+}
+
+InsertValuesStatement& InsertValuesStatement::conflict_action(InsertValuesStatement::ConflictAction action) {
+    impl_->conflict_action_ = action;
+    return *this;
+}
 
 name::Name* InsertValuesStatement::table() {
     return impl_->table_.get();

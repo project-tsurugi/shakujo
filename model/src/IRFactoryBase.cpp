@@ -980,11 +980,13 @@ std::unique_ptr<statement::dml::InsertValuesStatement> IRFactoryBase::InsertValu
 std::unique_ptr<statement::dml::InsertValuesStatement> IRFactoryBase::InsertValuesStatement(
         std::unique_ptr<name::Name> table,
         common::util::MoveInitializerList<std::unique_ptr<statement::Statement>> initialize,
-        common::util::MoveInitializerList<std::unique_ptr<statement::dml::InsertValuesStatement::Column>> columns) {
+        common::util::MoveInitializerList<std::unique_ptr<statement::dml::InsertValuesStatement::Column>> columns,
+        statement::dml::InsertValuesStatement::ConflictAction action) {
     auto ret = InsertValuesStatement();
     ret->table(std::move(table));
     ret->initialize() = std::move(initialize).build();
     ret->columns() = std::move(columns).build();
+    ret->conflict_action(action);
     return ret;
 }
 
