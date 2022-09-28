@@ -1585,6 +1585,9 @@ std::unique_ptr<model::type::Type> Engine::visit(Grammar::DataTypeContext *c) {
             return f.Float32Type() << region(c);
         }
     }
+    if (is_defined(c->K_REAL())) {
+        return f.Float32Type() << region(c);
+    }
     if (is_defined(c->K_DOUBLE())) {
         return f.Float64Type() << region(c);
     }

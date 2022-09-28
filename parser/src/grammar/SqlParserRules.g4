@@ -424,6 +424,7 @@ dataType
     : K_INT ( '(' dataSize ')' )?
     | K_BIGINT
     | K_FLOAT ( '(' dataSize ')' )?
+    | K_REAL
     | K_DOUBLE ( K_PRECISION )?
     | K_DECIMAL ( '(' precision=flexibleDataSize ( ',' scale=flexibleDataSize )? ')' )?
     | K_CHAR ( '(' dataSize ')' )?

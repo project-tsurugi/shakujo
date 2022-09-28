@@ -278,6 +278,17 @@ TEST_F(ParserCreateTableTest, type_bigint) {
     EXPECT_TRUE(equals(f.Int64Type(), col->type()));
 }
 
+TEST_F(ParserCreateTableTest, type_real) {
+    auto stmt = parse("CREATE TABLE t (C1 REAL)");
+
+    EXPECT_TRUE(equals(f.Name("t"), stmt->table()));
+
+    auto& cols = stmt->columns();
+    ASSERT_EQ(1U, cols.size());
+    auto col = cols[0];
+    EXPECT_TRUE(equals(f.Float32Type(), col->type()));
+}
+
 TEST_F(ParserCreateTableTest, type_float) {
     auto stmt = parse("CREATE TABLE t (C1 FLOAT)");
 
