@@ -86,7 +86,8 @@ public:
      * @brief Returns the node kind.
      * @return the node kind
      * @see tag
-     */TypeKind kind() const override {
+     */
+    TypeKind kind() const override {
         return tag;
     }
 
