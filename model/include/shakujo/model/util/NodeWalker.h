@@ -80,7 +80,9 @@
 #include "shakujo/model/statement/VectorElementInsertStatement.h"
 #include "shakujo/model/statement/WhileStatement.h"
 #include "shakujo/model/statement/ddl/CreateTableStatement.h"
+#include "shakujo/model/statement/ddl/CreateIndexStatement.h"
 #include "shakujo/model/statement/ddl/DropTableStatement.h"
+#include "shakujo/model/statement/ddl/DropIndexStatement.h"
 #include "shakujo/model/statement/dml/DeleteStatement.h"
 #include "shakujo/model/statement/dml/EmitStatement.h"
 #include "shakujo/model/statement/dml/InsertRelationStatement.h"
@@ -1434,6 +1436,30 @@ protected:
     }
 
     /**
+     * @brief callback on enter into CreateIndexStatement.
+     * @param node the processing target
+     * @return true if continue to enter into child elements of the given node
+     * @return false don't walk into child elements, also the corresponded exit() will not be called
+     * @see statement::ddl::CreateIndexStatement
+     * @see walk()
+     * @see exit()
+     */
+    virtual bool enter([[maybe_unused]] statement::ddl::CreateIndexStatement* node) {
+        return enterDefault(node);
+    }
+
+    /**
+     * @brief callback on exit from CreateIndexStatement.
+     * @param node the processing target
+     * @see statement::ddl::CreateIndexStatement
+     * @see walk()
+     * @see enter()
+     */
+    virtual void exit([[maybe_unused]] statement::ddl::CreateIndexStatement* node) {
+        exitDefault(node);
+    }
+
+    /**
      * @brief callback on enter into DropTableStatement.
      * @param node the processing target
      * @return true if continue to enter into child elements of the given node
@@ -1454,6 +1480,30 @@ protected:
      * @see enter()
      */
     virtual void exit([[maybe_unused]] statement::ddl::DropTableStatement* node) {
+        exitDefault(node);
+    }
+
+    /**
+     * @brief callback on enter into DropIndexStatement.
+     * @param node the processing target
+     * @return true if continue to enter into child elements of the given node
+     * @return false don't walk into child elements, also the corresponded exit() will not be called
+     * @see statement::ddl::DropIndexStatement
+     * @see walk()
+     * @see exit()
+     */
+    virtual bool enter([[maybe_unused]] statement::ddl::DropIndexStatement* node) {
+        return enterDefault(node);
+    }
+
+    /**
+     * @brief callback on exit from DropIndexStatement.
+     * @param node the processing target
+     * @see statement::ddl::DropIndexStatement
+     * @see walk()
+     * @see enter()
+     */
+    virtual void exit([[maybe_unused]] statement::ddl::DropIndexStatement* node) {
         exitDefault(node);
     }
 
@@ -2653,6 +2703,13 @@ public:
      * @see statement::ddl::CreateTableStatement
      */
     void walk(statement::ddl::CreateTableStatement* node);
+    
+    /**
+     * @brief Begins to walk CreateIndexStatement.
+     * @param node the processing target
+     * @see statement::ddl::CreateIndexStatement
+     */
+    void walk(statement::ddl::CreateIndexStatement* node);
 
     /**
      * @brief Begins to walk DropTableStatement.
@@ -2660,6 +2717,13 @@ public:
      * @see statement::ddl::DropTableStatement
      */
     void walk(statement::ddl::DropTableStatement* node);
+
+    /**
+     * @brief Begins to walk DropIndexStatement.
+     * @param node the processing target
+     * @see statement::ddl::DropIndexStatement
+     */
+    void walk(statement::ddl::DropIndexStatement* node);
 
     /**
      * @brief Begins to walk DeleteStatement.

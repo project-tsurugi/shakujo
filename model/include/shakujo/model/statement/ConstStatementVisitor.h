@@ -39,7 +39,9 @@
 #include "shakujo/model/statement/VectorElementInsertStatement.h"
 #include "shakujo/model/statement/WhileStatement.h"
 #include "shakujo/model/statement/ddl/CreateTableStatement.h"
+#include "shakujo/model/statement/ddl/CreateIndexStatement.h"
 #include "shakujo/model/statement/ddl/DropTableStatement.h"
+#include "shakujo/model/statement/ddl/DropIndexStatement.h"
 #include "shakujo/model/statement/dml/DeleteStatement.h"
 #include "shakujo/model/statement/dml/EmitStatement.h"
 #include "shakujo/model/statement/dml/InsertRelationStatement.h"
@@ -259,6 +261,17 @@ public:
     }
 
     /**
+     * @brief Processes CreateTableStatement.
+     * @param node the processing target
+     * @param args the processing arguments
+     * @return the result
+     * @see ddl::CreateTableStatement
+     */
+    virtual Return visit(ddl::CreateIndexStatement const* node, Args... args) {
+        return visitDefault(node, std::forward<Args>(args)...);
+    }
+
+    /**
      * @brief Processes DropTableStatement.
      * @param node the processing target
      * @param args the processing arguments
@@ -266,6 +279,17 @@ public:
      * @see ddl::DropTableStatement
      */
     virtual Return visit(ddl::DropTableStatement const* node, Args... args) {
+        return visitDefault(node, std::forward<Args>(args)...);
+    }
+
+    /**
+     * @brief Processes DropTableStatement.
+     * @param node the processing target
+     * @param args the processing arguments
+     * @return the result
+     * @see ddl::DropTableStatement
+     */
+    virtual Return visit(ddl::DropIndexStatement const* node, Args... args) {
         return visitDefault(node, std::forward<Args>(args)...);
     }
 

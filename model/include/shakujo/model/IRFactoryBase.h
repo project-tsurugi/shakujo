@@ -87,7 +87,9 @@
 #include "shakujo/model/statement/VectorElementInsertStatement.h"
 #include "shakujo/model/statement/WhileStatement.h"
 #include "shakujo/model/statement/ddl/CreateTableStatement.h"
+#include "shakujo/model/statement/ddl/CreateIndexStatement.h"
 #include "shakujo/model/statement/ddl/DropTableStatement.h"
+#include "shakujo/model/statement/ddl/DropIndexStatement.h"
 #include "shakujo/model/statement/dml/DeleteStatement.h"
 #include "shakujo/model/statement/dml/EmitStatement.h"
 #include "shakujo/model/statement/dml/InsertRelationStatement.h"
@@ -1312,6 +1314,46 @@ public:
             statement::ddl::CreateTableStatement::PrimaryKey::Direction direction = statement::ddl::CreateTableStatement::PrimaryKey::Direction::DONT_CARE);
 
     /**
+     * @brief returns a new empty statement::ddl::CreateIndexStatement.
+     * @return a created empty node
+     * @see statement::ddl::CreateIndexStatement
+     */
+    virtual std::unique_ptr<statement::ddl::CreateIndexStatement> CreateIndexStatement();
+
+    /**
+     * @brief returns a new statement::ddl::CreateIndexStatement.
+     * @param index index name
+     * @param table table name
+     * @param columns columns specification
+     * @param attributes create table attributes
+     * @return a created node
+     * @see statement::ddl::CreateIndexStatement
+     */
+    std::unique_ptr<statement::ddl::CreateIndexStatement> CreateIndexStatement(
+            std::unique_ptr<name::Name> index,
+            std::unique_ptr<name::Name> table,
+            common::util::MoveInitializerList<std::unique_ptr<statement::ddl::CreateIndexStatement::Column>> columns,
+            std::initializer_list<statement::ddl::CreateIndexStatement::Attribute> attributes = {});
+
+    /**
+     * @brief returns a new empty statement::ddl::CreateIndexStatement::Column.
+     * @return a created empty node
+     * @see statement::ddl::CreateIndexStatement::Column
+     */
+    virtual std::unique_ptr<statement::ddl::CreateIndexStatement::Column> CreateIndexStatementColumn();
+
+    /**
+     * @brief returns a new statement::ddl::CreateIndexStatement::Column.
+     * @param name column name
+     * @param direction column order
+     * @return a created node
+     * @see statement::ddl::CreateIndexStatement::Column
+     */
+    std::unique_ptr<statement::ddl::CreateIndexStatement::Column> CreateIndexStatementColumn(
+            std::unique_ptr<name::SimpleName> name,
+            statement::ddl::CreateIndexStatement::Column::Direction direction = statement::ddl::CreateIndexStatement::Column::Direction::DONT_CARE);
+
+    /**
      * @brief returns a new empty statement::ddl::DropTableStatement.
      * @return a created empty node
      * @see statement::ddl::DropTableStatement
@@ -1328,6 +1370,24 @@ public:
     std::unique_ptr<statement::ddl::DropTableStatement> DropTableStatement(
             std::unique_ptr<name::Name> table,
             std::initializer_list<statement::ddl::DropTableStatement::Attribute> attributes = {});
+
+    /**
+     * @brief returns a new empty statement::ddl::DropIndexStatement.
+     * @return a created empty node
+     * @see statement::ddl::DropIndexStatement
+     */
+    virtual std::unique_ptr<statement::ddl::DropIndexStatement> DropIndexStatement();
+
+    /**
+     * @brief returns a new statement::ddl::DropIndexStatement.
+     * @param table index name
+     * @param attributes drop table attributes
+     * @return a created node
+     * @see statement::ddl::DropIndexStatement
+     */
+    std::unique_ptr<statement::ddl::DropIndexStatement> DropIndexStatement(
+            std::unique_ptr<name::Name> index,
+            std::initializer_list<statement::ddl::DropIndexStatement::Attribute> attributes = {});
 
     /**
      * @brief returns a new empty statement::dml::DeleteStatement.

@@ -89,7 +89,9 @@
 #include "shakujo/model/statement/VectorElementInsertStatement.h"
 #include "shakujo/model/statement/WhileStatement.h"
 #include "shakujo/model/statement/ddl/CreateTableStatement.h"
+#include "shakujo/model/statement/ddl/CreateIndexStatement.h"
 #include "shakujo/model/statement/ddl/DropTableStatement.h"
+#include "shakujo/model/statement/ddl/DropIndexStatement.h"
 #include "shakujo/model/statement/dml/DeleteStatement.h"
 #include "shakujo/model/statement/dml/EmitStatement.h"
 #include "shakujo/model/statement/dml/InsertRelationStatement.h"
@@ -799,6 +801,13 @@ public:
      * @param printer the destination printer
      * @param value the target value
      */
+    virtual void serialize(common::util::DataSerializer& printer, statement::ddl::CreateIndexStatement const* value);  // NOLINT
+
+    /**
+     * @brief serializes the value into given printer.
+     * @param printer the destination printer
+     * @param value the target value
+     */
     virtual void serialize(common::util::DataSerializer& printer, statement::ddl::CreateTableStatement::Attribute value);  // NOLINT
 
     /**
@@ -835,6 +844,13 @@ public:
      * @param value the target value
      */
     virtual void serialize(common::util::DataSerializer& printer, statement::ddl::DropTableStatement const* value);  // NOLINT
+
+    /**
+     * @brief serializes the value into given printer.
+     * @param printer the destination printer
+     * @param value the target value
+     */
+    virtual void serialize(common::util::DataSerializer& printer, statement::ddl::DropIndexStatement const* value);  // NOLINT
 
     /**
      * @brief serializes the value into given printer.

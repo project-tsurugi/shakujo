@@ -164,7 +164,13 @@ std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::DdlStatement
     if (auto s = c->createTableStatement(); is_defined(s)) {
         return visit(s);
     }
+    if (auto s = c->createIndexStatement(); is_defined(s)) {
+        return visit(s);
+    }
     if (auto s = c->dropTableStatement(); is_defined(s)) {
+        return visit(s);
+    }
+    if (auto s = c->dropIndexStatement(); is_defined(s)) {
         return visit(s);
     }
     rule_error(c);
@@ -1043,6 +1049,86 @@ void Engine::visit(Grammar::PrimaryKeyDefinitionContext *c, model::statement::dd
     rule_error(c);
 }
 
+std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::CreateIndexStatementContext *c) {
+    check(c);
+    if (auto s = c->indexDefinition(); is_defined(s)) {
+        return visit(s);
+    }
+    rule_error(c);
+}
+
+std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::IndexDefinitionContext *c) {
+    check(c);
+    auto in = c->indexName;
+    auto tn = c->tableName;
+    auto es = c->indexElementList();
+    if (is_defined(c->K_CREATE()) && is_defined(c->K_INDEX()) && is_defined(es)) {
+        auto result = f.CreateIndexStatement() << region(c);
+        if (is_defined(in)) {
+            auto name = visit(in);
+            result->index(std::move(name));
+        }
+        auto name = visit(tn);
+        result->table(std::move(name));
+        for (auto a : c->indexDefinitionOption()) {
+            visit(a, result.get());
+        }
+        visit(es, result.get());
+        return result;
+    }
+    rule_error(c);
+}
+
+void Engine::visit(Grammar::IndexDefinitionOptionContext *c, model::statement::ddl::CreateIndexStatement *r) {
+    check(c);
+    using Attribute = model::statement::ddl::CreateIndexStatement::Attribute;
+    if (is_defined(c->K_IF()) && is_defined(c->K_NOT()) && is_defined(c->K_EXISTS())) {
+        r->attributes().emplace(Attribute::IF_NOT_EXISTS);
+        return;
+    }
+    rule_error(c);
+}
+
+void Engine::visit(Grammar::IndexElementListContext *c, model::statement::ddl::CreateIndexStatement *r) {
+    check(c);
+    if (!c->indexElement().empty()) {
+        for (auto* element : c->indexElement()) {
+            visit(element, r);
+        }
+        return;
+    }
+    rule_error(c);
+}
+
+void Engine::visit(Grammar::IndexElementContext *c, model::statement::ddl::CreateIndexStatement *r) {
+    check(c);
+    auto n = c->columnName();
+    auto o = c->orderingSpecification();
+    if (is_defined(n)) {
+        auto result = f.CreateIndexStatementColumn();
+        auto name = visit(n);
+        result->name(std::move(name));
+        if (is_defined(o)) {
+            auto order = visit(o);
+            using direction = model::statement::ddl::CreateIndexStatement::Column::Direction;
+            switch (order) {
+                case decltype(order)::ASCENDANT:
+                    result->direction(direction::ASCENDANT);
+                    break;
+                case decltype(order)::DESCENDANT:
+                    result->direction(direction::DESCENDANT);
+                    break;
+                default:
+                    result->direction(direction::DONT_CARE);
+                    break;
+            }
+        }
+        r->columns().push_back(std::move(result));
+        return;
+    }
+    rule_error(c);
+}
+
 std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::DropTableStatementContext *c) {
     check(c);
     auto n = c->name();
@@ -1050,6 +1136,18 @@ std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::DropTableSta
         auto result = f.DropTableStatement() << region(c);
         auto name = visit(n);
         result->table(std::move(name));
+        return result;
+    }
+    rule_error(c);
+}
+
+std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::DropIndexStatementContext *c) {
+    check(c);
+    auto n = c->name();
+    if (is_defined(c->K_DROP()) && is_defined(c->K_INDEX()) && is_defined(n)) {
+        auto result = f.DropIndexStatement() << region(c);
+        auto name = visit(n);
+        result->index(std::move(name));
         return result;
     }
     rule_error(c);

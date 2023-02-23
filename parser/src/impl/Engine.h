@@ -76,7 +76,9 @@ public:
 
     // ddlStatement
     //     : createTableStatement
+    //     | createIndexStatement
     //     | dropTableStatement
+    //     | dropIndexStatement
     //     ;
     std::unique_ptr<model::statement::Statement> visit(Grammar::DdlStatementContext *);
 
@@ -431,12 +433,44 @@ public:
     //     ;
     std::unique_ptr<model::statement::ddl::CreateTableStatement::PrimaryKey> visit(Grammar::ColumnOrderContext *);
 
+    // -- CREATE INDEX
+    // createIndexStatement
+    //     : indexDefinition
+    //     ;
+    std::unique_ptr<model::statement::Statement> visit(Grammar::CreateIndexStatementContext *);
+
+    // indexDefinition
+    //     : K_CREATE K_TABLE ( indexDefinitionOption )* indexName=name?
+    //             K_ON tableName=name indexElementList
+    //     ;
+    std::unique_ptr<model::statement::Statement> visit(Grammar::IndexDefinitionContext *);
+
+    // indexDefinitionOption
+    //     : K_IF K_NOT K_EXISTS
+    //     ;
+    void visit(Grammar::IndexDefinitionOptionContext *, model::statement::ddl::CreateIndexStatement *);
+
+    // indexElementList
+    //     : '(' indexElement ( ',' indexElement )* ')'
+    //     ;
+    void visit(Grammar::IndexElementListContext *, model::statement::ddl::CreateIndexStatement *);
+
+    // indexElement
+    //     : columnName orderingSpecification?
+    //     ;
+    void visit(Grammar::IndexElementContext *, model::statement::ddl::CreateIndexStatement *);
+
     // -- DROP TABLE
     // dropTableStatement
     //     : K_DROP K_TABLE name
     //     ;
     std::unique_ptr<model::statement::Statement> visit(Grammar::DropTableStatementContext *);
 
+    // -- DROP INDEX
+    // dropIndexStatement
+    //     : K_DROP K_INDEX name
+    //     ;
+    std::unique_ptr<model::statement::Statement> visit(Grammar::DropIndexStatementContext *);
 
     // -- generic statements
     // statement

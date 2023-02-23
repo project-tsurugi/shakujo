@@ -575,10 +575,34 @@ protected:
         return true;
     }
 
-    //bool enter(model::statement::ddl::DropTableStatement const* node) override {
-    //    // FIXME: impl
-    //    return true;
-    //}
+    bool enter(model::statement::ddl::CreateIndexStatement const* node) override {
+        if (!is_defined(node->table())) {
+            report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "create index statement must have a valid table name");
+        }
+        if (node->columns().empty()) {
+            report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "create index statement must have one or more columns");
+        }
+        for (auto column : node->columns()) {
+            if (!is_defined(column->name())) {
+                report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "index column must have a valid name");
+            }
+        }
+        return true;
+    }
+
+    bool enter(model::statement::ddl::DropTableStatement const* node) override {
+        if (!is_defined(node->table())) {
+            report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "drop table statement must have a valid table name");
+        }
+        return true;
+    }
+
+    bool enter(model::statement::ddl::DropIndexStatement const* node) override {
+        if (!is_defined(node->index())) {
+            report(node, Diagnostic::Code::UNDEFINED_ELEMENT, "drop index statement must have a valid index name");
+        }
+        return true;
+    }
 
     bool enter(model::statement::dml::DeleteStatement const* node) override {
         if (!is_defined(node->source())) {

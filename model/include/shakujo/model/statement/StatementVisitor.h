@@ -39,7 +39,9 @@
 #include "shakujo/model/statement/VectorElementInsertStatement.h"
 #include "shakujo/model/statement/WhileStatement.h"
 #include "shakujo/model/statement/ddl/CreateTableStatement.h"
+#include "shakujo/model/statement/ddl/CreateIndexStatement.h"
 #include "shakujo/model/statement/ddl/DropTableStatement.h"
+#include "shakujo/model/statement/ddl/DropIndexStatement.h"
 #include "shakujo/model/statement/dml/DeleteStatement.h"
 #include "shakujo/model/statement/dml/EmitStatement.h"
 #include "shakujo/model/statement/dml/InsertRelationStatement.h"
@@ -258,6 +260,18 @@ public:
         return visitDefault(node, std::forward<Args>(args)...);
     }
 
+
+    /**
+     * @brief Processes CreateTableStatement.
+     * @param node the processing target
+     * @param args the processing arguments
+     * @return the result
+     * @see ddl::CreateTableStatement
+     */
+    virtual Return visit(ddl::CreateIndexStatement* node, Args... args) {  // NOLINT
+        return visitDefault(node, std::forward<Args>(args)...);
+    }
+
     /**
      * @brief Processes DropTableStatement.
      * @param node the processing target
@@ -266,6 +280,17 @@ public:
      * @see ddl::DropTableStatement
      */
     virtual Return visit(ddl::DropTableStatement* node, Args... args) {  // NOLINT
+        return visitDefault(node, std::forward<Args>(args)...);
+    }
+
+    /**
+     * @brief Processes DropTableStatement.
+     * @param node the processing target
+     * @param args the processing arguments
+     * @return the result
+     * @see ddl::DropTableStatement
+     */
+    virtual Return visit(ddl::DropIndexStatement* node, Args... args) {  // NOLINT
         return visitDefault(node, std::forward<Args>(args)...);
     }
 
@@ -377,8 +402,12 @@ public:
             return visit(static_cast<WhileStatement*>(node), std::forward<Args>(args)...);  // NOLINT
         case ddl::CreateTableStatement::tag:
             return visit(static_cast<ddl::CreateTableStatement*>(node), std::forward<Args>(args)...);  // NOLINT
+        case ddl::CreateIndexStatement::tag:
+            return visit(static_cast<ddl::CreateIndexStatement*>(node), std::forward<Args>(args)...);  // NOLINT
         case ddl::DropTableStatement::tag:
             return visit(static_cast<ddl::DropTableStatement*>(node), std::forward<Args>(args)...);  // NOLINT
+        case ddl::DropIndexStatement::tag:
+            return visit(static_cast<ddl::DropIndexStatement*>(node), std::forward<Args>(args)...);  // NOLINT
         case dml::DeleteStatement::tag:
             return visit(static_cast<dml::DeleteStatement*>(node), std::forward<Args>(args)...);  // NOLINT
         case dml::EmitStatement::tag:

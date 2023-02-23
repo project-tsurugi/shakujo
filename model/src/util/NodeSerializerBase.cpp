@@ -2277,8 +2277,14 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, statem
     case statement::ddl::CreateTableStatement::tag:
         serialize(printer, static_cast<statement::ddl::CreateTableStatement const*>(value));  // NOLINT
         return;
+    case statement::ddl::CreateIndexStatement::tag:
+        serialize(printer, static_cast<statement::ddl::CreateIndexStatement const*>(value));  // NOLINT
+        return;
     case statement::ddl::DropTableStatement::tag:
         serialize(printer, static_cast<statement::ddl::DropTableStatement const*>(value));  // NOLINT
+        return;
+    case statement::ddl::DropIndexStatement::tag:
+        serialize(printer, static_cast<statement::ddl::DropIndexStatement const*>(value));  // NOLINT
         return;
     case statement::dml::DeleteStatement::tag:
         serialize(printer, static_cast<statement::dml::DeleteStatement const*>(value));  // NOLINT
@@ -2559,6 +2565,25 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, statem
     }
 }
 
+void NodeSerializerBase::serialize(common::util::DataSerializer& printer, statement::ddl::CreateIndexStatement const* value) {
+    if (value == nullptr) {
+        printer.value(nullptr);
+        return;
+    }
+    printer.enter_object("CreateIndexStatement");
+    {
+        printer.enter_property("index");
+        serialize(printer, value->index());
+        printer.exit_property("index");
+    }
+    {
+        printer.enter_property("table");
+        serialize(printer, value->table());
+        printer.exit_property("table");
+    }
+    printer.exit_object("CreateIndexStatement");
+}
+
 void NodeSerializerBase::serialize(common::util::DataSerializer& printer, statement::ddl::DropTableStatement const* value) {
     if (value == nullptr) {
         printer.value(nullptr);
@@ -2607,6 +2632,20 @@ void NodeSerializerBase::serialize(common::util::DataSerializer& printer, statem
     } else {
         printer.value(impl_->to_string(value));
     }
+}
+
+void NodeSerializerBase::serialize(common::util::DataSerializer& printer, statement::ddl::DropIndexStatement const* value) {
+    if (value == nullptr) {
+        printer.value(nullptr);
+        return;
+    }
+    printer.enter_object("DropIndexStatement");
+    {
+        printer.enter_property("index");
+        serialize(printer, value->index());
+        printer.exit_property("index");
+    }
+    printer.exit_object("DropIndexStatement");
 }
 
 void NodeSerializerBase::serialize(common::util::DataSerializer& printer, statement::dml::DeleteStatement const* value) {

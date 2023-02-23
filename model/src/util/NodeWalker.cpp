@@ -539,8 +539,14 @@ void NodeWalker::walk(statement::Statement* node) {
     case statement::ddl::CreateTableStatement::tag:
         walk(static_cast<statement::ddl::CreateTableStatement*>(node));  // NOLINT
         return;
+    case statement::ddl::CreateIndexStatement::tag:
+        walk(static_cast<statement::ddl::CreateIndexStatement*>(node));  // NOLINT
+        return;
     case statement::ddl::DropTableStatement::tag:
         walk(static_cast<statement::ddl::DropTableStatement*>(node));  // NOLINT
+        return;
+    case statement::ddl::DropIndexStatement::tag:
+        walk(static_cast<statement::ddl::DropIndexStatement*>(node));  // NOLINT
         return;
     case statement::dml::DeleteStatement::tag:
         walk(static_cast<statement::dml::DeleteStatement*>(node));  // NOLINT
@@ -699,9 +705,25 @@ void NodeWalker::walk(statement::ddl::CreateTableStatement* node) {
     exit(node);
 }
 
+void NodeWalker::walk(statement::ddl::CreateIndexStatement* node) {
+    if (!enter(node)) return;
+    if (node->table()) walk(node->index());
+    if (node->table()) walk(node->table());
+    for (auto child : node->columns()) {
+        if (child->name()) walk(child->name());
+    }
+    exit(node);
+}
+
 void NodeWalker::walk(statement::ddl::DropTableStatement* node) {
     if (!enter(node)) return;
     if (node->table()) walk(node->table());
+    exit(node);
+}
+
+void NodeWalker::walk(statement::ddl::DropIndexStatement* node) {
+    if (!enter(node)) return;
+    if (node->index()) walk(node->index());
     exit(node);
 }
 

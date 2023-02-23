@@ -10,7 +10,9 @@ dmlStatement
 
 ddlStatement
     : createTableStatement
+    | createIndexStatement
     | dropTableStatement
+    | dropIndexStatement
     ;
 
 // -- INSERT
@@ -282,9 +284,36 @@ columnOrder
     | columnName
     ;
 
+// create index
+createIndexStatement
+    : indexDefinition
+    ;
+
+indexDefinition
+    : K_CREATE K_INDEX ( indexDefinitionOption )* indexName=name?
+            K_ON tableName=name indexElementList
+    ;
+
+indexDefinitionOption
+    : K_IF K_NOT K_EXISTS
+    ;
+
+indexElementList
+    : '(' indexElement ( ',' indexElement )* ')'
+    ;
+
+indexElement
+    : columnName orderingSpecification?
+    ;
+
 // drop table
 dropTableStatement
     : K_DROP K_TABLE name
+    ;
+
+// drop index
+dropIndexStatement
+    : K_DROP K_INDEX name
     ;
 
 // general statement

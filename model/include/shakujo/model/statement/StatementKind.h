@@ -114,10 +114,20 @@ enum class StatementKind {
      */
     CREATE_TABLE_STATEMENT,
     /**
+     * @brief tag for CreateIndexStatement.
+     * @see ddl::CreateIndexStatement
+     */
+    CREATE_INDEX_STATEMENT,
+    /**
      * @brief tag for DropTableStatement.
      * @see ddl::DropTableStatement
      */
     DROP_TABLE_STATEMENT,
+    /**
+     * @brief tag for DropIndexStatement.
+     * @see ddl::DropIndexStatement
+     */
+    DROP_INDEX_STATEMENT,
     /**
      * @brief tag for DeleteStatement.
      * @see dml::DeleteStatement
@@ -175,7 +185,9 @@ inline constexpr std::string_view to_string_view(StatementKind value) {
         case StatementKind::VECTOR_ELEMENT_INSERT_STATEMENT: return "VECTOR_ELEMENT_INSERT_STATEMENT";
         case StatementKind::WHILE_STATEMENT: return "WHILE_STATEMENT";
         case StatementKind::CREATE_TABLE_STATEMENT: return "CREATE_TABLE_STATEMENT";
+        case StatementKind::CREATE_INDEX_STATEMENT: return "CREATE_INDEX_STATEMENT";
         case StatementKind::DROP_TABLE_STATEMENT: return "DROP_TABLE_STATEMENT";
+        case StatementKind::DROP_INDEX_STATEMENT: return "DROP_INDEX_STATEMENT";
         case StatementKind::DELETE_STATEMENT: return "DELETE_STATEMENT";
         case StatementKind::EMIT_STATEMENT: return "EMIT_STATEMENT";
         case StatementKind::INSERT_RELATION_STATEMENT: return "INSERT_RELATION_STATEMENT";

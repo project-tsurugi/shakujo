@@ -45,10 +45,6 @@
 #include "shakujo/model/statement/LocalVariableDeclaration.h"
 #include "shakujo/model/statement/LogStatement.h"
 #include "shakujo/model/statement/Statement.h"
-#include "shakujo/model/statement/ddl/CreateTableStatement.h"
-#include "shakujo/model/statement/ddl/DropTableStatement.h"
-#include "shakujo/model/statement/dml/InsertValuesStatement.h"
-#include "shakujo/model/statement/dml/UpdateStatement.h"
 #include "shakujo/model/type/TupleType.h"
 #include "shakujo/model/type/Type.h"
 
@@ -921,6 +917,36 @@ std::unique_ptr<statement::ddl::CreateTableStatement::PrimaryKey> IRFactoryBase:
     return ret;
 }
 
+std::unique_ptr<statement::ddl::CreateIndexStatement> IRFactoryBase::CreateIndexStatement() {
+    return std::make_unique<statement::ddl::CreateIndexStatement>();
+}
+
+std::unique_ptr<statement::ddl::CreateIndexStatement> IRFactoryBase::CreateIndexStatement(
+        std::unique_ptr<name::Name> index,
+        std::unique_ptr<name::Name> table,
+        common::util::MoveInitializerList<std::unique_ptr<statement::ddl::CreateIndexStatement::Column>> columns,
+        std::initializer_list<statement::ddl::CreateIndexStatement::Attribute> attributes) {
+    auto ret = CreateIndexStatement();
+    ret->index(std::move(index));
+    ret->table(std::move(table));
+    ret->columns() = std::move(columns).build();
+    ret->attributes() = attributes;
+    return ret;
+}
+
+std::unique_ptr<statement::ddl::CreateIndexStatement::Column> IRFactoryBase::CreateIndexStatementColumn() {
+    return std::make_unique<statement::ddl::CreateIndexStatement::Column>();
+}
+
+std::unique_ptr<statement::ddl::CreateIndexStatement::Column> IRFactoryBase::CreateIndexStatementColumn(
+        std::unique_ptr<name::SimpleName> name,
+        statement::ddl::CreateIndexStatement::Column::Direction direction) {
+    auto ret = CreateIndexStatementColumn();
+    ret->name(std::move(name));
+    ret->direction(direction);
+    return ret;
+}
+
 std::unique_ptr<statement::ddl::DropTableStatement> IRFactoryBase::DropTableStatement() {
     return std::make_unique<statement::ddl::DropTableStatement>();
 }
@@ -930,6 +956,19 @@ std::unique_ptr<statement::ddl::DropTableStatement> IRFactoryBase::DropTableStat
         std::initializer_list<statement::ddl::DropTableStatement::Attribute> attributes) {
     auto ret = DropTableStatement();
     ret->table(std::move(table));
+    ret->attributes() = attributes;
+    return ret;
+}
+
+std::unique_ptr<statement::ddl::DropIndexStatement> IRFactoryBase::DropIndexStatement() {
+    return std::make_unique<statement::ddl::DropIndexStatement>();
+}
+
+std::unique_ptr<statement::ddl::DropIndexStatement> IRFactoryBase::DropIndexStatement(
+        std::unique_ptr<name::Name> index,
+        std::initializer_list<statement::ddl::DropIndexStatement::Attribute> attributes) {
+    auto ret = DropIndexStatement();
+    ret->index(std::move(index));
     ret->attributes() = attributes;
     return ret;
 }

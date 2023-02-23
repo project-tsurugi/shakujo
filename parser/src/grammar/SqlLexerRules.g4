@@ -22,6 +22,8 @@ K_SET: S E T;
 K_CREATE: C R E A T E;
 K_DROP: D R O P;
 K_TABLE: T A B L E;
+K_INDEX: I N D E X;
+K_UNIQUE: U N I Q U E;
 
 K_DEFAULT: D E F A U L T;
 
