@@ -1380,7 +1380,7 @@ public:
 
     /**
      * @brief returns a new statement::ddl::DropIndexStatement.
-     * @param table index name
+     * @param index index name
      * @param attributes drop table attributes
      * @return a created node
      * @see statement::ddl::DropIndexStatement
