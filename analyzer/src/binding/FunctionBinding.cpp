@@ -15,6 +15,9 @@
  */
 #include "shakujo/analyzer/binding/FunctionBinding.h"
 
+
+#include <array>
+
 #include "shakujo/common/core/Value.h"
 
 #include "analyze/typing.h"
@@ -121,7 +124,12 @@ FunctionBinding::resolve_overload(std::vector<ExpressionBinding const*> const& a
     if (!is_overload_stub()) {
         return {};
     }
-    for (tester_t const& tester : { eq_strict, eq_nullable, eq_assignable }) {
+    std::array<tester_t, 3> const testers {
+        eq_strict,
+        eq_nullable,
+        eq_assignable,
+    };
+    for (tester_t const& tester : testers) {
         for (auto&& candidate : impl_->overload_candidates_) {
             if (candidate->quantifier() != Quantifier::GROUND && candidate->quantifier() != Quantifier::ALL) {
                 continue;
@@ -145,7 +153,12 @@ FunctionBinding::resolve_overload(FunctionBinding::Quantifier quantifier, Expres
     if (!is_overload_stub()) {
         return {};
     }
-    for (tester_t const& tester : { eq_strict, eq_nullable, eq_assignable }) {
+    std::array<tester_t, 3> const testers {
+        eq_strict,
+        eq_nullable,
+        eq_assignable,
+    };
+    for (tester_t const& tester : testers) {
         for (auto&& candidate : impl_->overload_candidates_) {
             if (candidate->quantifier() != quantifier) {
                 continue;
