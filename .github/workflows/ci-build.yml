@@ -9,6 +9,8 @@ jobs:
       matrix:
         os: [ubuntu-20.04, ubuntu-22.04]
     runs-on: [self-hosted, docker]
+    permissions:
+      checks: write
     timeout-minutes: 30
     container:
       image: ghcr.io/project-tsurugi/oltp-sandbox:${{ matrix.os }}
@@ -54,6 +56,8 @@ jobs:
 
   Analysis:
     runs-on: [self-hosted, docker]
+    permissions:
+      checks: write
     timeout-minutes: 30
     container:
       image: ghcr.io/project-tsurugi/oltp-sandbox:ubuntu-22.04
