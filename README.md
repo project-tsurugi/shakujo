@@ -2,9 +2,9 @@
 
 ## Requirements
 
-* CMake `>= 3.10`
+* CMake `>= 3.16`
 * C++ Compiler `>= C++17`
-* Java Runtime `>= 8.0`
+* Java Runtime `>= 11`
 * and see *Dockerfile* section
 
 ```sh
@@ -15,7 +15,7 @@ git submodule update --init --recursive
 #### Dockerfile
 
 ```dockerfile
-FROM ubuntu:18.04
+FROM ubuntu:22.04
 
 RUN apt update -y && apt install -y git build-essential cmake ninja-build openjdk-11-jdk libgoogle-glog-dev pkg-config uuid-dev doxygen
 ```
