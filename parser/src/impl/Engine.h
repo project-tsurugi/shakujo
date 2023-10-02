@@ -297,8 +297,8 @@ public:
     std::unique_ptr<model::expression::Expression> visit(Grammar::BooleanFactorContext *);
 
     // booleanTest
-    //     : booleanPrimary K_IS (K_TRUE|K_FALSE)
-    //     | booleanPrimary K_IS K_NOT (K_TRUE|K_FALSE)
+    //     : booleanPrimary K_IS (K_TRUE|K_FALSE|K_NULL)
+    //     | booleanPrimary K_IS K_NOT (K_TRUE|K_FALSE|K_NULL)
     //     | booleanPrimary
     //     ;
     std::unique_ptr<model::expression::Expression> visit(Grammar::BooleanTestContext *);

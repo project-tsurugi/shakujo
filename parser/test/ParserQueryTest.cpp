@@ -43,6 +43,10 @@ public:
         auto scan = dynamic_pointer_cast<ScanExpression>(expr);
         return common::util::to_string(*scan->table());
     }
+
+    int as_int(Expression const* expr) {
+        return static_cast<int>(value_of<v::Int>(expr));
+    }
 };
 
 TEST_F(ParserQueryTest, select_simple) {
@@ -73,6 +77,80 @@ TEST_F(ParserQueryTest, select_condition) {
     auto condition = dynamic_pointer_cast<Literal>(selection->condition());
     EXPECT_EQ(t::Bool(NON_NULL), *condition->type());
     EXPECT_EQ(v::Bool(true), *condition->value());
+}
+
+TEST_F(ParserQueryTest, select_condition_and) {
+    auto select = parse_select("SELECT * FROM TBL WHERE 1 AND 2");
+    auto selection = dynamic_pointer_cast<SelectionExpression>(select->source());
+    auto e = dynamic_pointer_cast<BinaryOperator>(selection->condition());
+    EXPECT_EQ(BinaryOperator::Kind::CONDITIONAL_AND, e->operator_kind());
+    EXPECT_EQ(1, as_int(e->left()));
+    EXPECT_EQ(2, as_int(e->right()));
+}
+
+TEST_F(ParserQueryTest, select_condition_or) {
+    auto select = parse_select("SELECT * FROM TBL WHERE 1 OR 2");
+    auto selection = dynamic_pointer_cast<SelectionExpression>(select->source());
+    auto e = dynamic_pointer_cast<BinaryOperator>(selection->condition());
+    EXPECT_EQ(BinaryOperator::Kind::CONDITIONAL_OR, e->operator_kind());
+    EXPECT_EQ(1, as_int(e->left()));
+    EXPECT_EQ(2, as_int(e->right()));
+}
+
+TEST_F(ParserQueryTest, select_condition_not) {
+    auto select = parse_select("SELECT * FROM TBL WHERE NOT 1");
+    auto selection = dynamic_pointer_cast<SelectionExpression>(select->source());
+    auto e = dynamic_pointer_cast<UnaryOperator>(selection->condition());
+    EXPECT_EQ(UnaryOperator::Kind::CONDITIONAL_NOT, e->operator_kind());
+    EXPECT_EQ(1, as_int(e->operand()));
+}
+
+TEST_F(ParserQueryTest, select_condition_is_true) {
+    auto select = parse_select("SELECT * FROM TBL WHERE 1 IS TRUE");
+    auto selection = dynamic_pointer_cast<SelectionExpression>(select->source());
+    auto e = dynamic_pointer_cast<UnaryOperator>(selection->condition());
+    EXPECT_EQ(UnaryOperator::Kind::IS_TRUE, e->operator_kind());
+    EXPECT_EQ(1, as_int(e->operand()));
+}
+
+TEST_F(ParserQueryTest, select_condition_is_not_true) {
+    auto select = parse_select("SELECT * FROM TBL WHERE 1 IS NOT TRUE");
+    auto selection = dynamic_pointer_cast<SelectionExpression>(select->source());
+    auto e = dynamic_pointer_cast<UnaryOperator>(selection->condition());
+    EXPECT_EQ(UnaryOperator::Kind::IS_NOT_TRUE, e->operator_kind());
+    EXPECT_EQ(1, as_int(e->operand()));
+}
+
+TEST_F(ParserQueryTest, select_condition_is_false) {
+    auto select = parse_select("SELECT * FROM TBL WHERE 1 IS FALSE");
+    auto selection = dynamic_pointer_cast<SelectionExpression>(select->source());
+    auto e = dynamic_pointer_cast<UnaryOperator>(selection->condition());
+    EXPECT_EQ(UnaryOperator::Kind::IS_FALSE, e->operator_kind());
+    EXPECT_EQ(1, as_int(e->operand()));
+}
+
+TEST_F(ParserQueryTest, select_condition_is_not_false) {
+    auto select = parse_select("SELECT * FROM TBL WHERE 1 IS NOT FALSE");
+    auto selection = dynamic_pointer_cast<SelectionExpression>(select->source());
+    auto e = dynamic_pointer_cast<UnaryOperator>(selection->condition());
+    EXPECT_EQ(UnaryOperator::Kind::IS_NOT_FALSE, e->operator_kind());
+    EXPECT_EQ(1, as_int(e->operand()));
+}
+
+TEST_F(ParserQueryTest, select_condition_is_null) {
+    auto select = parse_select("SELECT * FROM TBL WHERE 1 IS NULL");
+    auto selection = dynamic_pointer_cast<SelectionExpression>(select->source());
+    auto e = dynamic_pointer_cast<UnaryOperator>(selection->condition());
+    EXPECT_EQ(UnaryOperator::Kind::IS_NULL, e->operator_kind());
+    EXPECT_EQ(1, as_int(e->operand()));
+}
+
+TEST_F(ParserQueryTest, select_condition_is_not_null) {
+    auto select = parse_select("SELECT * FROM TBL WHERE 1 IS NOT NULL");
+    auto selection = dynamic_pointer_cast<SelectionExpression>(select->source());
+    auto e = dynamic_pointer_cast<UnaryOperator>(selection->condition());
+    EXPECT_EQ(UnaryOperator::Kind::IS_NOT_NULL, e->operator_kind());
+    EXPECT_EQ(1, as_int(e->operand()));
 }
 
 TEST_F(ParserQueryTest, select_projection) {
