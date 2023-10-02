@@ -179,8 +179,8 @@ booleanFactor
     ;
 
 booleanTest
-    : booleanPrimary K_IS (K_TRUE|K_FALSE)
-    | booleanPrimary K_IS K_NOT (K_TRUE|K_FALSE)
+    : booleanPrimary K_IS (K_TRUE|K_FALSE|K_NULL)
+    | booleanPrimary K_IS K_NOT (K_TRUE|K_FALSE|K_NULL)
     | booleanPrimary
     ;
 

@@ -742,6 +742,12 @@ static model::expression::UnaryOperator::Kind boolean_test_operator(Grammar::Boo
         }
         return model::expression::UnaryOperator::Kind::IS_FALSE;
     }
+    if (is_defined(c->K_NULL())) {
+        if (is_defined(c->K_NOT())) {
+            return model::expression::UnaryOperator::Kind::IS_NOT_NULL;
+        }
+        return model::expression::UnaryOperator::Kind::IS_NULL;
+    }
     return model::expression::UnaryOperator::Kind::INVALID;
 }
 
