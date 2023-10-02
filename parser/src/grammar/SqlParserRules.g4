@@ -106,7 +106,7 @@ selectSublist
     ;
 
 derivedColumn
-    : expression (K_AS columnName)?
+    : expression (K_AS? columnName)?
     ;
 
 tableExpression

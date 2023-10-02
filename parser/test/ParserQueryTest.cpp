@@ -97,6 +97,17 @@ TEST_F(ParserQueryTest, select_projection_alias) {
     EXPECT_TRUE(equals(f.Name("C1"), c1v->name()));
 }
 
+TEST_F(ParserQueryTest, select_projection_alias_noas) {
+    auto select = parse_select("SELECT C1 x FROM TBL");
+    auto projection = dynamic_pointer_cast<ProjectionExpression>(select->source());
+    ASSERT_EQ(1U, projection->columns().size());
+
+    auto c1 = projection->columns()[0];
+    EXPECT_TRUE(equals(f.Name("x"), c1->alias()));
+    auto c1v = dynamic_pointer_cast<VariableReference>(c1->value());
+    EXPECT_TRUE(equals(f.Name("C1"), c1v->name()));
+}
+
 TEST_F(ParserQueryTest, select_projection_many) {
     auto select = parse_select("SELECT 1, 2, 3, 4, 5 FROM TBL");
     auto projection = dynamic_pointer_cast<ProjectionExpression>(select->source());
