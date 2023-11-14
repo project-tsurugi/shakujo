@@ -37,11 +37,23 @@ public:
     }
 };
 
+template<typename C, typename E>
+static bool contains(const C& container, const E& element) {
+    return container.find(element) != container.end();
+}
+
 
 TEST_F(ParserDropIndexTest, simple) {
     auto stmt = parse("DROP INDEX t");
 
     EXPECT_TRUE(equals(f.Name("t"), stmt->index()));
+}
+
+TEST_F(ParserDropIndexTest, if_exists) {
+    auto stmt = parse("DROP INDEX IF EXISTS t");
+
+    EXPECT_TRUE(equals(f.Name("t"), stmt->index()));
+    EXPECT_TRUE(contains(stmt->attributes(), DropIndexStatement::Attribute::IF_EXISTS));
 }
 
 }  // namespace shakujo::parser

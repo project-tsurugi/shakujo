@@ -462,15 +462,26 @@ public:
 
     // -- DROP TABLE
     // dropTableStatement
-    //     : K_DROP K_TABLE name
+    //     : K_DROP K_TABLE ( dropTableOption )? name
     //     ;
     std::unique_ptr<model::statement::Statement> visit(Grammar::DropTableStatementContext *);
 
+    // dropTableOption
+    //     : K_IF K_EXISTS
+    //     ;
+    void visit(Grammar::DropTableOptionContext *, model::statement::ddl::DropTableStatement *);
+
+
     // -- DROP INDEX
     // dropIndexStatement
-    //     : K_DROP K_INDEX name
+    //     : K_DROP K_INDEX ( dropIndexOption )? name
     //     ;
     std::unique_ptr<model::statement::Statement> visit(Grammar::DropIndexStatementContext *);
+
+    // dropTableOption
+    //     : K_IF K_EXISTS
+    //     ;
+    void visit(Grammar::DropIndexOptionContext *, model::statement::ddl::DropIndexStatement *);
 
     // -- generic statements
     // statement

@@ -1140,9 +1140,23 @@ std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::DropTableSta
     auto n = c->name();
     if (is_defined(c->K_DROP()) && is_defined(c->K_TABLE()) && is_defined(n)) {
         auto result = f.DropTableStatement() << region(c);
+        if (auto a = c->dropTableOption(); is_defined(a)) {
+            visit(a, result.get());
+        }
         auto name = visit(n);
         result->table(std::move(name));
         return result;
+    }
+    rule_error(c);
+}
+
+void Engine::visit(Grammar::DropTableOptionContext *c, model::statement::ddl::DropTableStatement *r) {
+    check(c);
+    check(c);
+    using Attribute = model::statement::ddl::DropTableStatement::Attribute;
+    if (is_defined(c->K_IF()) && is_defined(c->K_EXISTS())) {
+        r->attributes().emplace(Attribute::IF_EXISTS);
+        return;
     }
     rule_error(c);
 }
@@ -1152,9 +1166,22 @@ std::unique_ptr<model::statement::Statement> Engine::visit(Grammar::DropIndexSta
     auto n = c->name();
     if (is_defined(c->K_DROP()) && is_defined(c->K_INDEX()) && is_defined(n)) {
         auto result = f.DropIndexStatement() << region(c);
+        if (auto a = c->dropIndexOption(); is_defined(a)) {
+            visit(a, result.get());
+        }
         auto name = visit(n);
         result->index(std::move(name));
         return result;
+    }
+    rule_error(c);
+}
+
+void Engine::visit(Grammar::DropIndexOptionContext *c, model::statement::ddl::DropIndexStatement *r) {
+    check(c);
+    using Attribute = model::statement::ddl::DropIndexStatement::Attribute;
+    if (is_defined(c->K_IF()) && is_defined(c->K_EXISTS())) {
+        r->attributes().emplace(Attribute::IF_EXISTS);
+        return;
     }
     rule_error(c);
 }
