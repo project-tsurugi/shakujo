@@ -308,12 +308,20 @@ indexElement
 
 // drop table
 dropTableStatement
-    : K_DROP K_TABLE name
+    : K_DROP K_TABLE ( dropTableOption )? name
+    ;
+
+dropTableOption
+    : K_IF K_EXISTS
     ;
 
 // drop index
 dropIndexStatement
-    : K_DROP K_INDEX name
+    : K_DROP K_INDEX ( dropIndexOption )? name
+    ;
+
+dropIndexOption
+    : K_IF K_EXISTS
     ;
 
 // general statement

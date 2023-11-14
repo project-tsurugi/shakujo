@@ -37,11 +37,23 @@ public:
     }
 };
 
+template<typename C, typename E>
+static bool contains(const C& container, const E& element) {
+    return container.find(element) != container.end();
+}
 
 TEST_F(ParserDropTableTest, simple) {
     auto stmt = parse("DROP TABLE t");
 
     EXPECT_TRUE(equals(f.Name("t"), stmt->table()));
+    EXPECT_FALSE(contains(stmt->attributes(), DropTableStatement::Attribute::IF_EXISTS));
+}
+
+TEST_F(ParserDropTableTest, if_exists) {
+    auto stmt = parse("DROP TABLE IF EXISTS t");
+
+    EXPECT_TRUE(equals(f.Name("t"), stmt->table()));
+    EXPECT_TRUE(contains(stmt->attributes(), DropTableStatement::Attribute::IF_EXISTS));
 }
 
 }  // namespace shakujo::parser
